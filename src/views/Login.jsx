@@ -77,7 +77,7 @@ export default function Login({ toast }) {
         <ErrorLine>{error}</ErrorLine>
 
         <p className="mt-6 text-center text-xs text-slate-500">
-          Données de démonstration stockées dans ce navigateur. Code serveur de démo : <code className="text-slate-300">HEVENLY1</code>
+          Les comptes sont stockés dans ce navigateur uniquement.
         </p>
       </div>
     </div>

@@ -114,7 +114,7 @@ function JoinServerModal({ onClose }) {
           Code d’invitation
           <input
             className="field font-mono uppercase"
-            placeholder="Ex. HEVENLY1"
+            placeholder="Code reçu d’un serveur"
             value={code}
             autoFocus
             onChange={(e) => setCode(e.target.value)}

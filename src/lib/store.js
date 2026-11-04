@@ -6,44 +6,23 @@
 
 import { uid, randomTag, OWNER_COLOR, slugChannel } from './util';
 
-const KEY = 'hevenly:v1';
+// v2 : suppression des comptes de démo (les données v1 ne sont plus lues).
+const KEY = 'hevenly:v2';
 const listeners = new Set();
 let state;
 let lastRaw = null;
 
+// État initial vide : aucun compte ni serveur de démonstration.
 function seed() {
-  const now = Date.now();
   return {
     session: { user_id: null },
-    users: [
-      { id: 'u_lina', pseudo: 'Lina', tag: '0001', avatar: '', bio: 'Fondatrice de Hevenly ✨', is_plus: 1, banner: { type: 'gradient', index: 1 }, last_activity: 0 },
-      { id: 'u_maxime', pseudo: 'Maxime', tag: '1234', avatar: '', bio: 'Toujours en vocal.', is_plus: 0, banner: { type: 'gradient', index: 2 }, last_activity: 0 },
-      { id: 'u_sofia', pseudo: 'Sofia', tag: '5678', avatar: '', bio: 'Lecture et musique.', is_plus: 0, banner: { type: 'gradient', index: 4 }, last_activity: 0 },
-      { id: 'u_hugo', pseudo: 'Hugo', tag: '4321', avatar: '', bio: '', is_plus: 0, banner: { type: 'gradient', index: 3 }, last_activity: 0 },
-    ],
-    servers: [
-      { id: 's_lounge', name: 'Hevenly Lounge', icon: '', is_public: 1, owner_id: 'u_lina', invite_code: 'HEVENLY1' },
-    ],
-    memberships: [
-      { server_id: 's_lounge', user_id: 'u_lina', role_ids: [] },
-      { server_id: 's_lounge', user_id: 'u_maxime', role_ids: ['r_mod'] },
-      { server_id: 's_lounge', user_id: 'u_sofia', role_ids: [] },
-      { server_id: 's_lounge', user_id: 'u_hugo', role_ids: [] },
-    ],
-    roles: [{ id: 'r_mod', server_id: 's_lounge', name: 'Modérateur', color: '#38bdf8', can_manage_channels: 1 }],
-    channels: [
-      { id: 'c_general', server_id: 's_lounge', name: 'général', type: 'text' },
-      { id: 'c_memes', server_id: 's_lounge', name: 'memes', type: 'text' },
-      { id: 'c_vocal', server_id: 's_lounge', name: 'lounge-vocal', type: 'voice' },
-    ],
-    messages: [
-      { id: 'm_1', channel_id: 'c_general', user_id: 'u_lina', content: 'Bienvenue sur Hevenly ! 🌿', created_at: now - 600000 },
-      { id: 'm_2', channel_id: 'c_general', user_id: 'u_maxime', content: 'Trop content d’être là.', created_at: now - 300000 },
-    ],
-    friendships: [
-      { id: 'f_1', from: 'u_maxime', to: 'u_lina', status: 'accepted' },
-      { id: 'f_2', from: 'u_sofia', to: 'u_lina', status: 'pending' },
-    ],
+    users: [],
+    servers: [],
+    memberships: [],
+    roles: [],
+    channels: [],
+    messages: [],
+    friendships: [],
     dms: [],
     voice: [],
     reports: [],

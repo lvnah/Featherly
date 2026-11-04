@@ -50,7 +50,7 @@ export default function FriendsView() {
         {/* Ajout d'ami */}
         <section className="card p-5">
           <h2 className="mb-1 font-semibold text-white">Ajouter un ami</h2>
-          <p className="mb-4 text-sm text-slate-400">Entrez le pseudo et le tag exact, par exemple Maxime#1234.</p>
+          <p className="mb-4 text-sm text-slate-400">Entrez le pseudo et le tag exact, par exemple Pseudo#1234.</p>
           <form onSubmit={add} className="flex flex-col gap-2 sm:flex-row">
             <input
               className="field"
