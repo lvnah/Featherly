@@ -220,7 +220,7 @@ function ChannelModal({ serverId, onClose }) {
     <Modal open title="Créer un salon" onClose={onClose}>
       <form onSubmit={submit} className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-2">
-          {[['text', '# Texte'], ['voice', '🔊 Vocal']].map(([v, label]) => (
+          {[['text', '# Texte'], ['voice', 'Vocal']].map(([v, label]) => (
             <button key={v} type="button" onClick={() => setType(v)} className={`rounded-2xl border-2 px-4 py-3 text-sm font-bold transition ${type === v ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-slate-100 text-slate-500'}`}>
               {label}
             </button>

@@ -24,35 +24,27 @@ export function memberMenuItems({ s, me, serverId, userId, go, openModal, toast 
   const target = getUser(s, userId);
   if (!target) return [];
   const srv = s.servers.find((x) => x.id === serverId);
-  const items = [{ label: 'Voir le profil', icon: '👤', onClick: () => go({ name: 'profile', userId }) }];
+  const items = [{ label: 'Voir le profil', onClick: () => go({ name: 'profile', userId }) }];
   if (userId !== me.id) {
-    items.push({ label: 'Envoyer un message', icon: '💬', onClick: () => go({ name: 'messages', withId: userId }) });
+    items.push({ label: 'Envoyer un message', onClick: () => go({ name: 'messages', withId: userId }) });
     if (!isFriend(s, me.id, userId)) {
       const pending = friendshipBetween(s, me.id, userId);
       items.push({
         label: pending ? 'Demande en attente' : 'Ajouter en ami',
-        icon: '➕',
         disabled: !!pending,
         onClick: () => run(toast, () => sendFriendRequest(userId), 'Demande d’ami envoyée'),
       });
     }
-    items.push({ label: 'Signaler', icon: '🚩', danger: true, onClick: () => openModal('report', { userId, serverId }) });
+    items.push({ label: 'Signaler', danger: true, onClick: () => openModal('report', { userId, serverId }) });
   }
   if (srv?.owner_id === me.id && userId !== me.id) {
-    items.push({ separator: true });
-    items.push({
-      label: 'Retirer les rôles',
-      icon: '∅',
-      onClick: () => run(toast, () => assignRole(serverId, userId, null), 'Rôle retiré'),
-    });
-    rolesOf(s, serverId).forEach((r) => {
-      items.push({
-        label: `Rôle : ${r.name}`,
-        icon: '🏷️',
-        onClick: () => run(toast, () => assignRole(serverId, userId, r.id), 'Rôle modifié'),
-      });
-    });
-    items.push({ label: 'Expulser de l’espace', icon: '🚪', danger: true, onClick: () => run(toast, () => kickMember(serverId, userId), 'Membre expulsé') });
+    const current = membership(s, serverId, userId)?.role_ids[0] ?? null;
+    items.push({ separator: true }, { header: 'Rôles' });
+    items.push({ label: 'Aucun rôle', checked: current === null, onClick: () => run(toast, () => assignRole(serverId, userId, null), 'Rôle retiré') });
+    rolesOf(s, serverId).forEach((r) =>
+      items.push({ label: r.name, checked: current === r.id, onClick: () => run(toast, () => assignRole(serverId, userId, r.id), 'Rôle modifié') }),
+    );
+    items.push({ separator: true }, { label: 'Expulser de l’espace', danger: true, onClick: () => run(toast, () => kickMember(serverId, userId), 'Membre expulsé') });
   }
   return items;
 }
@@ -116,7 +108,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
       e.preventDefault();
       return;
     }
-    openMenu(e, [{ label: 'Supprimer le salon', icon: '🗑️', danger: true, onClick: () => run(toast, () => deleteChannel(channel.id), 'Salon supprimé') }]);
+    openMenu(e, [{ label: 'Supprimer le salon', danger: true, onClick: () => run(toast, () => deleteChannel(channel.id), 'Salon supprimé') }]);
   };
 
   const memberMenu = (e, userId) =>

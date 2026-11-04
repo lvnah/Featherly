@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Splash from './components/Splash';
 import { getMe, refresh } from './lib/store';
 import { getToken } from './lib/api';
 import { ContextMenu, UIContext, useStore } from './components/ui';
@@ -21,6 +22,14 @@ export default function App() {
   const [menu, setMenu] = useState(null);
   const [toastMsg, setToastMsg] = useState(null);
   const [booting, setBooting] = useState(() => !!getToken());
+  const [splash, setSplash] = useState(false);
+  const wasLogged = useRef(false);
+  const endSplash = useCallback(() => setSplash(false), []);
+  const logged = !!me;
+  useEffect(() => {
+    if (logged && !wasLogged.current) setSplash(true);
+    wasLogged.current = logged;
+  }, [logged]);
 
   // Synchronisation toutes les 2 s (messages, présence, relations).
   useEffect(() => {
@@ -84,7 +93,7 @@ export default function App() {
         {view.name === 'messages' && <MessagesView withId={view.withId} />}
         {view.name === 'friends' && <FriendsView />}
         {view.name === 'admin' && <AdminView />}
-        {view.name === 'profile' && <ProfileView key={view.userId} userId={view.userId} goBack={goHome} />}
+        {view.name === 'profile' && <ProfileView key={`${view.userId}-${!!view.edit}`} userId={view.userId} edit={!!view.edit} goBack={goHome} />}
       </Layout>
     );
   }
@@ -92,6 +101,7 @@ export default function App() {
   return (
     <UIContext.Provider value={ui}>
       {content}
+      {splash && <Splash onDone={endSplash} />}
       <ModalHost modal={modal} onClose={closeModal} />
       {menu && <ContextMenu x={menu.x} y={menu.y} items={menu.items} onClose={closeMenu} />}
       {toastMsg && (

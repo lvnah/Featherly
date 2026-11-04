@@ -64,6 +64,22 @@
   }
 }
 
+/* Animation d'arrivée : révélation du logo de bas en haut, puis fondu de l'écran */
+.splash-screen {
+  animation: splash-out 0.7s ease-in 1.9s forwards;
+}
+.splash-logo {
+  animation: logo-reveal 1.6s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@keyframes logo-reveal {
+  from { clip-path: inset(100% 0 0 0); opacity: 0.2; transform: scale(0.92); }
+  60% { opacity: 1; }
+  to { clip-path: inset(0 0 0 0); opacity: 1; transform: scale(1); }
+}
+@keyframes splash-out {
+  to { opacity: 0; visibility: hidden; }
+}
+
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }

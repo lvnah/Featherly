@@ -77,7 +77,7 @@ export default function MessagesView({ withId }) {
               </button>
             </header>
             <div ref={listRef} className="thin-scroll flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-5">
-              {thread.length === 0 && <p className="m-auto text-sm text-slate-500">Dites bonjour à {partner.pseudo} 👋</p>}
+              {thread.length === 0 && <p className="m-auto text-sm text-slate-500">Dites bonjour à {partner.pseudo}</p>}
               {thread.map((d) => {
                 const mine = d.from === me.id;
                 return (

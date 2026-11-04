@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { deleteRole, deleteServer, getMe, kickMember, membersOf, membership, rolesOf, assignRole, updateInvite, updateRole, updateServerIcon, createRole } from '../lib/store';
-import { Modal, Avatar, ColorDiamonds, ErrorLine, useStore, useUI } from './ui';
+import { Avatar, ColorDiamonds, ErrorLine, useStore, useUI } from './ui';
 import { fullName } from '../lib/util';
 import { ROLE_COLORS } from '../lib/util';
 import { run } from '../views/ServerView';
@@ -23,12 +23,16 @@ export default function EspaceSettingsModal({ serverId, onClose }) {
   const isOwner = server.owner_id === me.id;
 
   return (
-    <Modal open title="" onClose={onClose} width="max-w-3xl">
-      <div className="flex flex-col gap-5">
+    <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-white">
+      <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-8 py-5">
         <div>
           <h2 className="text-xl font-extrabold">Paramètres de l’espace</h2>
           <p className="text-sm text-slate-500">{server.name}</p>
         </div>
+        <button onClick={onClose} className="btn-ghost !rounded-full !px-5 !py-2.5">Fermer</button>
+      </div>
+      <div className="thin-scroll min-h-0 flex-1 overflow-y-auto p-8">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
         {!isOwner ? (
           <p className="text-sm text-slate-500">Seul le propriétaire de l’espace peut modifier ces paramètres.</p>
         ) : (
@@ -47,7 +51,8 @@ export default function EspaceSettingsModal({ serverId, onClose }) {
           </>
         )}
       </div>
-    </Modal>
+      </div>
+    </div>
   );
 }
 
