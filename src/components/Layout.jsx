@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { getMe, serversOf, logout } from '../lib/store';
-import { useStore, useUI, Avatar, Icon } from './ui';
+import { useStore, useUI, Avatar, Icon, ServerIcon } from './ui';
 import Logo from './Logo';
 
 const NAV = [
@@ -75,9 +75,7 @@ export default function Layout({ view, children }) {
                   view.name === 'server' && view.serverId === srv.id ? 'bg-slate-100' : ''
                 }`}
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-brand-400 to-brand-700 text-sm font-bold text-white">
-                  {srv.icon ? <img src={srv.icon} alt="" className="h-full w-full object-cover" /> : srv.name.charAt(0).toUpperCase()}
-                </span>
+                <ServerIcon server={srv} className="h-10 w-10" />
                 <span className="truncate text-sm font-semibold text-slate-800">{srv.name}</span>
               </button>
             ))}

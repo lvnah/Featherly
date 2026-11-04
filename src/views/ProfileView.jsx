@@ -29,24 +29,13 @@ function OwnProfile() {
 
   const preview = { ...me, pseudo: pseudo || me.pseudo, avatar, banner };
 
-  const pickAvatar = async (e) => {
+  const pick = (setter, opts, asBanner = false) => async (e) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
     try {
-      setAvatar(await fileToDataUrl(file, AVATAR_OPTS));
-      setError('');
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const pickBanner = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    try {
-      setBanner({ type: 'image', value: await fileToDataUrl(file, BANNER_OPTS) });
+      const data = await fileToDataUrl(file, opts);
+      setter(asBanner ? { type: 'image', value: data } : data);
       setError('');
     } catch (err) {
       setError(err.message);
@@ -74,70 +63,74 @@ function OwnProfile() {
         <button onClick={() => go({ name: 'profile', userId: me.id })} className="text-sm font-bold text-red-500 hover:text-red-600">Quitter</button>
       </div>
 
-      <form onSubmit={save} className="mx-auto flex w-full max-w-xl flex-col gap-6 p-8">
-        <div className="overflow-hidden rounded-[2rem] border border-slate-100 shadow-soft">
-          <div className="relative h-40" style={bannerStyle(preview)} />
-          <div className="relative flex items-end justify-between px-6 pb-5">
-            <div className="-mt-14 h-28 w-28 overflow-hidden rounded-full ring-4 ring-white">
-              <Avatar user={{ ...preview, avatar }} size="xl" className="!h-full !w-full !text-4xl" />
+      <div className="flex justify-center p-8">
+        <form onSubmit={save} className="w-full max-w-lg overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white shadow-soft">
+          <div className="relative h-40" style={bannerStyle(preview)}>
+            <div className="absolute -bottom-12 left-7 h-24 w-24 overflow-hidden rounded-full bg-white ring-4 ring-white">
+              <Avatar user={preview} size="xl" className="!h-full !w-full" />
             </div>
-            {me.is_plus ? (
-              <span className="pill !bg-brand-100 !px-3 !py-1.5 !text-brand-700">Pass PLUS Actif</span>
-            ) : (
-              <button type="button" onClick={() => run(toast, () => togglePlus(), 'Statut PLUS mis à jour')} className="pill !px-3 !py-1.5 hover:!bg-slate-200">
-                Activer PLUS (simulation)
-              </button>
-            )}
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-          <Field label="Nom d’utilisateur" className="sm:col-span-2">
-            <input className="field" value={pseudo} maxLength={24} onChange={(e) => setPseudo(e.target.value)} />
-          </Field>
-          <Field label="Tag # (4 chiffres)">
-            <input className="field font-mono" value={tag} disabled={!me.is_plus} inputMode="numeric" maxLength={4} onChange={(e) => setTag(e.target.value.replace(/\D/g, '').slice(0, 4))} />
-          </Field>
-        </div>
+          <div className="flex flex-col gap-5 px-7 pb-7">
+            <div className="flex min-h-12 items-center justify-end pt-3">
+              {me.is_plus ? (
+                <span className="rounded-full bg-brand-100 px-3 py-1.5 text-xs font-bold text-brand-700">Pass PLUS Actif</span>
+              ) : (
+                <button type="button" onClick={() => run(toast, () => togglePlus(), 'Statut PLUS mis à jour')} className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200">
+                  Activer PLUS (simulation)
+                </button>
+              )}
+            </div>
 
-        <div className="flex flex-col gap-2">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Photo de profil</span>
-          <label className="btn-ghost w-fit cursor-pointer">
-            Importer une photo
-            <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={pickAvatar} />
-          </label>
-        </div>
+            <div className="grid grid-cols-3 gap-4">
+              <Field label="Nom d’utilisateur" className="col-span-2">
+                <input className="field" value={pseudo} maxLength={24} onChange={(e) => setPseudo(e.target.value)} />
+              </Field>
+              <Field label="Tag # (4 chiffres)">
+                <input className="field font-mono" value={tag} disabled={!me.is_plus} inputMode="numeric" maxLength={4} onChange={(e) => setTag(e.target.value.replace(/\D/g, '').slice(0, 4))} />
+              </Field>
+            </div>
 
-        <div className="flex flex-col gap-3">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-brand-600">Bannière (réservé PLUS)</span>
-          <div className="flex flex-wrap gap-2">
-            {BANNER_GRADIENTS.map((g, i) => (
-              <button
-                key={g}
-                type="button"
-                aria-label={`Bannière ${i + 1}`}
-                onClick={() => setBanner({ type: 'gradient', index: i })}
-                className={`h-9 w-14 rounded-xl transition ${banner.type === 'gradient' && banner.index === i ? 'ring-2 ring-brand-500 ring-offset-2' : 'opacity-80 hover:opacity-100'}`}
-                style={{ background: g }}
+            <Field label="Photo de profil">
+              <ImportButton onChange={pick(setAvatar, AVATAR_OPTS)} label={avatar ? 'Changer la photo' : 'Importer une photo'} />
+            </Field>
+
+            <Field label="Bannière personnalisée (réservé PLUS)" accent>
+              <ImportButton
+                disabled={!me.is_plus}
+                onChange={pick(setBanner, BANNER_OPTS, true)}
+                label={banner.type === 'image' ? 'Changer la bannière' : 'Importer une image de bannière'}
               />
-            ))}
+              {!!me.is_plus && banner.type === 'image' && (
+                <button type="button" onClick={() => setBanner({ type: 'gradient', index: 0 })} className="self-start text-xs font-bold text-slate-500 hover:text-slate-900">
+                  Revenir au dégradé vert
+                </button>
+              )}
+            </Field>
+
+            <Field label={`Bio (${bio.length}/190)`}>
+              <textarea className="field min-h-24 resize-none" value={bio} maxLength={190} onChange={(e) => setBio(e.target.value)} />
+            </Field>
+
+            <ErrorLine>{error}</ErrorLine>
+            <button type="submit" className="btn-soft w-full !rounded-2xl !py-4" disabled={busy}>
+              Enregistrer les modifications
+            </button>
           </div>
-          <label className={`btn-ghost w-fit ${me.is_plus ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
-            Importer une image de bannière
-            <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" disabled={!me.is_plus} onChange={pickBanner} />
-          </label>
-        </div>
-
-        <Field label={`Bio (${bio.length}/190)`}>
-          <textarea className="field min-h-24 resize-none" value={bio} maxLength={190} onChange={(e) => setBio(e.target.value)} />
-        </Field>
-
-        <ErrorLine>{error}</ErrorLine>
-        <button type="submit" className="btn-primary w-full !rounded-2xl !py-4" disabled={busy}>
-          Enregistrer les modifications
-        </button>
-      </form>
+        </form>
+      </div>
     </div>
+  );
+}
+
+// Bouton d'import présenté comme un champ (même hauteur et même fond que les autres champs).
+function ImportButton({ onChange, label, disabled = false }) {
+  return (
+    <label className={`field flex items-center justify-between text-slate-500 ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:border-brand-300'}`}>
+      <span>{label}</span>
+      <Icon name="arrow" className="h-4 w-4 text-slate-400" />
+      <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" disabled={disabled} onChange={onChange} />
+    </label>
   );
 }
 
@@ -201,9 +194,9 @@ function PublicProfile({ user, goBack }) {
 
 function Field({ label, children, accent = false, className = '' }) {
   return (
-    <label className={`flex flex-col gap-2 ${className}`}>
+    <div className={`flex flex-col gap-2 ${className}`}>
       <span className={`text-[11px] font-bold uppercase tracking-widest ${accent ? 'text-brand-600' : 'text-slate-400'}`}>{label}</span>
       {children}
-    </label>
+    </div>
   );
 }

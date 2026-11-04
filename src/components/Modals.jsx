@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createChannel, createServer, getMe, getUser, joinServer, regenerateInvite, reportUser } from '../lib/store';
-import { Modal, Avatar, Banner, ErrorLine, Icon, useStore, useUI } from './ui';
+import { Modal, Avatar, Banner, ErrorLine, Icon, ServerIcon, useStore, useUI } from './ui';
 import { fullName, isOnline } from '../lib/util';
 import { fileToDataUrl, ICON_OPTS } from '../lib/images';
 import PlusBadge from './PlusBadge';
@@ -58,9 +58,7 @@ function CreateServerModal({ onClose }) {
         </label>
         <div className="flex flex-col gap-2"><Label>Icône (facultatif)</Label>
           <div className="flex items-center gap-3">
-            <span className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-slate-100 text-lg font-bold text-slate-400">
-              {icon ? <img src={icon} alt="" className="h-full w-full object-cover" /> : (name.charAt(0).toUpperCase() || '?')}
-            </span>
+            <ServerIcon icon={icon} server={{ id: name || 'new', name }} className="h-14 w-14" />
             <label className="btn-ghost cursor-pointer">
               Importer une image
               <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) { try { setIcon(await fileToDataUrl(f, ICON_OPTS)); } catch (err) { setError(err.message); } } }} />

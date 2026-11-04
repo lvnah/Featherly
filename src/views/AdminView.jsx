@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { adminDeleteServer, adminDeleteUser, adminDismissReport, adminListReports, adminListServers, adminListUsers, adminSetPlus, getMe } from '../lib/store';
-import { useStore, useUI, Avatar, EmptyState, Icon } from '../components/ui';
+import { useStore, useUI, Avatar, EmptyState, Icon, ServerIcon } from '../components/ui';
 import { formatStamp, isOnline } from '../lib/util';
 import { run } from './ServerView';
 
@@ -95,7 +95,7 @@ export default function AdminView() {
         {tab === 'servers' &&
           servers.map((srv) => (
             <div key={srv.id} className="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-100 bg-white p-4">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-700 font-bold text-white">{srv.name.charAt(0).toUpperCase()}</span>
+              <ServerIcon server={srv} className="h-11 w-11" />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-bold">{srv.name}</p>
                 <p className="text-xs text-slate-500">
