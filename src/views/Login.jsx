@@ -18,7 +18,6 @@ export default function Login({ toast }) {
     try {
       if (mode === 'register') {
         await register(pseudo, password);
-        toast('Compte créé. Bienvenue sur Hevenly !');
       } else {
         await login(pseudo, password);
       }

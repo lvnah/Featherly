@@ -96,7 +96,6 @@ export default function Layout({ view, children }) {
             aria-label="Se déconnecter"
             onClick={async () => {
               await logout();
-              toast('Vous êtes déconnecté.');
             }}
             className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
           >
