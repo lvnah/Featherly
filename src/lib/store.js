@@ -50,8 +50,8 @@ async function act(name, payload = {}) {
 
 // ---------- Authentification ----------
 
-export async function register(pseudo, password) {
-  const res = await api('/api/auth/register', { method: 'POST', body: { pseudo, password }, auth: false });
+export async function register(pseudo, password, tag = '') {
+  const res = await api('/api/auth/register', { method: 'POST', body: { pseudo, password, tag }, auth: false });
   setToken(res.token);
   await refresh();
 }

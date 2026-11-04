@@ -403,13 +403,22 @@ export function runAction(name, me, payload) {
 }
 
 // Authentification (hors session).
-export function register({ pseudo, password }) {
+// Tag choisi à la création (4 chiffres) : libre si aucun compte n'a déjà ce pseudo#tag. Sinon, tag aléatoire libre.
+export function register({ pseudo, password, tag: wanted }) {
   const name = text(pseudo, 2, 24, 'Le pseudo doit faire entre 2 et 24 caractères.');
   if (typeof password !== 'string' || password.length < 8 || password.length > 200) {
     fail('Le mot de passe doit faire entre 8 et 200 caractères.');
   }
+  const chosen = String(wanted ?? '').trim();
+  if (chosen && !/^\d{4}$/.test(chosen)) fail('Le tag doit contenir exactement 4 chiffres.');
   return transaction(() => {
     let tag = null;
+    if (chosen) {
+      if (one('SELECT 1 FROM users WHERE pseudo = ? COLLATE NOCASE AND tag = ?', name, chosen)) {
+        fail(`${name}#${chosen} existe déjà. Choisissez un autre tag.`, 409);
+      }
+      tag = chosen;
+    }
     for (let i = 0; i < 50 && !tag; i += 1) {
       const candidate = String(1000 + Math.floor(Math.random() * 9000));
       if (!one('SELECT 1 FROM users WHERE pseudo = ? COLLATE NOCASE AND tag = ?', name, candidate)) tag = candidate;

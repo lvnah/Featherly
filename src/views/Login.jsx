@@ -8,6 +8,7 @@ export default function Login({ toast }) {
   const [mode, setMode] = useState('login');
   const [pseudo, setPseudo] = useState('');
   const [password, setPassword] = useState('');
+  const [tag, setTag] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -17,7 +18,7 @@ export default function Login({ toast }) {
     setBusy(true);
     try {
       if (mode === 'register') {
-        await register(pseudo, password);
+        await register(pseudo, password, tag);
       } else {
         await login(pseudo, password);
       }
@@ -67,6 +68,19 @@ export default function Login({ toast }) {
               onChange={(e) => setPseudo(e.target.value)}
             />
           </label>
+          {mode === 'register' && (
+            <label className="flex flex-col gap-2 text-xs font-bold uppercase tracking-widest text-slate-500">
+              Tag # (4 chiffres, facultatif)
+              <input
+                className="field normal-case tracking-normal font-mono"
+                placeholder="Laissez vide pour un tag automatique"
+                value={tag}
+                inputMode="numeric"
+                maxLength={4}
+                onChange={(e) => setTag(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              />
+            </label>
+          )}
           <label className="flex flex-col gap-2 text-xs font-bold uppercase tracking-widest text-slate-500">
             Mot de passe
             <input
