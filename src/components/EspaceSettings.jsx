@@ -131,8 +131,8 @@ function MembersTab({ serverId, toast }) {
   const s = useStore();
   const server = s.servers.find((x) => x.id === serverId);
   const roles = rolesOf(s, serverId);
-  const members = membersOf(s, serverId).filter((u) => u.id !== server.owner_id);
-  if (members.length === 0) return <p className="text-sm text-slate-500">Aucun autre membre dans cet espace.</p>;
+  const members = membersOf(s, serverId);
+  if (members.length === 0) return <p className="text-sm text-slate-500">Aucun membre dans cet espace.</p>;
   return (
     <div className="flex flex-col gap-2 rounded-3xl bg-slate-50 p-4">
       {members.map((u) => {
@@ -151,9 +151,11 @@ function MembersTab({ serverId, toast }) {
                 <option key={r.id} value={r.id}>{r.name}</option>
               ))}
             </select>
-            <button className="btn-danger !py-2" onClick={() => window.confirm(`Exclure ${u.pseudo} de l’espace ?`) && run(toast, () => kickMember(serverId, u.id), 'Membre exclu')}>
-              Exclure
-            </button>
+            {u.id !== server.owner_id && (
+              <button className="btn-danger !py-2" onClick={() => window.confirm(`Exclure ${u.pseudo} de l’espace ?`) && run(toast, () => kickMember(serverId, u.id), 'Membre exclu')}>
+                Exclure
+              </button>
+            )}
           </div>
         );
       })}

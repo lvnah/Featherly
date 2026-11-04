@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  canManageChannels, deleteChannel, friendshipBetween, getMe, getUser, isFriend, isMember, joinVoice, kickMember,
+  roleOf, canManageChannels, deleteChannel, friendshipBetween, getMe, getUser, isFriend, isMember, joinVoice, kickMember,
   leaveVoice, membersOf, membership, roleColorOf, roleNameOf, roleRank, rolesOf, sendFriendRequest, sendMessage,
   assignRole, deleteMessage,
 } from '../lib/store';
@@ -37,14 +37,16 @@ export function memberMenuItems({ s, me, serverId, userId, go, openModal, toast 
     }
     items.push({ label: 'Signaler', danger: true, onClick: () => openModal('report', { userId, serverId }) });
   }
-  if (srv?.owner_id === me.id && userId !== me.id) {
+  if (srv?.owner_id === me.id) {
     const current = membership(s, serverId, userId)?.role_ids[0] ?? null;
     items.push({ separator: true }, { header: 'Rôles' });
     items.push({ label: 'Aucun rôle', checked: current === null, onClick: () => run(toast, () => assignRole(serverId, userId, null), 'Rôle retiré') });
     rolesOf(s, serverId).forEach((r) =>
       items.push({ label: r.name, checked: current === r.id, onClick: () => run(toast, () => assignRole(serverId, userId, r.id), 'Rôle modifié') }),
     );
-    items.push({ separator: true }, { label: 'Expulser de l’espace', danger: true, onClick: () => run(toast, () => kickMember(serverId, userId), 'Membre expulsé') });
+    if (userId !== me.id) {
+      items.push({ separator: true }, { label: 'Expulser de l’espace', danger: true, onClick: () => run(toast, () => kickMember(serverId, userId), 'Membre expulsé') });
+    }
   }
   return items;
 }
@@ -135,13 +137,19 @@ export default function ServerView({ serverId, channelId, goHome }) {
   };
 
   // Groupes en ligne par rôle (ex. « OWNER — 1 »), puis hors ligne.
+  // Un groupe par rôle (dans l'ordre des rôles), les membres sans rôle en dernier.
   const onlineGroups = [];
   onlineMembers.forEach((u) => {
-    const label = roleNameOf(s, serverId, u.id).toUpperCase();
-    const group = onlineGroups.find((g) => g.label === label);
-    if (group) group.users.push(u);
-    else onlineGroups.push({ label, color: roleColorOf(s, serverId, u.id), users: [u] });
+    const role = roleOf(s, serverId, u.id);
+    const key = role?.id ?? 'none';
+    let group = onlineGroups.find((g) => g.key === key);
+    if (!group) {
+      group = { key, label: role ? role.name.toUpperCase() : null, color: role?.color ?? '#64748b', users: [] };
+      onlineGroups.push(group);
+    }
+    group.users.push(u);
   });
+  onlineGroups.sort((a, b) => (a.key === 'none') - (b.key === 'none'));
 
   const membersPanel = (
     <div className="flex flex-col gap-4">
@@ -149,9 +157,11 @@ export default function ServerView({ serverId, channelId, goHome }) {
         <p className="text-xs font-bold uppercase tracking-wide text-brand-600">En ligne — {onlineMembers.length}</p>
         {onlineGroups.map((g) => (
           <div key={g.label} className="flex flex-col gap-2">
-            <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: g.color || '#64748b' }}>
-              {g.label} — {g.users.length}
-            </p>
+            {g.label && (
+              <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: g.color }}>
+                {g.label} — {g.users.length}
+              </p>
+            )}
             {g.users.map(memberRow)}
           </div>
         ))}
