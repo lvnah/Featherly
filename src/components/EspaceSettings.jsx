@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { deleteRole, deleteServer, getMe, kickMember, membersOf, membership, rolesOf, assignRole, updateInvite, updateRole, updateServerIcon, createRole } from '../lib/store';
 import { Avatar, ColorDiamonds, ErrorLine, useStore, useUI } from './ui';
+import { fileToDataUrl, ICON_OPTS } from '../lib/images';
 import { fullName } from '../lib/util';
 import { ROLE_COLORS } from '../lib/util';
 import { run } from '../views/ServerView';
@@ -205,20 +206,39 @@ function ManageTab({ serverId, toast, onDeleted }) {
   const s = useStore();
   const server = s.servers.find((x) => x.id === serverId);
   const [icon, setIcon] = useState(server.icon || '');
+  const [error, setError] = useState('');
+  const pick = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      setIcon(await fileToDataUrl(file, ICON_OPTS));
+      setError('');
+    } catch (err) {
+      setError(err.message);
+    }
+  };
   return (
     <div className="flex flex-col gap-6">
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
-          run(toast, () => updateServerIcon(serverId, icon), 'Icône mise à jour');
+          await run(toast, () => updateServerIcon(serverId, icon), 'Icône mise à jour');
         }}
-        className="flex flex-col gap-3 rounded-3xl bg-slate-50 p-5"
+        className="flex flex-col gap-4 rounded-3xl bg-slate-50 p-5"
       >
         <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Icône de l’espace</p>
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <input className="field" placeholder="https://…" value={icon} onChange={(e) => setIcon(e.target.value)} />
-          <button type="submit" className="btn-primary" disabled={!icon.trim()}>Enregistrer</button>
+        <div className="flex items-center gap-4">
+          <span className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-brand-400 to-brand-700 text-2xl font-bold text-white">
+            {icon ? <img src={icon} alt="" className="h-full w-full object-cover" /> : server.name.charAt(0).toUpperCase()}
+          </span>
+          <label className="btn-ghost cursor-pointer">
+            Importer une image
+            <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={pick} />
+          </label>
+          <button type="submit" className="btn-primary" disabled={!icon}>Enregistrer</button>
         </div>
+        <ErrorLine>{error}</ErrorLine>
       </form>
       <div className="flex flex-col gap-3 rounded-3xl border border-red-100 bg-red-50/60 p-5">
         <p className="text-xs font-bold uppercase tracking-widest text-red-600">Suppression définitive</p>

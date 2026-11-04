@@ -55,10 +55,10 @@ export function Avatar({ user, size = 'md', showStatus = false, className = '' }
   return (
     <div className={`relative shrink-0 ${dims} ${className}`}>
       {user?.avatar && !broken ? (
-        <img src={user.avatar} alt="" onError={() => setBroken(true)} className="h-full w-full rounded-2xl object-cover" />
+        <img src={user.avatar} alt="" onError={() => setBroken(true)} className="h-full w-full rounded-full object-cover" />
       ) : (
         <div
-          className="flex h-full w-full items-center justify-center rounded-2xl font-bold text-white"
+          className="flex h-full w-full items-center justify-center rounded-full font-bold text-white"
           style={{ background: avatarGradient(user?.id || user?.pseudo) }}
         >
           {letter}

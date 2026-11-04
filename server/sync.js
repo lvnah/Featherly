@@ -14,8 +14,8 @@ export function publicUser(u) {
     is_plus: u.is_plus,
     is_admin: u.is_admin ?? 0,
     banner:
-      u.banner_type === 'url'
-        ? { type: 'url', value: u.banner_value }
+      u.banner_type === 'image' || u.banner_type === 'url'
+        ? { type: 'image', value: u.banner_value }
         : { type: 'gradient', index: Number(u.banner_value) || 0 },
     last_activity: u.last_activity,
   };

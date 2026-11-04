@@ -67,9 +67,15 @@ const randomCode = () => {
   } while (one('SELECT 1 FROM servers WHERE invite_code = ?', code));
   return code;
 };
-const httpUrl = (value, max, message) => {
-  const v = String(value ?? '').trim().slice(0, max);
-  if (v && !/^https?:\/\//i.test(v)) fail(message);
+// Images envoyées depuis le navigateur (data URL redimensionnée côté client).
+// Limites de taille : ce sont des miniatures, elles sont renvoyées à chaque synchronisation.
+const IMAGE_LIMITS = { avatar: 60_000, banner: 160_000, icon: 60_000 };
+const imageData = (value, kind) => {
+  const v = String(value ?? '').trim();
+  if (!v) return '';
+  if (v.length > IMAGE_LIMITS[kind] || !/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(v)) {
+    fail('Image invalide ou trop lourde. Choisissez une image plus petite (PNG, JPEG, WebP ou GIF).');
+  }
   return v;
 };
 
@@ -87,15 +93,16 @@ const handlers = {
     if (one('SELECT 1 FROM users WHERE pseudo = ? COLLATE NOCASE AND tag = ? AND id <> ?', pseudo, tag, me.id)) {
       fail('Ce pseudo et ce tag sont déjà utilisés.', 409);
     }
-    const avatar = p.avatar !== undefined ? httpUrl(p.avatar, 500, 'L’avatar doit être une URL http(s).') : me.avatar;
+    const avatar = p.avatar !== undefined ? imageData(p.avatar, 'avatar') : me.avatar;
     const bio = p.bio !== undefined ? String(p.bio).slice(0, 190) : me.bio;
     let bannerType = me.banner_type;
     let bannerValue = me.banner_value;
     if (p.banner !== undefined) {
-      if (p.banner.type === 'url') {
+      if (p.banner.type === 'image') {
         if (!me.is_plus) fail('La bannière personnalisée est réservée aux membres PLUS.', 403);
-        bannerType = 'url';
-        bannerValue = httpUrl(p.banner.value, 500, 'La bannière doit être une URL http(s).');
+        bannerType = 'image';
+        bannerValue = imageData(p.banner.value, 'banner');
+        if (!bannerValue) fail('Image de bannière manquante.');
       } else {
         bannerType = 'gradient';
         bannerValue = String(Math.max(0, Math.min(5, Number(p.banner.index) || 0)));
@@ -169,7 +176,7 @@ const handlers = {
 
   createServer(me, p) {
     const name = text(p.name, 1, 16, 'Le nom doit faire entre 1 et 16 caractères.');
-    const icon = httpUrl(p.icon, 500, 'L’icône doit être une URL http(s).');
+    const icon = imageData(p.icon, 'icon');
     let code;
     if (String(p.customCode ?? '').trim()) {
       if (!me.is_plus) fail('Le code personnalisé est réservé aux membres PLUS.', 403);
@@ -293,8 +300,8 @@ const handlers = {
 
   updateServerIcon(me, p) {
     requireOwner(p.serverId, me);
-    const icon = httpUrl(p.icon, 500, 'URL invalide.');
-    if (!icon) fail('URL invalide.');
+    const icon = imageData(p.icon, 'icon');
+    if (!icon) fail('Image manquante.');
     run('UPDATE servers SET icon = ? WHERE id = ?', icon, p.serverId);
   },
 

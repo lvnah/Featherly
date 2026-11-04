@@ -5,6 +5,7 @@ import {
   assignRole, deleteMessage,
 } from '../lib/store';
 import { useStore, useUI, Avatar, EmptyState, ErrorLine, Icon } from '../components/ui';
+import PlusBadge from '../components/PlusBadge';
 import { formatStamp, isOnline } from '../lib/util';
 
 // Exécute une action async et affiche le résultat dans un toast.
@@ -129,7 +130,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
       >
         <Avatar user={u} size="sm" showStatus />
         <span className="min-w-0">
-          <span className="block truncate text-sm font-bold" style={{ color }}>{u.pseudo}</span>
+          <span className="flex items-center gap-1.5 truncate text-sm font-bold" style={{ color }}>{u.pseudo}{u.is_plus ? <PlusBadge className="!h-4 !w-4" /> : null}</span>
           <span className="block truncate text-[11px] text-slate-400">#{u.tag}</span>
         </span>
       </button>
@@ -278,6 +279,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
                           <button onClick={() => openModal('mini', { userId: author.id, serverId })} onContextMenu={(e) => memberMenu(e, author.id)} className="font-bold hover:underline" style={{ color }}>
                             {author.pseudo}
                           </button>
+                          {author.is_plus ? <PlusBadge /> : null}
                           <span className="pill">#{author.tag}</span>
                         </div>
                         <p className="mt-1 whitespace-pre-wrap break-words text-sm text-slate-700">{m.content}</p>
