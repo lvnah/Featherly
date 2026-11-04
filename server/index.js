@@ -7,6 +7,9 @@ import { userFromToken } from './auth.js';
 import { buildSnapshot } from './sync.js';
 import { HttpError, login, logout, register, runAction } from './actions.js';
 import { db } from './db.js';
+import { ensureAdmin } from './seed.js';
+
+ensureAdmin();
 
 const PORT = Number(process.env.PORT || 3001);
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');

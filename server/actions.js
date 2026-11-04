@@ -16,6 +16,7 @@ const fail = (message, status = 400) => {
   throw new HttpError(status, message);
 };
 const one = (sql, ...p) => db.prepare(sql).get(...p);
+const all = (sql, ...p) => db.prepare(sql).all(...p);
 const run = (sql, ...p) => db.prepare(sql).run(...p);
 const newId = (prefix) => `${prefix}_${randomBytes(8).toString('hex')}`;
 const now = () => Date.now();
@@ -36,6 +37,9 @@ const transaction = (fn) => {
   }
 };
 
+const requireAdmin = (me) => {
+  if (!me.is_admin) fail('Accès réservé aux administrateurs.', 403);
+};
 const getServer = (id) => one('SELECT * FROM servers WHERE id = ?', id);
 const isMember = (serverId, userId) =>
   !!one('SELECT 1 FROM memberships WHERE server_id = ? AND user_id = ?', serverId, userId);
@@ -62,16 +66,6 @@ const randomCode = () => {
     code = randomBytes(5).toString('hex').toUpperCase();
   } while (one('SELECT 1 FROM servers WHERE invite_code = ?', code));
   return code;
-};
-const cleanChannelName = (name) => {
-  const slug = String(name ?? '')
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^\p{L}\p{N}_-]/gu, '')
-    .slice(0, 24);
-  if (!slug) fail('Nom de salon invalide.');
-  return slug;
 };
 const httpUrl = (value, max, message) => {
   const v = String(value ?? '').trim().slice(0, max);
@@ -213,9 +207,11 @@ const handlers = {
 
   createChannel(me, p) {
     if (!canManageChannels(p.serverId, me.id)) fail('Permission insuffisante.', 403);
+    const raw = String(p.name ?? '').trim();
+    if (!/^[a-zA-Z0-9-]{1,16}$/.test(raw)) fail('Nom invalide (uniquement lettres, chiffres, tirets, max 16 caractères).');
     run(
       'INSERT INTO channels (id, server_id, name, type, created_at) VALUES (?, ?, ?, ?, ?)',
-      newId('c'), p.serverId, cleanChannelName(p.name), p.type === 'voice' ? 'voice' : 'text', now(),
+      newId('c'), p.serverId, raw.toLowerCase(), p.type === 'voice' ? 'voice' : 'text', now(),
     );
   },
 
@@ -257,14 +253,66 @@ const handlers = {
     );
   },
 
-  toggleRole(me, p) {
+  // Un seul rôle par membre (roleId vide = retirer les rôles), comme assign_role de server.php.
+  assignRole(me, p) {
     requireOwner(p.serverId, me);
     if (!isMember(p.serverId, p.userId)) fail('Ce membre ne fait pas partie de l’espace.', 404);
+    run('DELETE FROM member_roles WHERE server_id = ? AND user_id = ?', p.serverId, p.userId);
+    if (p.roleId) {
+      const role = one('SELECT * FROM roles WHERE id = ? AND server_id = ?', p.roleId, p.serverId);
+      if (!role) fail('Rôle introuvable.', 404);
+      run('INSERT INTO member_roles (server_id, user_id, role_id) VALUES (?, ?, ?)', p.serverId, p.userId, p.roleId);
+    }
+  },
+
+  updateRole(me, p) {
+    requireOwner(p.serverId, me);
     const role = one('SELECT * FROM roles WHERE id = ? AND server_id = ?', p.roleId, p.serverId);
     if (!role) fail('Rôle introuvable.', 404);
-    const has = one('SELECT 1 FROM member_roles WHERE server_id = ? AND user_id = ? AND role_id = ?', p.serverId, p.userId, p.roleId);
-    if (has) run('DELETE FROM member_roles WHERE server_id = ? AND user_id = ? AND role_id = ?', p.serverId, p.userId, p.roleId);
-    else run('INSERT INTO member_roles (server_id, user_id, role_id) VALUES (?, ?, ?)', p.serverId, p.userId, p.roleId);
+    const name = text(p.name ?? role.name, 1, 20, 'Le nom du rôle doit faire entre 1 et 20 caractères.');
+    const color = /^#[0-9a-f]{6}$/i.test(p.color ?? '') ? p.color : role.color;
+    run('UPDATE roles SET name = ?, color = ?, can_manage_channels = ? WHERE id = ?', name, color, p.can_manage_channels ? 1 : 0, role.id);
+  },
+
+  deleteRole(me, p) {
+    requireOwner(p.serverId, me);
+    run('DELETE FROM roles WHERE id = ? AND server_id = ?', p.roleId, p.serverId);
+  },
+
+  // Supprimer un message : l'auteur ou le propriétaire de l'espace.
+  deleteMessage(me, p) {
+    const msg = one(
+      'SELECT m.id, m.user_id, c.server_id FROM messages m JOIN channels c ON c.id = m.channel_id WHERE m.id = ?',
+      p.messageId,
+    );
+    if (!msg) fail('Message introuvable.', 404);
+    const srv = getServer(msg.server_id);
+    if (srv.owner_id !== me.id && msg.user_id !== me.id) fail('Action non autorisée.', 403);
+    run('DELETE FROM messages WHERE id = ?', msg.id);
+  },
+
+  updateServerIcon(me, p) {
+    requireOwner(p.serverId, me);
+    const icon = httpUrl(p.icon, 500, 'URL invalide.');
+    if (!icon) fail('URL invalide.');
+    run('UPDATE servers SET icon = ? WHERE id = ?', icon, p.serverId);
+  },
+
+  deleteServer(me, p) {
+    requireOwner(p.serverId, me);
+    run('DELETE FROM servers WHERE id = ?', p.serverId);
+  },
+
+  // Code personnalisé : réservé au propriétaire PLUS.
+  updateInvite(me, p) {
+    requireOwner(p.serverId, me);
+    if (!me.is_plus) fail('Le code personnalisé est réservé aux membres PLUS.', 403);
+    const code = String(p.code ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (code.length < 4 || code.length > 20) fail('Code : 4 à 20 caractères (lettres et chiffres).');
+    if (one('SELECT 1 FROM servers WHERE invite_code = ? AND id <> ?', code, p.serverId)) {
+      fail('Ce code est déjà utilisé par un autre espace.', 409);
+    }
+    run('UPDATE servers SET invite_code = ? WHERE id = ?', code, p.serverId);
   },
 
   kickMember(me, p) {
@@ -283,7 +331,61 @@ const handlers = {
     const reason = text(p.reason, 3, 300, 'Motif : entre 3 et 300 caractères.');
     if (p.targetId === me.id) fail('Vous ne pouvez pas vous signaler vous-même.');
     if (!one('SELECT 1 FROM users WHERE id = ?', p.targetId)) fail('Utilisateur introuvable.', 404);
-    run('INSERT INTO reports (id, reporter_id, target_user_id, reason, created_at) VALUES (?, ?, ?, ?, ?)', newId('rp'), me.id, p.targetId, reason, now());
+    run(
+      'INSERT INTO reports (id, reporter_id, target_user_id, reason, created_at, server_id) VALUES (?, ?, ?, ?, ?, ?)',
+      newId('rp'), me.id, p.targetId, reason, now(), p.serverId ?? null,
+    );
+  },
+
+  // ----- Administration (réservée à is_admin = 1) -----
+  adminListUsers(me) {
+    requireAdmin(me);
+    return all('SELECT id, pseudo, tag, is_plus, is_admin, created_at, last_activity FROM users ORDER BY created_at DESC');
+  },
+
+  adminSetPlus(me, p) {
+    requireAdmin(me);
+    run('UPDATE users SET is_plus = ? WHERE id = ?', p.value ? 1 : 0, p.userId);
+  },
+
+  adminDeleteUser(me, p) {
+    requireAdmin(me);
+    if (p.userId === me.id) fail('Vous ne pouvez pas supprimer votre propre compte ici.');
+    run('DELETE FROM users WHERE id = ?', p.userId);
+  },
+
+  adminListServers(me) {
+    requireAdmin(me);
+    return all(
+      `SELECT s.id, s.name, s.icon, s.is_public, s.invite_code, s.created_at, u.pseudo AS owner_pseudo, u.tag AS owner_tag,
+         (SELECT COUNT(*) FROM memberships m WHERE m.server_id = s.id) AS members
+       FROM servers s JOIN users u ON u.id = s.owner_id ORDER BY s.created_at DESC`,
+    );
+  },
+
+  adminDeleteServer(me, p) {
+    requireAdmin(me);
+    run('DELETE FROM servers WHERE id = ?', p.serverId);
+  },
+
+  adminListReports(me) {
+    requireAdmin(me);
+    return all(
+      `SELECT r.id, r.reason, r.created_at, r.server_id,
+         ru.pseudo AS reporter_pseudo, ru.tag AS reporter_tag,
+         tu.id AS target_id, tu.pseudo AS target_pseudo, tu.tag AS target_tag,
+         s.name AS server_name
+       FROM reports r
+       LEFT JOIN users ru ON ru.id = r.reporter_id
+       LEFT JOIN users tu ON tu.id = r.target_user_id
+       LEFT JOIN servers s ON s.id = r.server_id
+       ORDER BY r.created_at DESC LIMIT 200`,
+    );
+  },
+
+  adminDismissReport(me, p) {
+    requireAdmin(me);
+    run('DELETE FROM reports WHERE id = ?', p.reportId);
   },
 };
 
@@ -317,7 +419,13 @@ export function register({ pseudo, password }) {
 
 export function login({ fullName, password }) {
   const [pseudo = '', tag = ''] = String(fullName ?? '').split('#').map((x) => x.trim());
-  const user = one('SELECT * FROM users WHERE pseudo = ? COLLATE NOCASE AND tag = ?', pseudo, tag);
+  // Avec tag : Pseudo#1234. Sans tag : accepté seulement si le pseudo est unique.
+  const user = tag
+    ? one('SELECT * FROM users WHERE pseudo = ? COLLATE NOCASE AND tag = ?', pseudo, tag)
+    : (() => {
+        const rows = all('SELECT * FROM users WHERE pseudo = ? COLLATE NOCASE', pseudo);
+        return rows.length === 1 ? rows[0] : null;
+      })();
   if (!user || typeof password !== 'string' || !verifyPassword(password, user.password_hash)) {
     fail('Pseudo#tag ou mot de passe incorrect.', 401);
   }

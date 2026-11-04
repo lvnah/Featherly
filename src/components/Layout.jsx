@@ -16,6 +16,7 @@ export default function Layout({ view, children }) {
   const me = getMe(s);
   const [drawer, setDrawer] = useState(false);
   const servers = serversOf(s, me.id);
+  const nav = me.is_admin ? [...NAV, { key: 'admin', label: 'Admin', icon: 'bolt', view: { name: 'admin' } }] : NAV;
 
   const navigate = (v) => {
     go(v);
@@ -40,7 +41,7 @@ export default function Layout({ view, children }) {
         </div>
 
         <nav className="flex flex-col gap-1">
-          {NAV.map((item) => (
+          {nav.map((item) => (
             <button
               key={item.key}
               onClick={() => (item.key === 'settings' ? navigate({ name: 'profile', userId: me.id }) : navigate(item.view))}

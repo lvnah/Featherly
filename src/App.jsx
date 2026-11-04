@@ -10,6 +10,7 @@ import ServerView from './views/ServerView';
 import MessagesView from './views/MessagesView';
 import FriendsView from './views/FriendsView';
 import ProfileView from './views/ProfileView';
+import AdminView from './views/AdminView';
 
 // Routage par état. La vue « espace » s'affiche plein écran (sans sidebar), comme la capture.
 export default function App() {
@@ -82,6 +83,7 @@ export default function App() {
         {view.name === 'home' && <Home />}
         {view.name === 'messages' && <MessagesView withId={view.withId} />}
         {view.name === 'friends' && <FriendsView />}
+        {view.name === 'admin' && <AdminView />}
         {view.name === 'profile' && <ProfileView key={view.userId} userId={view.userId} goBack={goHome} />}
       </Layout>
     );

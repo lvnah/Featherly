@@ -69,11 +69,26 @@ Le fichier `data/hevenly.sqlite` contient les utilisateurs (mots de passe haché
 les espaces, rôles, salons, messages, amis, messages privés, connexions vocales et signalements.
 Sauvegardez ce fichier pour conserver les données (ou utilisez `DB_PATH` pour le placer ailleurs).
 
+## Compte administrateur
+
+Le compte **`lvnah#0000`** (statut administrateur) est créé au démarrage s'il n'existe pas, à condition que
+`ADMIN_PASSWORD` soit défini (8 caractères minimum). Le mot de passe n'est jamais stocké dans le code.
+
+```bash
+ADMIN_PASSWORD='votre-mot-de-passe' npm start
+```
+
+Connexion : pseudo `lvnah` (le tag est facultatif car le pseudo est unique) et ce mot de passe.
+La page **Admin**, visible uniquement pour ce compte, permet de gérer les utilisateurs (PLUS, suppression),
+les espaces (suppression) et les signalements (classer sans suite).
+
 ## Règles importantes
 
 - Les règles sont vérifiées **côté serveur** : le client ne fait qu'afficher les permissions.
 - Un message privé nécessite une amitié acceptée (ou un historique de messages).
-- Seul le propriétaire gère les rôles, les codes d'invitation et les expulsions.
+- Seul le propriétaire gère les rôles (un rôle par membre), les codes d'invitation, l'icône, les expulsions et la suppression de l'espace.
+- Un message peut être supprimé par son auteur ou par le propriétaire de l'espace.
+- Les noms de salons suivent la règle de `server.php` : lettres, chiffres et tirets, 16 caractères maximum.
 - Les codes d'invitation personnalisés, les tags libres et les bannières URL sont réservés aux membres PLUS.
 - Le statut PLUS est une simulation : aucun paiement n'est géré.
 

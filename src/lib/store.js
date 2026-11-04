@@ -148,6 +148,21 @@ export const sendMessage = (channelId, content) => act('sendMessage', { channelI
 export const joinVoice = (channelId) => act('joinVoice', { channelId });
 export const leaveVoice = () => act('leaveVoice');
 export const createRole = (serverId, role) => act('createRole', { serverId, ...role });
-export const toggleRole = (serverId, userId, roleId) => act('toggleRole', { serverId, userId, roleId });
 export const kickMember = (serverId, userId) => act('kickMember', { serverId, userId });
-export const reportUser = (targetId, reason) => act('reportUser', { targetId, reason });
+export const reportUser = (targetId, reason, serverId = null) => act('reportUser', { targetId, reason, serverId });
+export const assignRole = (serverId, userId, roleId) => act('assignRole', { serverId, userId, roleId });
+export const updateRole = (serverId, roleId, role) => act('updateRole', { serverId, roleId, ...role });
+export const deleteRole = (serverId, roleId) => act('deleteRole', { serverId, roleId });
+export const deleteMessage = (messageId) => act('deleteMessage', { messageId });
+export const updateServerIcon = (serverId, icon) => act('updateServerIcon', { serverId, icon });
+export const deleteServer = (serverId) => act('deleteServer', { serverId });
+export const updateInvite = (serverId, code) => act('updateInvite', { serverId, code });
+
+// Administration
+export const adminListUsers = () => act('adminListUsers');
+export const adminSetPlus = (userId, value) => act('adminSetPlus', { userId, value });
+export const adminDeleteUser = (userId) => act('adminDeleteUser', { userId });
+export const adminListServers = () => act('adminListServers');
+export const adminDeleteServer = (serverId) => act('adminDeleteServer', { serverId });
+export const adminListReports = () => act('adminListReports');
+export const adminDismissReport = (reportId) => act('adminDismissReport', { reportId });

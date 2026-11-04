@@ -147,9 +147,11 @@ function PublicProfile({ user, goBack }) {
                 <p className={`text-sm font-semibold ${isOnline(user) ? 'text-brand-600' : 'text-slate-400'}`}>{isOnline(user) ? 'En ligne' : 'Hors ligne'}</p>
               </div>
             </div>
-            <p className="text-sm text-slate-600">{user.bio || 'Aucune biographie.'}</p>
-            <p className="text-xs text-slate-400">Présent sur {roles} espace(s)</p>
-            {user.id !== me.id && (
+            <div className="flex flex-col gap-2 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+              <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-400">À propos</h3>
+              <p className="text-sm text-slate-700">{user.bio || "Cet utilisateur n’a pas encore rédigé de biographie."}</p>
+            </div>
+                        {user.id !== me.id && (
               <div className="flex flex-wrap gap-2 pt-2">
                 <button className="btn-primary" onClick={() => go({ name: 'messages', withId: user.id })}>Envoyer un message</button>
                 {!friend && (

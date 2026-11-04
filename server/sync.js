@@ -12,6 +12,7 @@ export function publicUser(u) {
     avatar: u.avatar,
     bio: u.bio,
     is_plus: u.is_plus,
+    is_admin: u.is_admin ?? 0,
     banner:
       u.banner_type === 'url'
         ? { type: 'url', value: u.banner_value }
