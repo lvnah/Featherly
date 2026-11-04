@@ -4,6 +4,7 @@ import { api, getToken, setToken } from './api';
 
 let state = null;
 let lastJson = null;
+let version = 0; // dernière version reçue du serveur : rien n'est re-téléchargé si elle n'a pas changé
 const listeners = new Set();
 
 export function getState() {
@@ -18,6 +19,7 @@ export function subscribe(listener) {
 function emit(next, json) {
   state = next;
   lastJson = json;
+  if (!next) version = 0;
   listeners.forEach((l) => l());
 }
 
@@ -28,10 +30,10 @@ export async function refresh() {
     return;
   }
   try {
-    const snap = await api('/api/sync');
-    const json = JSON.stringify(snap);
-    if (json === lastJson) return;
-    emit({ ...snap, session: { user_id: snap.me.id } }, json);
+    const snap = await api(`/api/sync?v=${version}`);
+    if (snap.unchanged) return;
+    version = snap.v;
+    emit({ ...snap, session: { user_id: snap.me.id } }, null);
   } catch (err) {
     if (err.status === 401) {
       setToken(null);
@@ -132,7 +134,6 @@ export function hasDmHistory(s, a, b) {
 // ---------- Actions (aliases vers l'API) ----------
 
 export const updateProfile = (patch) => act('updateProfile', patch);
-export const togglePlus = () => act('togglePlus');
 export const sendFriendRequest = (targetId) => act('sendFriendRequest', { targetId });
 export const sendFriendRequestByTag = (query) => act('sendFriendRequest', { query });
 export const respondFriendRequest = (id, accept) => act('respondFriendRequest', { id, accept });

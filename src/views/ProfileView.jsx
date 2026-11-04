@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getMe, getUser, friendshipBetween, isFriend, sendFriendRequest, togglePlus, updateProfile } from '../lib/store';
+import { getMe, getUser, friendshipBetween, isFriend, sendFriendRequest, updateProfile } from '../lib/store';
 import { useStore, useUI, Avatar, Banner, EmptyState, ErrorLine, Icon } from '../components/ui';
 import { BANNER_GRADIENTS, bannerStyle, fullName, isOnline } from '../lib/util';
 import { fileToDataUrl, AVATAR_OPTS, BANNER_OPTS } from '../lib/images';
@@ -72,13 +72,7 @@ function OwnProfile() {
 
           <div className="flex flex-col gap-5 px-7 pb-7">
             <div className="flex min-h-12 items-center justify-end pt-3">
-              {me.is_plus ? (
-                <span className="rounded-full bg-brand-100 px-3 py-1.5 text-xs font-bold text-brand-700">Pass PLUS Actif</span>
-              ) : (
-                <button type="button" onClick={() => run(toast, () => togglePlus(), 'Statut PLUS mis à jour')} className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200">
-                  Activer PLUS (simulation)
-                </button>
-              )}
+              {me.is_plus ? <span className="rounded-full bg-brand-100 px-3 py-1.5 text-xs font-bold text-brand-700">Pass PLUS Actif</span> : null}
             </div>
 
             <div className="grid grid-cols-3 gap-4">

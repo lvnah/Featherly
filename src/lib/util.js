@@ -7,7 +7,7 @@ export const ROLE_COLORS = ['#ef4444', '#38bdf8', '#a78bfa', '#f472b6', '#facc15
 
 // Bannières par défaut (index 0 = vert de la page Paramètres).
 export const BANNER_GRADIENTS = [
-  'linear-gradient(120deg,#22c55e 0%,#15803d 45%,#052e16 100%)',
+  'linear-gradient(120deg,#007454 0%,#00412f 45%,#002f22 100%)',
   'linear-gradient(135deg,#bae6fd 0%,#c7d2fe 100%)',
   'linear-gradient(135deg,#6366f1 0%,#a855f7 100%)',
   'linear-gradient(135deg,#f97316 0%,#ec4899 100%)',
@@ -34,7 +34,7 @@ export function bannerStyle(user) {
 
 // Dégradés saturés pour les avatars sans photo (la lettre doit rester lisible en blanc).
 const AVATAR_GRADIENTS = [
-  'linear-gradient(135deg,#22c55e,#15803d)',
+  'linear-gradient(135deg,#007454,#00412f)',
   'linear-gradient(135deg,#6366f1,#a855f7)',
   'linear-gradient(135deg,#0ea5e9,#2563eb)',
   'linear-gradient(135deg,#f97316,#ec4899)',

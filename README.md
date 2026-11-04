@@ -35,7 +35,6 @@ Variables d'environnement facultatives :
 | --- | --- | --- |
 | `PORT` | `3001` | Port HTTP de l'API et de l'interface en production |
 | `DB_PATH` | `data/hevenly.sqlite` | Emplacement du fichier SQLite |
-| `ALLOW_PLUS_SIMULATION` | activé | Mettre `0` pour désactiver le bouton « Activer PLUS (simulation) » |
 
 ## Architecture
 
@@ -97,9 +96,26 @@ les espaces (suppression) et les signalements (classer sans suite).
 - Les codes d'invitation personnalisés, les tags libres et les bannières URL sont réservés aux membres PLUS.
 - Le statut PLUS est une simulation : aucun paiement n'est géré.
 
+## Vocal
+
+Le vocal utilise WebRTC : le micro est capté quand on rejoint un salon vocal, et chaque membre du salon est relié
+aux autres (maillage, adapté à quelques personnes). La signalisation passe par l'API (`/api/voice/*`).
+Le navigateur demande le micro : il faut HTTPS (ou localhost). Un serveur TURN n'est pas configuré : certaines
+connexions derrière un réseau très restrictif ne pourront pas s'établir.
+
+## Consommation réseau
+
+- La synchronisation est toutes les 3 secondes, mais le serveur ne renvoie les données que si quelque chose a changé
+  (numéro de version). Sans changement, la réponse ne fait que quelques octets.
+- Les messages de signalisation vocale ne circulent que pendant un appel.
+- Les fichiers du build sont mis en cache par le navigateur.
+
+## Administration
+
+Le panel est accessible sur `/admin` (réservé aux comptes administrateurs).
+
 ## Limites connues
 
-- Synchronisation par interrogation toutes les 2 secondes (pas de WebSocket) : les messages apparaissent avec un léger délai.
-- Le vocal est uniquement un état affiché : il n'y a pas de flux audio.
+- Synchronisation par interrogation toutes les 3 secondes (pas de WebSocket) : les messages apparaissent avec un léger délai.
 - Pas de limitation de débit sur l'API ni de téléversement d'images : les avatars et bannières sont des URL.
 - Pas de tests automatisés dans le dépôt.
