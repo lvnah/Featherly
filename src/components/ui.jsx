@@ -2,35 +2,60 @@ import { createContext, useContext, useEffect, useState, useSyncExternalStore } 
 import { subscribe, getState } from '../lib/store';
 import { avatarGradient, bannerStyle, isOnline, ROLE_COLORS } from '../lib/util';
 
-// Contexte global : navigation, menus, modales, notifications.
 export const UIContext = createContext(null);
 export const useUI = () => useContext(UIContext);
 
-// Abonnement au store : le composant se rafraîchit à chaque changement (local ou autre onglet).
 export function useStore() {
   return useSyncExternalStore(subscribe, getState, getState);
+}
+
+const ICONS = {
+  home: 'M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z',
+  message: 'M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-4-1L3 21l2-5a8.4 8.4 0 0 1-2-5.5 8.5 8.5 0 0 1 17 0z',
+  users: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',
+  settings: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z',
+  bolt: 'M13 2 3 14h9l-1 8 10-12h-9l1-8z',
+  chat: 'M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-4-1L3 21l2-5a8.4 8.4 0 0 1-2-5.5 8.5 8.5 0 0 1 17 0z',
+  search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM21 21l-4.3-4.3',
+  send: 'M22 2 11 13M22 2l-7 20-4-9-9-4z',
+  hash: 'M4 9h16M4 15h16M10 3 8 21M16 3l-2 18',
+  speaker: 'M11 5 6 9H2v6h4l5 4zM15.5 8.5a5 5 0 0 1 0 7',
+  link: 'M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1 1M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1-1',
+  x: 'M18 6 6 18M6 6l12 12',
+  plus: 'M12 5v14M5 12h14',
+  back: 'M15 18l-6-6 6-6',
+  trash: 'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6',
+  flag: 'M4 22V4M4 4h12l-2 4 2 4H4',
+  logout: 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9',
+  arrow: 'M5 12h14M12 5l7 7-7 7',
+  user: 'M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
+  check: 'M20 6 9 17l-5-5',
+};
+
+export function Icon({ name, className = 'h-5 w-5' }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d={ICONS[name]} />
+    </svg>
+  );
 }
 
 export function Avatar({ user, size = 'md', showStatus = false, className = '' }) {
   const [broken, setBroken] = useState(false);
   const dims = {
     xs: 'h-6 w-6 text-[10px]',
-    sm: 'h-8 w-8 text-xs',
-    md: 'h-10 w-10 text-sm',
+    sm: 'h-9 w-9 text-xs',
+    md: 'h-11 w-11 text-sm',
     lg: 'h-20 w-20 text-2xl',
     xl: 'h-28 w-28 text-4xl',
   }[size];
   const online = isOnline(user);
   const letter = (user?.pseudo || '?').charAt(0).toUpperCase();
+  const dot = size === 'xs' ? 'h-2 w-2' : 'h-3 w-3';
   return (
     <div className={`relative shrink-0 ${dims} ${className}`}>
       {user?.avatar && !broken ? (
-        <img
-          src={user.avatar}
-          alt=""
-          onError={() => setBroken(true)}
-          className="h-full w-full rounded-2xl object-cover"
-        />
+        <img src={user.avatar} alt="" onError={() => setBroken(true)} className="h-full w-full rounded-2xl object-cover" />
       ) : (
         <div
           className="flex h-full w-full items-center justify-center rounded-2xl font-bold text-white"
@@ -41,9 +66,7 @@ export function Avatar({ user, size = 'md', showStatus = false, className = '' }
       )}
       {showStatus && (
         <span
-          className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-ink-900 ${
-            online ? 'bg-brand-500' : 'bg-slate-500'
-          }`}
+          className={`absolute -bottom-0.5 -right-0.5 ${dot} rounded-full border-2 border-white ${online ? 'bg-brand-500' : 'bg-slate-300'}`}
           title={online ? 'En ligne' : 'Hors ligne'}
         />
       )}
@@ -57,27 +80,20 @@ export function Banner({ user, className = '' }) {
 
 export function Modal({ open, title, onClose, children, width = 'max-w-md' }) {
   useEffect(() => {
-    if (!open) return;
+    if (!open) return undefined;
     const onKey = (e) => e.key === 'Escape' && onClose?.();
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
-
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="mobile-overlay absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div
-        role="dialog"
-        aria-modal="true"
-        className={`card relative max-h-[90dvh] w-full ${width} overflow-y-auto thin-scroll bg-ink-800/95 p-6`}
-      >
-        <div className="mb-5 flex items-center justify-between gap-4">
-          <h2 className="text-lg font-bold text-white">{title}</h2>
-          <button onClick={onClose} className="rounded-xl p-2 text-slate-400 hover:bg-white/10 hover:text-white" aria-label="Fermer">
-            ✕
-          </button>
-        </div>
+      <div className="mobile-overlay absolute inset-0 bg-slate-900/30 backdrop-blur-sm" onClick={onClose} />
+      <div role="dialog" aria-modal="true" className={`panel relative max-h-[90dvh] w-full ${width} overflow-y-auto thin-scroll p-6`}>
+        <button onClick={onClose} className="absolute right-5 top-5 z-10 rounded-full bg-white/90 p-2 text-slate-500 shadow-soft hover:text-slate-900" aria-label="Fermer">
+          <Icon name="x" className="h-4 w-4" />
+        </button>
+        {title && <h2 className="mb-5 pr-10 text-lg font-bold text-slate-900">{title}</h2>}
         {children}
       </div>
     </div>
@@ -97,20 +113,13 @@ export function ContextMenu({ x, y, items, onClose }) {
       window.removeEventListener('keydown', onKey);
     };
   }, [onClose]);
-
-  // Garde le menu dans la fenêtre.
-  const left = Math.min(x, window.innerWidth - 220);
+  const left = Math.min(x, window.innerWidth - 230);
   const top = Math.min(y, window.innerHeight - items.length * 40 - 16);
   return (
-    <div
-      role="menu"
-      style={{ left, top }}
-      onClick={(e) => e.stopPropagation()}
-      className="fixed z-[60] w-56 rounded-2xl border border-white/10 bg-ink-800/95 p-1.5 shadow-soft backdrop-blur-xl"
-    >
+    <div role="menu" style={{ left, top }} onClick={(e) => e.stopPropagation()} className="panel fixed z-[60] w-56 rounded-3xl p-1.5">
       {items.map((it, i) =>
         it.separator ? (
-          <div key={i} className="my-1 border-t border-white/5" />
+          <div key={i} className="my-1 border-t border-slate-100" />
         ) : (
           <button
             key={i}
@@ -120,11 +129,11 @@ export function ContextMenu({ x, y, items, onClose }) {
               onClose();
               it.onClick?.();
             }}
-            className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm transition disabled:opacity-40 ${
-              it.danger ? 'text-red-300 hover:bg-red-500/15' : 'text-slate-200 hover:bg-white/10'
+            className={`flex w-full items-center gap-2 rounded-2xl px-3 py-2 text-left text-sm transition disabled:opacity-40 ${
+              it.danger ? 'text-red-600 hover:bg-red-50' : 'text-slate-700 hover:bg-slate-100'
             }`}
           >
-            {it.icon && <span className="w-4 text-center">{it.icon}</span>}
+            {it.icon && <span className="w-4 text-center text-xs">{it.icon}</span>}
             <span className="truncate">{it.label}</span>
           </button>
         ),
@@ -133,19 +142,16 @@ export function ContextMenu({ x, y, items, onClose }) {
   );
 }
 
-// Sélecteur de couleur en losange.
 export function ColorDiamonds({ value, onChange }) {
   return (
-    <div className="flex flex-wrap gap-3 px-1">
+    <div className="flex flex-wrap gap-4 px-1">
       {ROLE_COLORS.map((c) => (
         <button
           key={c}
           type="button"
           onClick={() => onChange(c)}
           aria-label={`Couleur ${c}`}
-          className={`h-7 w-7 rotate-45 rounded-md transition ${
-            value === c ? 'scale-110 ring-2 ring-white ring-offset-2 ring-offset-ink-800' : 'opacity-70 hover:opacity-100'
-          }`}
+          className={`h-7 w-7 rotate-45 rounded-md transition ${value === c ? 'scale-110 ring-2 ring-slate-900 ring-offset-2' : 'opacity-70 hover:opacity-100'}`}
           style={{ background: c }}
         />
       ))}
@@ -153,17 +159,19 @@ export function ColorDiamonds({ value, onChange }) {
   );
 }
 
-export function EmptyState({ icon = '🌿', title, children }) {
+export function EmptyState({ icon = 'bolt', title, children }) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-3 p-10 text-center">
-      <div className="text-5xl">{icon}</div>
-      <h3 className="text-lg font-semibold text-white">{title}</h3>
-      {children && <div className="max-w-sm text-sm text-slate-400">{children}</div>}
+    <div className="flex flex-1 flex-col items-center justify-center gap-4 p-10 text-center">
+      <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-brand-50 text-amber-400">
+        <Icon name={icon} className="h-9 w-9" />
+      </div>
+      <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+      {children && <div className="max-w-sm text-sm text-slate-500">{children}</div>}
     </div>
   );
 }
 
 export function ErrorLine({ children }) {
   if (!children) return null;
-  return <p className="mt-2 rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-300">{children}</p>;
+  return <p className="mt-2 rounded-2xl bg-red-50 px-4 py-2.5 text-sm text-red-600">{children}</p>;
 }

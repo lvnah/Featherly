@@ -1,71 +1,85 @@
-# Hevenly — version React
+# Hevenly
 
-Recréation de l'application Hevenly (type Discord) en React + Vite + Tailwind CSS, avec le même design system
-(couleurs `brand` / `ink`, polices Plus Jakarta Sans, coins `rounded-[2.5rem]`, `backdrop-blur`, `thin-scroll`,
-tiroir mobile `sidebar-drawer` et `mobile-overlay`).
+Application communautaire (type Discord) : espaces, salons texte et vocaux, messages privés, amis, rôles.
+Interface React + Tailwind CSS, backend Node.js avec base **SQLite**.
 
-## Lancer le projet
+## Prérequis
+
+- **Node.js 22.13 ou plus** (le module `node:sqlite` est intégré à Node, aucune dépendance native à compiler).
+
+## Installation
 
 ```bash
 npm install
-npm run dev      # serveur de développement
-npm run build    # build de production dans dist/
 ```
 
-## Fonctionnalités couvertes
+## Développement
 
-| Spec | Implémentation |
-| --- | --- |
-| Connexion / session (`login.php`) | `src/views/Login.jsx` — choisir un compte ou créer un pseudo |
-| Présence (`last_activity`, < 45 s) | `isOnline()` dans `src/lib/util.js`, heartbeat toutes les ~14 s |
-| Profil, tag `#1234`, avatar, bio, bannière | `src/views/ProfileView.jsx` (édition + profil public) |
-| Statut PLUS (tag libre, bannière URL, code perso) | `togglePlus()` — simulation locale, pas de paiement |
-| Sidebar, serveurs, profil en bas | `src/components/Layout.jsx` |
-| Accueil : recherche, bannière, stats en direct | `src/views/Home.jsx` |
-| Serveurs : création, adhésion par code, invitation | `CreateServerModal`, `JoinServerModal`, `InviteModal` |
-| Salons texte / vocaux, un seul vocal actif | `src/views/ServerView.jsx`, `joinVoice()` / `leaveVoice()` |
-| Interdiction de supprimer le dernier salon | `deleteChannel()` |
-| Chat de salon, polling 2 s, pseudo coloré par rôle | `ServerView.jsx` + `sync()` dans `App.jsx` |
-| Rôles (nom, couleur losange, `can_manage_channels`) | `RolesModal`, `createRole()`, `toggleRole()` |
-| Membres en ligne / hors ligne, kick | Liste des membres, `kickMember()` |
-| Mini-profil, menus contextuels (clic droit) | `MiniProfileModal`, `memberMenuItems()`, `ContextMenu` |
-| Messages privés (amis ou historique) | `src/views/MessagesView.jsx`, `sendDM()` |
-| Amis : demandes, acceptation, suppression | `src/views/FriendsView.jsx` |
-| Signalements | `ReportModal`, `reportUser()` |
+Deux terminaux :
+
+```bash
+npm run dev:api   # API sur http://localhost:3001 (rechargement automatique)
+npm run dev       # interface sur http://localhost:5173 (proxy /api vers l'API)
+```
+
+## Production
+
+```bash
+npm run build     # génère dist/
+npm start         # API + interface sur http://localhost:3001
+```
+
+Variables d'environnement facultatives :
+
+| Variable | Défaut | Rôle |
+| --- | --- | --- |
+| `PORT` | `3001` | Port HTTP de l'API et de l'interface en production |
+| `DB_PATH` | `data/hevenly.sqlite` | Emplacement du fichier SQLite |
+| `ALLOW_PLUS_SIMULATION` | activé | Mettre `0` pour désactiver le bouton « Activer PLUS (simulation) » |
 
 ## Architecture
 
 ```
+server/
+├── index.js     Serveur HTTP : routes /api et fichiers statiques de dist/
+├── db.js        Connexion SQLite et schéma (tables créées automatiquement)
+├── auth.js      Mots de passe (scrypt) et sessions par jeton Bearer (30 jours)
+├── actions.js   Toutes les règles métier (permissions, limites, unicité)
+└── sync.js      Instantané des données visibles par l'utilisateur
 src/
-├── App.jsx              Routage par état, polling 2 s, menus, modales, toasts
-├── main.jsx
-├── index.css            Classes utilitaires du design system (.btn-primary, .card, .field, .thin-scroll…)
-├── lib/
-│   ├── store.js         Store (localStorage + synchro entre onglets) et actions métier
-│   └── util.js          Constantes (couleurs, dégradés), helpers purs
-├── components/
-│   ├── ui.jsx           Avatar, Banner, Modal, ContextMenu, ColorDiamonds, contextes
-│   ├── Layout.jsx       Sidebar / tiroir mobile
-│   └── Modals.jsx       Hôte des modales (création, invitation, paramètres, rôles…)
-└── views/               Login, Home, ServerView, MessagesView, FriendsView, ProfileView
+├── lib/api.js        Appels HTTP
+├── lib/store.js      État client (synchronisé toutes les 2 s) et actions
+├── components/       Layout (sidebar), modales, primitives UI
+└── views/            Login, Home, ServerView, MessagesView, FriendsView, ProfileView
 ```
 
-## Important : persistance de démo
+### API
 
-Cette version n'a pas de backend. Les données (utilisateurs, serveurs, messages, amis…) sont stockées dans
-`localStorage` sous la clé `hevenly:v1`, avec des comptes de démonstration (Lina, Maxime, Sofia, Hugo) et un
-serveur de démo dont le code est `HEVENLY1`.
+- `POST /api/auth/register` — `{ pseudo, password }` → `{ token, user }` (le tag `#1234` est attribué automatiquement)
+- `POST /api/auth/login` — `{ fullName: "Pseudo#1234", password }` → `{ token, user }`
+- `POST /api/auth/logout`
+- `GET /api/sync` — données visibles pour l'utilisateur connecté (met aussi à jour sa présence)
+- `POST /api/actions/:name` — actions métier, par exemple `sendMessage`, `createServer`, `joinServer`, `sendFriendRequest`, `toggleRole`, `kickMember`…
 
-- Les données ne sont **partagées qu'entre onglets d'un même navigateur**.
-- Les règles métier (permissions, limites de longueur, statut PLUS, etc.) sont appliquées dans `store.js`,
-  mais elles ne sont pas sécurisées : un vrai backend devra les reproduire côté serveur.
+Toutes les routes sauf l'authentification exigent `Authorization: Bearer <token>`.
 
-Pour passer au temps réel multi-utilisateurs, remplacer `commit` / `sync` dans `src/lib/store.js` par une API
-(Supabase, Firebase, WebSocket ou le backend PHP existant), en gardant les mêmes actions exportées.
+### Données
+
+Le fichier `data/hevenly.sqlite` contient les utilisateurs (mots de passe hachés, jamais en clair), les sessions,
+les espaces, rôles, salons, messages, amis, messages privés, connexions vocales et signalements.
+Sauvegardez ce fichier pour conserver les données (ou utilisez `DB_PATH` pour le placer ailleurs).
+
+## Règles importantes
+
+- Les règles sont vérifiées **côté serveur** : le client ne fait qu'afficher les permissions.
+- Un message privé nécessite une amitié acceptée (ou un historique de messages).
+- Seul le propriétaire gère les rôles, les codes d'invitation et les expulsions.
+- Les codes d'invitation personnalisés, les tags libres et les bannières URL sont réservés aux membres PLUS.
+- Le statut PLUS est une simulation : aucun paiement n'est géré.
 
 ## Limites connues
 
-- Les images (avatars, bannières, icônes) sont des URL fournies par l'utilisateur, sans upload.
-- Le statut PLUS est simulé (aucun paiement).
-- Le vocal est uniquement un état d'affichage : il n'y a pas de flux audio.
-- Pas de tests automatisés pour l'instant.
+- Synchronisation par interrogation toutes les 2 secondes (pas de WebSocket) : les messages apparaissent avec un léger délai.
+- Le vocal est uniquement un état affiché : il n'y a pas de flux audio.
+- Pas de limitation de débit sur l'API ni de téléversement d'images : les avatars et bannières sont des URL.
+- Pas de tests automatisés dans le dépôt.

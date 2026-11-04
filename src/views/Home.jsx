@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { getMe, serversOf, friendsOf } from '../lib/store';
-import { useStore, useUI, Avatar, Banner } from '../components/ui';
+import { getMe, serversOf, friendsOf, membersOf } from '../lib/store';
+import { useStore, useUI, Avatar, Icon } from '../components/ui';
 import { fullName, isOnline } from '../lib/util';
 
 export default function Home() {
   const s = useStore();
-  const { go, openModal, openMenu } = useUI();
+  const { go, openModal } = useUI();
   const me = getMe(s);
   const [q, setQ] = useState('');
 
@@ -13,185 +13,175 @@ export default function Home() {
   const total = s.users.length;
   const online = s.users.filter(isOnline).length;
   const percent = total ? Math.round((online / total) * 100) : 0;
-  const friends = friendsOf(s, me.id);
+  const friends = friendsOf(s, me.id).sort((a, b) => Number(isOnline(b)) - Number(isOnline(a)));
   const onlineFriends = friends.filter(isOnline);
 
   const query = q.trim().toLowerCase();
   const results = query
     ? {
-        servers: s.servers.filter((x) => x.name.toLowerCase().includes(query)),
+        servers: servers.filter((x) => x.name.toLowerCase().includes(query)),
         users: s.users.filter((u) => u.id !== me.id && fullName(u).toLowerCase().includes(query)),
       }
     : null;
 
-  const quickMessage = (id) => {
-    go({ name: 'messages', withId: id });
-  };
-
   return (
-    <div className="thin-scroll flex min-w-0 flex-1 overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 md:p-8">
-        {/* Recherche globale */}
-        <div className="relative">
+    <div className="flex min-w-0 flex-1 flex-col gap-4 overflow-hidden">
+      {/* Barre supérieure */}
+      <div className="flex items-center gap-4">
+        <div className="relative mx-auto w-full max-w-md">
           <input
-            className="field h-12 rounded-2xl pl-11 backdrop-blur"
-            placeholder="Rechercher un serveur ou un utilisateur (pseudo#1234)"
+            className="w-full rounded-full border border-white bg-white/80 py-3 pl-12 pr-4 text-sm shadow-soft backdrop-blur focus:outline-none focus:ring-4 focus:ring-brand-500/15"
+            placeholder="Rechercher une communauté, un membre..."
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
-          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">🔍</span>
+          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+            <Icon name="search" className="h-5 w-5" />
+          </span>
           {results && (
-            <div className="card absolute left-0 right-0 top-14 z-20 max-h-80 overflow-y-auto thin-scroll p-2">
-              {results.servers.length === 0 && results.users.length === 0 && (
-                <p className="p-3 text-sm text-slate-400">Aucun résultat.</p>
-              )}
+            <div className="panel absolute left-0 right-0 top-14 z-20 max-h-80 overflow-y-auto thin-scroll p-2">
+              {results.servers.length === 0 && results.users.length === 0 && <p className="p-3 text-sm text-slate-500">Aucun résultat.</p>}
               {results.servers.map((srv) => (
-                <button
-                  key={srv.id}
-                  onClick={() => {
-                    setQ('');
-                    go({ name: 'server', serverId: srv.id });
-                  }}
-                  className="flex w-full items-center gap-3 rounded-2xl p-3 text-left hover:bg-white/5"
-                >
-                  <span className="text-lg">🏠</span>
-                  <span className="text-sm text-white">{srv.name}</span>
+                <button key={srv.id} onClick={() => { setQ(''); go({ name: 'server', serverId: srv.id }); }} className="flex w-full items-center gap-3 rounded-2xl p-3 text-left hover:bg-slate-50">
+                  <Icon name="home" className="h-5 w-5 text-brand-600" />
+                  <span className="text-sm font-semibold">{srv.name}</span>
                 </button>
               ))}
               {results.users.map((u) => (
-                <button
-                  key={u.id}
-                  onClick={() => {
-                    setQ('');
-                    go({ name: 'profile', userId: u.id });
-                  }}
-                  className="flex w-full items-center gap-3 rounded-2xl p-3 text-left hover:bg-white/5"
-                >
+                <button key={u.id} onClick={() => { setQ(''); go({ name: 'profile', userId: u.id }); }} className="flex w-full items-center gap-3 rounded-2xl p-3 text-left hover:bg-slate-50">
                   <Avatar user={u} size="sm" showStatus />
-                  <span className="text-sm text-white">{fullName(u)}</span>
+                  <span className="text-sm font-semibold">{fullName(u)}</span>
                 </button>
               ))}
             </div>
           )}
         </div>
-
-        {/* Bannière de bienvenue */}
-        <section className="card relative overflow-hidden p-8 md:p-10">
-          <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-brand-500/20 blur-3xl" />
-          <div className="absolute -bottom-20 right-20 h-48 w-48 rounded-full bg-teal-500/10 blur-3xl" />
-          <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-brand-300">Bon retour, {me.pseudo} 👋</p>
-              <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white md:text-4xl">
-                Retrouvez vos communautés.
-              </h1>
-              <p className="mt-3 max-w-md text-sm text-slate-400">
-                Discutez dans vos salons, lancez un vocal ou écrivez à vos amis en privé.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <button className="btn-primary" onClick={() => openModal('createServer')}>
-                  + Créer un serveur
-                </button>
-                <button className="btn-ghost" onClick={() => openModal('join')}>
-                  Rejoindre avec un code
-                </button>
-                <button className="btn-ghost" onClick={() => go({ name: 'friends' })}>
-                  Mes amis
-                </button>
-              </div>
-            </div>
-            <div className="hidden h-36 w-36 shrink-0 items-center justify-center rounded-[2.5rem] bg-gradient-to-br from-brand-400 to-teal-700 text-6xl shadow-soft md:flex">
-              🌿
-            </div>
-          </div>
-        </section>
-
-        {/* Statistiques en direct */}
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Stat label="Membres inscrits" value={total} />
-          <Stat label="En ligne" value={online} accent />
-          <Stat label="Activité globale" value={`${percent}%`} />
-        </section>
-
-        {/* Mes serveurs */}
-        <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-slate-500">Mes serveurs</h2>
-          {servers.length === 0 ? (
-            <div className="card p-6 text-sm text-slate-400">Vous n’êtes membre d’aucun serveur. Créez-en un ou rejoignez-en un avec un code.</div>
-          ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {servers.map((srv) => (
-                <button
-                  key={srv.id}
-                  onClick={() => go({ name: 'server', serverId: srv.id })}
-                  onContextMenu={(e) => openMenu(e, [
-                    { label: 'Ouvrir', icon: '↗', onClick: () => go({ name: 'server', serverId: srv.id }) },
-                    ...(srv.owner_id === me.id ? [{ label: 'Code d’invitation', icon: '🔗', onClick: () => openModal('invite', { serverId: srv.id }) }] : []),
-                  ])}
-                  className="card flex items-center gap-4 p-4 text-left transition hover:bg-white/5"
-                >
-                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-teal-700 text-lg font-bold text-white">
-                    {srv.name.charAt(0).toUpperCase()}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate font-semibold text-white">{srv.name}</span>
-                    <span className="text-xs text-slate-400">
-                      {s.memberships.filter((m) => m.server_id === srv.id).length} membres ·{' '}
-                      {srv.is_public ? 'Public' : 'Privé'}
-                    </span>
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </section>
+        <button onClick={() => go({ name: 'messages' })} className="btn-ghost hidden shrink-0 !rounded-full !bg-white !py-2.5 shadow-soft sm:flex">
+          <Icon name="users" className="h-4 w-4 text-brand-600" />
+          Message
+        </button>
+        <button onClick={() => go({ name: 'profile', userId: me.id })} className="hidden shrink-0 sm:block" aria-label="Mon profil">
+          <Avatar user={me} size="md" showStatus />
+        </button>
       </div>
 
-      {/* Panneau de droite (desktop) */}
-      <aside className="thin-scroll hidden w-80 shrink-0 flex-col gap-5 overflow-y-auto border-l border-white/5 bg-ink-900/60 p-5 xl:flex">
-        <div className="card overflow-hidden">
-          <Banner user={me} className="h-20 rounded-t-[2.5rem]" />
-          <div className="-mt-8 px-5 pb-5">
-            <Avatar user={me} size="lg" showStatus className="ring-4 ring-ink-850 rounded-2xl" />
-            <p className="mt-3 font-bold text-white">{fullName(me)}</p>
-            <p className="mt-1 text-sm text-slate-400">{me.bio || 'Aucune biographie.'}</p>
-            <button className="btn-ghost mt-4 w-full" onClick={() => go({ name: 'profile', userId: me.id })}>
-              Modifier mon profil
-            </button>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <h3 className="px-2 text-xs font-bold uppercase tracking-widest text-slate-500">
-            Amis en ligne · {onlineFriends.length}
-          </h3>
-          {onlineFriends.length === 0 && <p className="px-2 text-sm text-slate-500">Personne pour le moment.</p>}
-          {onlineFriends.map((f) => (
-            <div key={f.id} className="flex items-center gap-3 rounded-2xl p-2 hover:bg-white/5">
-              <button className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => go({ name: 'profile', userId: f.id })}>
-                <Avatar user={f} size="sm" showStatus />
-                <span className="truncate text-sm font-semibold text-white">{fullName(f)}</span>
-              </button>
-              <button
-                title="Envoyer un message"
-                onClick={() => quickMessage(f.id)}
-                className="rounded-xl px-2 py-1 hover:bg-white/10"
-              >
-                💬
+      <div className="thin-scroll flex min-h-0 flex-1 gap-4 overflow-y-auto pb-2">
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
+          {/* Bannière de bienvenue */}
+          <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-brand-900 via-brand-800 to-[#052e16] p-8 text-white shadow-panel md:p-10">
+            <div className="absolute -right-10 -top-10 h-72 w-72 rounded-full bg-brand-500/25 blur-3xl" />
+            <Icon name="bolt" className="absolute right-10 top-1/2 hidden h-48 w-48 -translate-y-1/2 text-white/5 md:block" />
+            <div className="relative">
+              <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">
+                Bienvenue sur <span className="text-brand-400">Hevenly !</span>
+              </h1>
+              <p className="mt-3 max-w-md text-sm text-white/75">
+                Une communauté unique, un univers infini. Rejoignez un espace ou créez le vôtre pour commencer à échanger.
+              </p>
+              <button onClick={() => openModal('join')} className="btn-soft mt-6 !rounded-full !px-6">
+                Rejoindre un espace
               </button>
             </div>
-          ))}
+          </section>
+
+          {/* Statistiques en direct */}
+          <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <Stat icon="users" label="Membres inscrits" value={total} />
+            <Stat icon="chat" label="Membres en ligne" value={online} />
+            <Stat icon="bolt" label="Activité globale" value={`${percent}%`} />
+          </section>
+
+          {/* Espaces ou tableau de bord vide */}
+          <section className="panel flex min-h-64 flex-1 flex-col p-6">
+            {servers.length === 0 ? (
+              <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
+                <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-brand-50 text-amber-400">
+                  <Icon name="bolt" className="h-9 w-9" />
+                </div>
+                <h2 className="text-xl font-bold">Bienvenue sur votre tableau de bord</h2>
+                <p className="max-w-sm text-sm text-slate-500">
+                  Sélectionnez un espace dans la colonne de gauche ou rejoignez-en un via un code d’invitation pour accéder aux salons textuels et vocaux de vos communautés.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                {servers.map((srv) => (
+                  <button key={srv.id} onClick={() => go({ name: 'server', serverId: srv.id })} className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-white p-4 text-left shadow-soft transition hover:-translate-y-0.5">
+                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-700 font-bold text-white">
+                      {srv.name.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate font-bold">{srv.name}</span>
+                      <span className="text-xs text-slate-500">
+                        {membersOf(s, srv.id).length} membre(s) · {srv.is_public ? 'Public' : 'Privé'}
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
-      </aside>
+
+        {/* Panneau de droite */}
+        <aside className="hidden w-80 shrink-0 flex-col gap-4 xl:flex">
+          <section className="panel p-6">
+            <div className="mb-5 flex items-center justify-between">
+              <h2 className="font-bold">Votre profil</h2>
+              <button onClick={() => go({ name: 'profile', userId: me.id })} aria-label="Modifier mon profil" className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100">
+                <Icon name="settings" className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex items-center gap-4">
+              <Avatar user={me} size="lg" />
+              <div className="min-w-0">
+                <p className="truncate text-lg font-bold">{me.pseudo}</p>
+                <p className="text-sm font-semibold text-brand-600">{me.is_plus ? 'Membre PLUS' : 'Membre Hevenly'}</p>
+              </div>
+            </div>
+          </section>
+
+          <section className="panel flex flex-col gap-3 p-6">
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold">Amis en ligne</h2>
+              <button onClick={() => go({ name: 'friends' })} className="text-sm font-semibold text-slate-500 hover:text-slate-900">
+                Voir tout →
+              </button>
+            </div>
+            {friends.length === 0 && <p className="text-sm text-slate-500">Aucun ami pour le moment.</p>}
+            {friends.slice(0, 6).map((f) => (
+              <div key={f.id} className="flex items-center gap-3">
+                <button onClick={() => go({ name: 'profile', userId: f.id })} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+                  <Avatar user={f} size="md" showStatus />
+                  <span className="min-w-0">
+                    <span className="block truncate font-bold">{f.pseudo}</span>
+                    <span className="block text-xs text-slate-500">{isOnline(f) ? 'En ligne' : 'Hors ligne'}</span>
+                  </span>
+                </button>
+                <button title="Envoyer un message" onClick={() => go({ name: 'messages', withId: f.id })} className="rounded-2xl bg-slate-100 p-2.5 text-slate-600 hover:bg-slate-200">
+                  <Icon name="chat" className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+            {onlineFriends.length > 0 && <p className="text-xs text-slate-400">{onlineFriends.length} ami(s) connecté(s)</p>}
+          </section>
+        </aside>
+      </div>
     </div>
   );
 }
 
-function Stat({ label, value, accent = false }) {
+function Stat({ icon, label, value }) {
   return (
-    <div className="card p-5">
-      <p className="text-xs font-bold uppercase tracking-widest text-slate-500">{label}</p>
-      <p className={`mt-2 text-3xl font-extrabold ${accent ? 'text-brand-400' : 'text-white'}`}>{value}</p>
+    <div className="panel flex items-center gap-4 p-5">
+      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
+        <Icon name={icon} className="h-5 w-5" />
+      </span>
+      <div>
+        <p className="text-xl font-extrabold">{value}</p>
+        <p className="text-xs font-semibold text-slate-500">{label}</p>
+      </div>
     </div>
   );
 }
+
