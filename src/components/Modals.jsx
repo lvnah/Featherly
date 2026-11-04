@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { createChannel, createServer, getMe, getUser, joinServer, regenerateInvite, reportUser } from '../lib/store';
 import { Modal, Avatar, Banner, ErrorLine, Icon, useStore, useUI } from './ui';
 import { fullName, isOnline } from '../lib/util';
+import { fileToDataUrl, ICON_OPTS } from '../lib/images';
+import PlusBadge from './PlusBadge';
 import { roleColorOf, roleNameOf } from '../lib/store';
 import { run } from '../views/ServerView';
 import EspaceSettingsModal from './EspaceSettings';
@@ -29,7 +31,7 @@ function useSubmit(fn) {
       setBusy(false);
     }
   };
-  return { error, busy, submit };
+  return { error, busy, submit, setError };
 }
 
 const Label = ({ children }) => <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">{children}</span>;
@@ -42,7 +44,7 @@ function CreateServerModal({ onClose }) {
   const [icon, setIcon] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [code, setCode] = useState('');
-  const { error, busy, submit } = useSubmit(async () => {
+  const { error, busy, submit, setError } = useSubmit(async () => {
     const res = await createServer({ name, icon, isPublic, customCode: code });
     onClose();
     go({ name: 'server', serverId: res.id });
@@ -54,9 +56,17 @@ function CreateServerModal({ onClose }) {
         <label className="flex flex-col gap-2"><Label>Nom de l’espace ({name.length}/16)</Label>
           <input className="field" maxLength={16} value={name} onChange={(e) => setName(e.target.value)} autoFocus />
         </label>
-        <label className="flex flex-col gap-2"><Label>Icône (URL, facultatif)</Label>
-          <input className="field" placeholder="https://…" value={icon} onChange={(e) => setIcon(e.target.value)} />
-        </label>
+        <div className="flex flex-col gap-2"><Label>Icône (facultatif)</Label>
+          <div className="flex items-center gap-3">
+            <span className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-slate-100 text-lg font-bold text-slate-400">
+              {icon ? <img src={icon} alt="" className="h-full w-full object-cover" /> : (name.charAt(0).toUpperCase() || '?')}
+            </span>
+            <label className="btn-ghost cursor-pointer">
+              Importer une image
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) { try { setIcon(await fileToDataUrl(f, ICON_OPTS)); } catch (err) { setError(err.message); } } }} />
+            </label>
+          </div>
+        </div>
         <label className="flex flex-col gap-2"><Label>Visibilité</Label>
           <select className="field" value={isPublic ? 'public' : 'private'} onChange={(e) => setIsPublic(e.target.value === 'public')}>
             <option value="public">Public : visible dans la recherche</option>
@@ -154,7 +164,7 @@ function MiniProfileModal({ userId, serverId, onClose }) {
       </div>
       <div className="mt-4 flex flex-col gap-4">
         <div>
-          <p className="text-lg font-extrabold" style={{ color }}>{user.pseudo}</p>
+          <p className="flex items-center gap-2 text-lg font-extrabold" style={{ color }}>{user.pseudo}{user.is_plus ? <PlusBadge /> : null}</p>
           <p className="text-sm text-slate-400">#{user.tag} · {isOnline(user) ? 'En ligne' : 'Hors ligne'}</p>
         </div>
         <p className="text-sm text-slate-600">{user.bio || 'Aucune biographie.'}</p>

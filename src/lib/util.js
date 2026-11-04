@@ -25,7 +25,7 @@ export function fullName(user) {
 
 export function bannerStyle(user) {
   const b = user?.banner || {};
-  if (b.type === 'url' && b.value) {
+  if ((b.type === 'image' || b.type === 'url') && b.value) {
     const safe = String(b.value).replace(/["\\()]/g, '');
     return { backgroundImage: `url("${safe}")`, backgroundSize: 'cover', backgroundPosition: 'center' };
   }
