@@ -72,7 +72,6 @@ function RolesTab({ serverId, toast }) {
       await createRole(serverId, { name, color, can_manage_channels: manage });
       setName('');
       setManage(false);
-      toast('Rôle créé avec succès.');
     } catch (err) {
       setError(err.message);
     }
@@ -176,7 +175,6 @@ function InviteTab({ serverId, toast }) {
     setError('');
     try {
       await updateInvite(serverId, code);
-      toast('Code d’invitation mis à jour.');
     } catch (err) {
       setError(err.message);
     }
@@ -185,7 +183,7 @@ function InviteTab({ serverId, toast }) {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
         <code className="select-all font-mono text-lg font-bold tracking-widest text-brand-700">{server.invite_code}</code>
-        <button className="btn-primary !py-2.5" onClick={() => navigator.clipboard?.writeText(server.invite_code).then(() => toast('Code copié'))}>Copier</button>
+        <button className="btn-primary !py-2.5" onClick={() => navigator.clipboard?.writeText(server.invite_code)}>Copier</button>
       </div>
       {me.is_plus ? (
         <form onSubmit={save} className="flex flex-col gap-3 border-t border-slate-100 pt-6">

@@ -12,7 +12,7 @@ import { formatStamp, isOnline } from '../lib/util';
 export async function run(toast, fn, okMessage) {
   try {
     await fn();
-    if (okMessage) toast(okMessage);
+    // Les succès ne déclenchent plus de notification : seules les erreurs sont affichées.
     return true;
   } catch (err) {
     toast(err.message);
@@ -130,7 +130,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
       >
         <Avatar user={u} size="sm" showStatus />
         <span className="min-w-0">
-          <span className="flex items-center gap-1.5 truncate text-sm font-bold" style={{ color }}>{u.pseudo}{u.is_plus ? <PlusBadge className="!h-4 !w-4" /> : null}</span>
+          <span className="flex min-w-0 items-center gap-1.5"><span className="truncate text-sm font-bold" style={{ color }}>{u.pseudo}</span>{u.is_plus ? <PlusBadge /> : null}</span>
           <span className="block truncate text-xs font-semibold text-slate-500">#{u.tag}</span>
         </span>
       </button>

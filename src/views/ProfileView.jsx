@@ -48,7 +48,6 @@ function OwnProfile() {
     setBusy(true);
     try {
       await updateProfile({ pseudo, tag: me.is_plus ? tag : undefined, avatar, bio, banner });
-      toast('Profil enregistré');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -66,7 +65,7 @@ function OwnProfile() {
       <div className="flex justify-center p-8">
         <form onSubmit={save} className="w-full max-w-lg overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white shadow-soft">
           <div className="relative h-40" style={bannerStyle(preview)}>
-            <div className="absolute -bottom-12 left-7 h-24 w-24 overflow-hidden rounded-full bg-white ring-4 ring-white">
+            <div className="absolute -bottom-12 left-7 h-24 w-24 rounded-full ring-2 ring-white">
               <Avatar user={preview} size="xl" className="!h-full !w-full" />
             </div>
           </div>
@@ -153,7 +152,7 @@ function PublicProfile({ user, goBack }) {
           <Banner user={user} className="h-44" />
           <div className="flex flex-col gap-4 px-6 pb-6">
             <div className="-mt-10 flex items-end gap-4">
-              <Avatar user={user} size="xl" showStatus className="rounded-[1.75rem] ring-4 ring-white" />
+              <Avatar user={user} size="xl" showStatus className="ring-2 ring-white" />
               <div className="min-w-0 pb-1">
                 <h2 className="flex items-center gap-2 truncate text-2xl font-extrabold">
                   {user.pseudo} <span className="text-base font-semibold text-slate-400">#{user.tag}</span>

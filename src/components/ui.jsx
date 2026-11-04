@@ -44,32 +44,27 @@ export function Icon({ name, className = 'h-5 w-5' }) {
 export function Avatar({ user, size = 'md', showStatus = false, className = '' }) {
   const [broken, setBroken] = useState(false);
   const dims = {
-    xs: 'h-6 w-6 text-[10px]',
-    sm: 'h-9 w-9 text-xs',
-    md: 'h-11 w-11 text-sm',
-    lg: 'h-20 w-20 text-2xl',
-    xl: 'h-28 w-28 text-4xl',
+    xs: 'h-6 w-6',
+    sm: 'h-9 w-9',
+    md: 'h-11 w-11',
+    lg: 'h-20 w-20',
+    xl: 'h-28 w-28',
   }[size];
   const online = isOnline(user);
-  const letter = (user?.pseudo || '?').charAt(0).toUpperCase();
   const dot = size === 'xs' ? 'h-2 w-2' : 'h-3 w-3';
+  const hasPhoto = !!user?.avatar && !broken;
   return (
-    <div className={`relative shrink-0 ${dims} ${className}`}>
-      {user?.avatar && !broken ? (
+    <div className={`relative shrink-0 rounded-full ${dims} ${className}`}>
+      {hasPhoto ? (
         <img src={user.avatar} alt="" onError={() => setBroken(true)} className="h-full w-full rounded-full object-cover" />
       ) : (
-        <div
-          className="flex h-full w-full items-center justify-center rounded-full font-bold text-white"
-          style={{ background: avatarGradient(user?.id || user?.pseudo) }}
-        >
-          <span className="flex h-[70%] w-[70%] items-center justify-center rounded-full bg-white/90">
-            <Logo className="h-[70%] w-[70%]" />
-          </span>
-        </div>
+        <span className="flex h-full w-full items-center justify-center rounded-full bg-slate-100">
+          <Logo className="h-[62%] w-[62%] object-contain" />
+        </span>
       )}
       {showStatus && (
         <span
-          className={`absolute -bottom-0.5 -right-0.5 ${dot} rounded-full border-2 border-white ${online ? 'bg-brand-500' : 'bg-slate-300'}`}
+          className={`absolute bottom-0 right-0 ${dot} rounded-full border-2 border-white ${online ? 'bg-brand-500' : 'bg-slate-300'}`}
           title={online ? 'En ligne' : 'Hors ligne'}
         />
       )}
@@ -82,10 +77,8 @@ export function ServerIcon({ server, icon, className = 'h-10 w-10' }) {
   const src = icon !== undefined ? icon : server?.icon;
   if (src) return <img src={src} alt="" className={`${className} shrink-0 rounded-full object-cover`} />;
   return (
-    <span className={`${className} flex shrink-0 items-center justify-center rounded-full`} style={{ background: avatarGradient(server?.id || server?.name) }}>
-      <span className="flex h-[70%] w-[70%] items-center justify-center rounded-full bg-white/90">
-        <Logo className="h-[70%] w-[70%]" />
-      </span>
+    <span className={`${className} flex shrink-0 items-center justify-center rounded-full bg-slate-100`}>
+      <Logo className="h-[62%] w-[62%] object-contain" />
     </span>
   );
 }

@@ -118,9 +118,8 @@ function InviteModal({ serverId, onClose }) {
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(server.invite_code);
-      toast('Code copié');
-    } catch {
-      toast('Copie impossible : sélectionnez le code manuellement.');
+      } catch {
+      // copie impossible : le code reste sélectionnable à l'écran
     }
   };
   return (
@@ -155,7 +154,7 @@ function MiniProfileModal({ userId, serverId, onClose }) {
         <Banner user={user} className="h-28" />
       </div>
       <div className="-mt-12 flex items-end justify-between gap-3">
-        <Avatar user={user} size="lg" showStatus className="rounded-3xl ring-4 ring-white" />
+        <Avatar user={user} size="lg" showStatus className="ring-2 ring-white" />
         <button className="btn-primary !rounded-full !py-2 !text-sm" onClick={() => go({ name: 'profile', userId: user.id })}>
           Voir profil complet
         </button>
@@ -195,7 +194,6 @@ function ReportModal({ userId, serverId = null, onClose }) {
   const [reason, setReason] = useState('');
   const { error, busy, submit } = useSubmit(async () => {
     await reportUser(userId, reason, serverId);
-    toast('Signalement envoyé. Merci.');
     onClose();
   });
   if (!target) return null;
@@ -221,7 +219,6 @@ function ChannelModal({ serverId, onClose }) {
   const [type, setType] = useState('text');
   const { error, busy, submit } = useSubmit(async () => {
     await createChannel(serverId, name, type);
-    toast('Salon créé');
     onClose();
   });
   return (
