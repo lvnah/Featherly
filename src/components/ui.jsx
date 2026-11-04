@@ -118,7 +118,9 @@ export function ContextMenu({ x, y, items, onClose }) {
   return (
     <div role="menu" style={{ left, top }} onClick={(e) => e.stopPropagation()} className="panel fixed z-[60] w-56 rounded-3xl p-1.5">
       {items.map((it, i) =>
-        it.separator ? (
+        it.header ? (
+          <p key={i} className="px-3 pb-1 pt-2 text-[11px] font-bold uppercase tracking-widest text-slate-400">{it.header}</p>
+        ) : it.separator ? (
           <div key={i} className="my-1 border-t border-slate-100" />
         ) : (
           <button
@@ -133,7 +135,9 @@ export function ContextMenu({ x, y, items, onClose }) {
               it.danger ? 'text-red-600 hover:bg-red-50' : 'text-slate-700 hover:bg-slate-100'
             }`}
           >
-            {it.icon && <span className="w-4 text-center text-xs">{it.icon}</span>}
+            {it.checked !== undefined && (
+              <span className="flex w-4 justify-center text-brand-600">{it.checked && <Icon name="check" className="h-4 w-4" />}</span>
+            )}
             <span className="truncate">{it.label}</span>
           </button>
         ),

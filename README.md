@@ -69,6 +69,11 @@ Le fichier `data/hevenly.sqlite` contient les utilisateurs (mots de passe haché
 les espaces, rôles, salons, messages, amis, messages privés, connexions vocales et signalements.
 Sauvegardez ce fichier pour conserver les données (ou utilisez `DB_PATH` pour le placer ailleurs).
 
+## Logo
+
+Le logo est défini dans `src/lib/brand.js` (`LOGO_URL`). Modifiez cette constante pour le changer partout :
+sidebar, connexion, favicon et écran d'arrivée. Sans image accessible, un logo vectoriel de secours s'affiche.
+
 ## Compte administrateur
 
 Le compte **`lvnah#0000`** (statut administrateur) est créé au démarrage s'il n'existe pas, à condition que

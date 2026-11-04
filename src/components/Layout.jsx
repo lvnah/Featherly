@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getMe, serversOf, logout } from '../lib/store';
 import { useStore, useUI, Avatar, Icon } from './ui';
+import Logo from './Logo';
 
 const NAV = [
   { key: 'home', label: 'Accueil', icon: 'home', view: { name: 'home' } },
@@ -23,7 +24,7 @@ export default function Layout({ view, children }) {
     setDrawer(false);
   };
   const isActive = (item) =>
-    item.key === 'settings' ? view.name === 'profile' && view.userId === me.id : view.name === item.key;
+    item.key === 'settings' ? view.name === 'profile' && view.userId === me.id && view.edit : view.name === item.key;
 
   return (
     <div className="flex h-dvh gap-4 p-4">
@@ -44,7 +45,7 @@ export default function Layout({ view, children }) {
           {nav.map((item) => (
             <button
               key={item.key}
-              onClick={() => (item.key === 'settings' ? navigate({ name: 'profile', userId: me.id }) : navigate(item.view))}
+              onClick={() => (item.key === 'settings' ? navigate({ name: 'profile', userId: me.id, edit: true }) : navigate(item.view))}
               className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-[15px] font-semibold transition ${
                 isActive(item) ? 'bg-brand-100 text-brand-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
               }`}
@@ -121,11 +122,6 @@ export default function Layout({ view, children }) {
   );
 }
 
-export function LeafLogo() {
-  return (
-    <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden="true">
-      <path d="M6 24C6 12 14 6 27 5c0 13-6 21-18 21-1 0-2 0-3-2z" fill="#22c55e" />
-      <path d="M6 26 17 14" stroke="#14532d" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
+export function LeafLogo({ className = 'h-7 w-7' }) {
+  return <Logo className={className} />;
 }

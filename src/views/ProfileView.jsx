@@ -5,12 +5,12 @@ import { BANNER_GRADIENTS, fullName, isOnline } from '../lib/util';
 import { run } from './ServerView';
 
 // Mon profil : page Paramètres du profil. Autre utilisateur : profil public.
-export default function ProfileView({ userId, goBack }) {
+export default function ProfileView({ userId, edit = false, goBack }) {
   const s = useStore();
   const me = getMe(s);
   const user = getUser(s, userId);
   if (!user) return <EmptyState icon="user" title="Profil introuvable">Cet utilisateur n’existe pas.</EmptyState>;
-  return user.id === me.id ? <OwnProfile key={me.id} goBack={goBack} /> : <PublicProfile user={user} goBack={goBack} />;
+  return user.id === me.id && edit ? <OwnProfile key={me.id} /> : <PublicProfile user={user} goBack={goBack} />;
 }
 
 function OwnProfile({ goBack }) {
@@ -48,7 +48,7 @@ function OwnProfile({ goBack }) {
     <div className="panel thin-scroll flex min-w-0 flex-1 flex-col overflow-y-auto">
       <div className="flex items-center justify-between border-b border-slate-100 px-8 py-6">
         <h1 className="text-xl font-extrabold">Paramètres du profil</h1>
-        <button onClick={goBack ?? (() => go({ name: 'home' }))} className="text-sm font-bold text-red-500 hover:text-red-600">Quitter</button>
+        <button onClick={() => go({ name: 'profile', userId: me.id })} className="text-sm font-bold text-red-500 hover:text-red-600">Quitter</button>
       </div>
 
       <form onSubmit={save} className="mx-auto flex w-full max-w-xl flex-col gap-6 p-8">
@@ -151,7 +151,12 @@ function PublicProfile({ user, goBack }) {
               <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-400">À propos</h3>
               <p className="text-sm text-slate-700">{user.bio || "Cet utilisateur n’a pas encore rédigé de biographie."}</p>
             </div>
-                        {user.id !== me.id && (
+                        {user.id === me.id && (
+              <div className="flex gap-2 pt-2">
+                <button className="btn-primary" onClick={() => go({ name: 'profile', userId: me.id, edit: true })}>Modifier le profil</button>
+              </div>
+            )}
+            {user.id !== me.id && (
               <div className="flex flex-wrap gap-2 pt-2">
                 <button className="btn-primary" onClick={() => go({ name: 'messages', withId: user.id })}>Envoyer un message</button>
                 {!friend && (
