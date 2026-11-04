@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Splash from './components/Splash';
-import { getMe, refresh } from './lib/store';
+import { getMe, getState, leaveVoice, refresh } from './lib/store';
+import { setVoiceErrorHandler, stopVoice, syncVoice } from './lib/voice';
 import { getToken } from './lib/api';
 import { ContextMenu, UIContext, useStore } from './components/ui';
 import Layout from './components/Layout';
@@ -14,10 +15,26 @@ import ProfileView from './views/ProfileView';
 import AdminView from './views/AdminView';
 
 // Routage par état. La vue « espace » s'affiche plein écran (sans sidebar), comme la capture.
+// Chemin d'URL -> vue. Seul /admin change de vue ; le reste est l'accueil (routage par état).
+function viewFromPath(pathname) {
+  return pathname.startsWith('/admin') ? { name: 'admin' } : { name: 'home' };
+}
+
+// Connexions vocales : d'après l'état courant (salon du membre et participants).
+function reconcileVoice() {
+  const st = getState();
+  const me = st && getMe(st);
+  if (!me) return stopVoice();
+  const mine = st.voice.find((v) => v.user_id === me.id);
+  if (!mine) return syncVoice(null, me.id, []);
+  const participants = st.voice.filter((v) => v.channel_id === mine.channel_id).map((v) => v.user_id);
+  return syncVoice(mine.channel_id, me.id, participants);
+}
+
 export default function App() {
   const s = useStore();
   const me = s ? getMe(s) : null;
-  const [view, setView] = useState({ name: 'home' });
+  const [view, setView] = useState(() => viewFromPath(window.location.pathname));
   const [modal, setModal] = useState(null);
   const [menu, setMenu] = useState(null);
   const [toastMsg, setToastMsg] = useState(null);
@@ -31,16 +48,33 @@ export default function App() {
     wasLogged.current = logged;
   }, [logged]);
 
-  // Synchronisation toutes les 2 s (messages, présence, relations).
+  // Synchronisation toutes les 3 s. Le serveur ne renvoie les données que si elles ont changé.
+  // Le vocal est réconcilié à chaque cycle (connexions vers les membres du salon).
   useEffect(() => {
     let alive = true;
-    const tick = () => refresh().finally(() => alive && setBooting(false));
+    const tick = () =>
+      refresh()
+        .then(() => reconcileVoice())
+        .finally(() => alive && setBooting(false));
     tick();
-    const id = setInterval(tick, 2000);
+    const id = setInterval(tick, 3000);
+    setVoiceErrorHandler((msg) => {
+      toast(msg);
+      leaveVoice().catch(() => {});
+    });
     return () => {
       alive = false;
       clearInterval(id);
+      stopVoice();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Navigation par URL : /admin ouvre le panel d'administration.
+  useEffect(() => {
+    const onPop = () => setView(viewFromPath(window.location.pathname));
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
   }, []);
 
   const closeMenu = useCallback(() => setMenu(null), []);
@@ -56,6 +90,8 @@ export default function App() {
     () => ({
       view,
       go: (v) => {
+        const path = v.name === 'admin' ? '/admin' : '/';
+        if (window.location.pathname !== path) window.history.pushState({}, '', path);
         setView(v);
         setModal(null);
       },

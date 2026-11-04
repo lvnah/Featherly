@@ -7,6 +7,7 @@ import { userFromToken } from './auth.js';
 import { buildSnapshot } from './sync.js';
 import { HttpError, login, logout, register, runAction } from './actions.js';
 import { db } from './db.js';
+import { getVersion, bumpVersion } from './version.js';
 import { ensureAdmin } from './seed.js';
 
 ensureAdmin();
@@ -76,15 +77,41 @@ async function handleApi(req, res, path) {
   }
   if (req.method === 'GET' && path === '/api/sync') {
     const me = requireUser(req);
-    // Le heartbeat de présence : chaque synchronisation (toutes les 2 s) rafraîchit last_activity.
+    // Heartbeat de présence (très léger) à chaque synchronisation.
     db.prepare('UPDATE users SET last_activity = ? WHERE id = ?').run(Date.now(), me.id);
+    const current = getVersion();
+    const since = Number(new URL(req.url, 'http://x').searchParams.get('v'));
+    // Rien n'a changé depuis la dernière synchronisation : réponse minimale, pas de données.
+    if (since === current) return send(res, 200, { unchanged: true, v: current });
     const fresh = db.prepare('SELECT * FROM users WHERE id = ?').get(me.id);
-    return send(res, 200, buildSnapshot(fresh));
+    return send(res, 200, { ...buildSnapshot(fresh), v: current });
+  }
+  // Signalisation WebRTC (vocal) : uniquement entre membres connectés au même salon vocal.
+  if (req.method === 'POST' && path === '/api/voice/signal') {
+    const me = requireUser(req);
+    const body = await readJson(req);
+    const mine = db.prepare('SELECT channel_id FROM voice_connections WHERE user_id = ?').get(me.id);
+    const theirs = db.prepare('SELECT channel_id FROM voice_connections WHERE user_id = ?').get(String(body.toId ?? ''));
+    if (!mine || !theirs || mine.channel_id !== theirs.channel_id) throw new HttpError(403, 'Pas dans le même salon vocal.');
+    if (!['offer', 'answer', 'ice'].includes(body.kind)) throw new HttpError(400, 'Signal inconnu.');
+    const payload = JSON.stringify(body.payload ?? null);
+    if (payload.length > 20000) throw new HttpError(413, 'Signal trop volumineux.');
+    const now = Date.now();
+    db.prepare('DELETE FROM voice_signals WHERE created_at < ?').run(now - 60_000);
+    db.prepare('INSERT INTO voice_signals (to_id, from_id, kind, payload, created_at) VALUES (?, ?, ?, ?, ?)').run(theirs && String(body.toId), me.id, body.kind, payload, now);
+    return send(res, 200, { ok: true });
+  }
+  if (req.method === 'GET' && path === '/api/voice/signals') {
+    const me = requireUser(req);
+    const rows = db.prepare('SELECT id, from_id, kind, payload FROM voice_signals WHERE to_id = ? ORDER BY id').all(me.id);
+    if (rows.length) db.prepare(`DELETE FROM voice_signals WHERE id IN (${rows.map(() => '?').join(',')})`).run(...rows.map((r) => r.id));
+    return send(res, 200, { signals: rows.map((r) => ({ from: r.from_id, kind: r.kind, payload: JSON.parse(r.payload) })) });
   }
   const match = path.match(/^\/api\/actions\/([A-Za-z]+)$/);
   if (req.method === 'POST' && match) {
     const me = requireUser(req);
     const result = runAction(match[1], me, await readJson(req));
+    bumpVersion();
     return send(res, 200, { ok: true, result: result ?? null });
   }
   throw new HttpError(404, 'Route inconnue.');
@@ -100,7 +127,9 @@ async function serveStatic(res, path) {
   if (!file.startsWith(DIST)) return send(res, 403, { error: 'Accès refusé.' });
   if (!(await stat(file).catch(() => null))?.isFile()) file = join(DIST, 'index.html'); // routes SPA
   const body = await readFile(file);
-  res.writeHead(200, { 'Content-Type': MIME[extname(file)] || 'application/octet-stream' });
+  // Fichiers versionnés par le build : cache long ; index.html : toujours revalidé.
+  const cache = file.includes(`${join(DIST, 'assets')}`) ? 'public, max-age=31536000, immutable' : 'no-cache';
+  res.writeHead(200, { 'Content-Type': MIME[extname(file)] || 'application/octet-stream', 'Cache-Control': cache });
   res.end(body);
 }
 

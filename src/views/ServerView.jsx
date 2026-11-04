@@ -6,6 +6,7 @@ import {
 } from '../lib/store';
 import { useStore, useUI, Avatar, EmptyState, ErrorLine, Icon, ServerIcon } from '../components/ui';
 import PlusBadge from '../components/PlusBadge';
+import { isVoiceMuted, setVoiceMuted } from '../lib/voice';
 import { formatStamp, isOnline } from '../lib/util';
 
 // Exécute une action async et affiche le résultat dans un toast.
@@ -67,6 +68,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
 
   const [text, setText] = useState('');
   const [error, setError] = useState('');
+  const [, setVoiceTick] = useState(0);
   const listRef = useRef(null);
 
   useEffect(() => {
@@ -252,6 +254,9 @@ export default function ServerView({ serverId, channelId, goHome }) {
               <span className="ml-auto flex items-center gap-3 rounded-full bg-brand-50 py-1 pl-3 pr-1 text-sm font-semibold text-brand-700">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-brand-500" />
                 Vocal · {myVoiceChannel.name}
+                <button onClick={() => { setVoiceMuted(!isVoiceMuted()); setVoiceTick((t) => t + 1); }} className="rounded-full bg-white px-3 py-1 text-xs text-slate-700 shadow-soft">
+                  {isVoiceMuted() ? 'Micro coupé' : 'Micro actif'}
+                </button>
                 <button onClick={() => run(toast, () => leaveVoice(), 'Vous avez quitté le vocal')} className="rounded-full bg-white px-3 py-1 text-xs text-red-600 shadow-soft">
                   Quitter
                 </button>

@@ -48,7 +48,7 @@
     @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl px-5 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary {
-    @apply btn bg-brand-500 text-white shadow-[0_10px_24px_-10px_rgba(34,197,94,0.8)] hover:bg-brand-600;
+    @apply btn bg-brand-500 text-white shadow-[0_10px_24px_-10px_rgba(0,116,84,0.7)] hover:bg-brand-600;
   }
   .btn-soft {
     @apply btn bg-brand-400 text-brand-900 hover:bg-brand-300;

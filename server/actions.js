@@ -114,12 +114,6 @@ const handlers = {
     );
   },
 
-  // Simulation du statut PLUS (pas de paiement). Désactivable via ALLOW_PLUS_SIMULATION=0.
-  togglePlus(me) {
-    if (process.env.ALLOW_PLUS_SIMULATION === '0') fail('Statut PLUS indisponible.', 403);
-    run('UPDATE users SET is_plus = 1 - is_plus WHERE id = ?', me.id);
-  },
-
   sendFriendRequest(me, p) {
     let target;
     if (p.targetId) {

@@ -112,3 +112,14 @@ function addColumn(table, column, definition) {
 }
 addColumn('users', 'is_admin', 'INTEGER NOT NULL DEFAULT 0');
 addColumn('reports', 'server_id', 'TEXT');
+db.exec(`
+CREATE TABLE IF NOT EXISTS voice_signals (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  to_id TEXT NOT NULL,
+  from_id TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  payload TEXT NOT NULL,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_voice_signals_to ON voice_signals (to_id);
+`);
