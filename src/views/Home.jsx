@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { getMe, serversOf, friendsOf, membersOf } from '../lib/store';
-import { useStore, useUI, Avatar, Icon } from '../components/ui';
+import { useStore, useUI, Avatar, Icon, ServerIcon } from '../components/ui';
 import { fullName, isOnline } from '../lib/util';
 
 export default function Home() {
@@ -107,9 +107,7 @@ export default function Home() {
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {servers.map((srv) => (
                   <button key={srv.id} onClick={() => go({ name: 'server', serverId: srv.id })} className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-white p-4 text-left shadow-soft transition hover:-translate-y-0.5">
-                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-700 font-bold text-white">
-                      {srv.name.charAt(0).toUpperCase()}
-                    </span>
+                    <ServerIcon server={srv} className="h-12 w-12" />
                     <span className="min-w-0">
                       <span className="block truncate font-bold">{srv.name}</span>
                       <span className="text-xs text-slate-500">

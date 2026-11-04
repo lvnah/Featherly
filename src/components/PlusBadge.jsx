@@ -1,10 +1,14 @@
-import Logo from './Logo';
-
-// Petit logo vert clair à côté du pseudo des membres PLUS (équivalent du badge Nitro).
+// Badge PLUS simple et net : pastille vert clair avec une petite feuille, sans effet.
 export default function PlusBadge({ className = '' }) {
   return (
-    <span title="Membre PLUS" className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 ring-1 ring-brand-300 ${className}`}>
-      <Logo className="h-3 w-3" />
+    <span
+      title="Membre PLUS"
+      className={`inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-brand-700 ring-1 ring-brand-200 ${className}`}
+    >
+      <svg viewBox="0 0 32 32" className="h-2.5 w-2.5" aria-hidden="true">
+        <path d="M6 24C6 12 14 6 27 5c0 13-6 21-18 21-1 0-2 0-3-2z" fill="currentColor" />
+      </svg>
+      PLUS
     </span>
   );
 }

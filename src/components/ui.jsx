@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useSyncExternalStore } from 'react';
 import { subscribe, getState } from '../lib/store';
 import { avatarGradient, bannerStyle, isOnline, ROLE_COLORS } from '../lib/util';
+import Logo from './Logo';
 
 export const UIContext = createContext(null);
 export const useUI = () => useContext(UIContext);
@@ -61,7 +62,9 @@ export function Avatar({ user, size = 'md', showStatus = false, className = '' }
           className="flex h-full w-full items-center justify-center rounded-full font-bold text-white"
           style={{ background: avatarGradient(user?.id || user?.pseudo) }}
         >
-          {letter}
+          <span className="flex h-[70%] w-[70%] items-center justify-center rounded-full bg-white/90">
+            <Logo className="h-[70%] w-[70%]" />
+          </span>
         </div>
       )}
       {showStatus && (
@@ -71,6 +74,19 @@ export function Avatar({ user, size = 'md', showStatus = false, className = '' }
         />
       )}
     </div>
+  );
+}
+
+// Icône d'espace : image importée, sinon le logo de base sur une couleur propre à l'espace.
+export function ServerIcon({ server, icon, className = 'h-10 w-10' }) {
+  const src = icon !== undefined ? icon : server?.icon;
+  if (src) return <img src={src} alt="" className={`${className} shrink-0 rounded-full object-cover`} />;
+  return (
+    <span className={`${className} flex shrink-0 items-center justify-center rounded-full`} style={{ background: avatarGradient(server?.id || server?.name) }}>
+      <span className="flex h-[70%] w-[70%] items-center justify-center rounded-full bg-white/90">
+        <Logo className="h-[70%] w-[70%]" />
+      </span>
+    </span>
   );
 }
 

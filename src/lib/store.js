@@ -153,6 +153,7 @@ export const assignRole = (serverId, userId, roleId) => act('assignRole', { serv
 export const updateRole = (serverId, roleId, role) => act('updateRole', { serverId, roleId, ...role });
 export const deleteRole = (serverId, roleId) => act('deleteRole', { serverId, roleId });
 export const deleteMessage = (messageId) => act('deleteMessage', { messageId });
+export const updateServerName = (serverId, name) => act('updateServerName', { serverId, name });
 export const updateServerIcon = (serverId, icon) => act('updateServerIcon', { serverId, icon });
 export const deleteServer = (serverId) => act('deleteServer', { serverId });
 export const updateInvite = (serverId, code) => act('updateInvite', { serverId, code });

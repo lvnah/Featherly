@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { deleteRole, deleteServer, getMe, kickMember, membersOf, membership, rolesOf, assignRole, updateInvite, updateRole, updateServerIcon, createRole } from '../lib/store';
-import { Avatar, ColorDiamonds, ErrorLine, useStore, useUI } from './ui';
+import { Avatar, ColorDiamonds, ErrorLine, ServerIcon, useStore, useUI } from './ui';
 import { fileToDataUrl, ICON_OPTS } from '../lib/images';
+import { updateServerName } from '../lib/store';
 import { fullName } from '../lib/util';
 import { ROLE_COLORS } from '../lib/util';
 import { run } from '../views/ServerView';
@@ -205,6 +206,7 @@ function InviteTab({ serverId, toast }) {
 function ManageTab({ serverId, toast, onDeleted }) {
   const s = useStore();
   const server = s.servers.find((x) => x.id === serverId);
+  const [name, setName] = useState(server.name);
   const [icon, setIcon] = useState(server.icon || '');
   const [error, setError] = useState('');
   const pick = async (e) => {
@@ -223,15 +225,26 @@ function ManageTab({ serverId, toast, onDeleted }) {
       <form
         onSubmit={async (e) => {
           e.preventDefault();
+          await run(toast, () => updateServerName(serverId, name), 'Nom de l’espace mis à jour');
+        }}
+        className="flex flex-col gap-3 rounded-3xl bg-slate-50 p-5"
+      >
+        <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Nom de l’espace</p>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <input className="field" maxLength={16} value={name} onChange={(e) => setName(e.target.value)} />
+          <button type="submit" className="btn-primary" disabled={!name.trim() || name === server.name}>Enregistrer</button>
+        </div>
+      </form>
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
           await run(toast, () => updateServerIcon(serverId, icon), 'Icône mise à jour');
         }}
         className="flex flex-col gap-4 rounded-3xl bg-slate-50 p-5"
       >
         <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Icône de l’espace</p>
         <div className="flex items-center gap-4">
-          <span className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-brand-400 to-brand-700 text-2xl font-bold text-white">
-            {icon ? <img src={icon} alt="" className="h-full w-full object-cover" /> : server.name.charAt(0).toUpperCase()}
-          </span>
+          <ServerIcon icon={icon} server={server} className="h-20 w-20" />
           <label className="btn-ghost cursor-pointer">
             Importer une image
             <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={pick} />

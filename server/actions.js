@@ -298,6 +298,12 @@ const handlers = {
     run('DELETE FROM messages WHERE id = ?', msg.id);
   },
 
+  updateServerName(me, p) {
+    requireOwner(p.serverId, me);
+    const name = text(p.name, 1, 16, 'Le nom doit faire entre 1 et 16 caractères.');
+    run('UPDATE servers SET name = ? WHERE id = ?', name, p.serverId);
+  },
+
   updateServerIcon(me, p) {
     requireOwner(p.serverId, me);
     const icon = imageData(p.icon, 'icon');

@@ -4,7 +4,7 @@ import {
   leaveVoice, membersOf, membership, roleColorOf, roleNameOf, roleRank, rolesOf, sendFriendRequest, sendMessage,
   assignRole, deleteMessage,
 } from '../lib/store';
-import { useStore, useUI, Avatar, EmptyState, ErrorLine, Icon } from '../components/ui';
+import { useStore, useUI, Avatar, EmptyState, ErrorLine, Icon, ServerIcon } from '../components/ui';
 import PlusBadge from '../components/PlusBadge';
 import { formatStamp, isOnline } from '../lib/util';
 
@@ -131,7 +131,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
         <Avatar user={u} size="sm" showStatus />
         <span className="min-w-0">
           <span className="flex items-center gap-1.5 truncate text-sm font-bold" style={{ color }}>{u.pseudo}{u.is_plus ? <PlusBadge className="!h-4 !w-4" /> : null}</span>
-          <span className="block truncate text-[11px] text-slate-400">#{u.tag}</span>
+          <span className="block truncate text-xs font-semibold text-slate-500">#{u.tag}</span>
         </span>
       </button>
     );
@@ -182,9 +182,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
           <Icon name="back" className="h-5 w-5" />
         </button>
         <div className="flex min-w-0 items-center gap-3">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-brand-400 to-brand-700 font-bold text-white">
-            {server.icon ? <img src={server.icon} alt="" className="h-full w-full object-cover" /> : server.name.charAt(0).toUpperCase()}
-          </span>
+          <ServerIcon server={server} className="h-12 w-12" />
           <div className="min-w-0">
             <p className="truncate text-lg font-extrabold">{server.name}</p>
             <span className="pill !bg-brand-50 !text-brand-700">
@@ -280,7 +278,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
                             {author.pseudo}
                           </button>
                           {author.is_plus ? <PlusBadge /> : null}
-                          <span className="pill">#{author.tag}</span>
+                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">#{author.tag}</span>
                         </div>
                         <p className="mt-1 whitespace-pre-wrap break-words text-sm text-slate-700">{m.content}</p>
                       </div>
