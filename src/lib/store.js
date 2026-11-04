@@ -103,24 +103,23 @@ export function canManageChannels(s, serverId, userId) {
   return s.roles.some((r) => r.server_id === serverId && m.role_ids.includes(r.id) && r.can_manage_channels);
 }
 
+// Couleur et nom viennent uniquement des rôles créés : le propriétaire n'a pas de rôle par défaut.
 export function roleColorOf(s, serverId, userId) {
-  const srv = s.servers.find((x) => x.id === serverId);
-  if (srv?.owner_id === userId) return '#ef4444';
   const m = membership(s, serverId, userId);
   if (!m) return null;
   return rolesOf(s, serverId).find((r) => m.role_ids.includes(r.id))?.color ?? null;
 }
 
-export function roleNameOf(s, serverId, userId) {
-  const srv = s.servers.find((x) => x.id === serverId);
-  if (srv?.owner_id === userId) return 'Owner';
+export function roleOf(s, serverId, userId) {
   const m = membership(s, serverId, userId);
-  return rolesOf(s, serverId).find((r) => m?.role_ids.includes(r.id))?.name ?? 'Membre';
+  return rolesOf(s, serverId).find((r) => m?.role_ids.includes(r.id)) || null;
+}
+
+export function roleNameOf(s, serverId, userId) {
+  return roleOf(s, serverId, userId)?.name ?? null;
 }
 
 export function roleRank(s, serverId, userId) {
-  const srv = s.servers.find((x) => x.id === serverId);
-  if (srv?.owner_id === userId) return -1;
   const m = membership(s, serverId, userId);
   const idx = rolesOf(s, serverId).findIndex((r) => m?.role_ids.includes(r.id));
   return idx === -1 ? Number.MAX_SAFE_INTEGER : idx;

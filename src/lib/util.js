@@ -3,7 +3,7 @@
 export const OWNER_COLOR = '#ef4444';
 export const ONLINE_WINDOW_MS = 45_000;
 
-export const ROLE_COLORS = ['#38bdf8', '#a78bfa', '#f472b6', '#facc15', '#34d399', '#fb923c', '#0f172a'];
+export const ROLE_COLORS = ['#ef4444', '#38bdf8', '#a78bfa', '#f472b6', '#facc15', '#34d399', '#fb923c', '#0f172a'];
 
 // Bannières par défaut (index 0 = vert de la page Paramètres).
 export const BANNER_GRADIENTS = [

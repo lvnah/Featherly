@@ -162,7 +162,7 @@ function MiniProfileModal({ userId, serverId, onClose }) {
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Rôle sur l’espace</p>
           <p className="mt-2 flex items-center gap-2 font-bold" style={{ color }}>
             <span className="h-3 w-3 rounded-full" style={{ background: color }} />
-            {roleName}
+            {roleName ?? 'Aucun rôle'}
           </p>
         </div>
         {user.id !== me.id && (
