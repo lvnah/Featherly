@@ -104,3 +104,11 @@ CREATE TABLE IF NOT EXISTS reports (
   created_at INTEGER NOT NULL
 );
 `);
+
+// Migrations légères pour les bases créées avant cette version.
+function addColumn(table, column, definition) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all();
+  if (!cols.some((c) => c.name === column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+}
+addColumn('users', 'is_admin', 'INTEGER NOT NULL DEFAULT 0');
+addColumn('reports', 'server_id', 'TEXT');

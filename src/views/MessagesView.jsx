@@ -46,8 +46,8 @@ export default function MessagesView({ withId }) {
   return (
     <div className="flex min-h-0 min-w-0 flex-1 gap-4">
       <aside className={`panel thin-scroll w-full flex-col overflow-y-auto p-5 md:flex md:w-80 md:shrink-0 ${withId ? 'hidden' : 'flex'}`}>
-        <h2 className="px-2 pb-4 text-xl font-extrabold">Messages</h2>
-        {conversations.length === 0 && <p className="px-2 text-sm text-slate-500">Aucune conversation. Ajoutez un ami pour discuter en privé.</p>}
+        <h2 className="px-2 pb-4 text-xl font-extrabold">Messages privés</h2>
+        {conversations.length === 0 && <p className="px-2 text-sm text-slate-500">Aucune conversation active.</p>}
         <div className="flex flex-col gap-2">
           {conversations.map(({ user, last }) => (
             <button key={user.id} onClick={() => go({ name: 'messages', withId: user.id })} className={`flex items-center gap-3 rounded-2xl p-3 text-left transition hover:bg-slate-50 ${withId === user.id ? 'bg-brand-50' : ''}`}>
@@ -72,7 +72,7 @@ export default function MessagesView({ withId }) {
                 <Avatar user={partner} size="sm" showStatus />
                 <span className="min-w-0">
                   <span className="block truncate font-bold">{fullName(partner)}</span>
-                  <span className="block text-xs text-slate-500">{isOnline(partner) ? 'En ligne' : 'Hors ligne'}</span>
+                  <span className="block text-xs text-slate-500">Discussion privée · {isOnline(partner) ? 'En ligne' : 'Hors ligne'}</span>
                 </span>
               </button>
             </header>
@@ -92,7 +92,7 @@ export default function MessagesView({ withId }) {
             </div>
             <form onSubmit={submit} className="border-t border-slate-100 p-4">
               <div className="flex items-center gap-3">
-                <input className="field !rounded-2xl !bg-slate-100 !py-3.5" placeholder={`Message à ${partner.pseudo}`} value={text} maxLength={1000} onChange={(e) => setText(e.target.value)} />
+                <input className="field !rounded-2xl !bg-slate-100 !py-3.5" placeholder={`Envoyer un message à ${partner.pseudo}...`} value={text} maxLength={1000} onChange={(e) => setText(e.target.value)} />
                 <button type="submit" disabled={!text.trim()} aria-label="Envoyer" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-500 text-white transition hover:bg-brand-600 disabled:opacity-40">
                   <Icon name="send" className="h-5 w-5" />
                 </button>

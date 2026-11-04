@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import {
-  createChannel, createRole, createServer, getMe, getUser, joinServer, membersOf, membership, regenerateInvite,
-  reportUser, rolesOf, toggleRole, roleColorOf, roleNameOf,
-} from '../lib/store';
-import { Modal, Avatar, Banner, ColorDiamonds, ErrorLine, Icon, useStore, useUI } from './ui';
-import { fullName, isOnline, ROLE_COLORS } from '../lib/util';
+import { createChannel, createServer, getMe, getUser, joinServer, regenerateInvite, reportUser } from '../lib/store';
+import { Modal, Avatar, Banner, ErrorLine, Icon, useStore, useUI } from './ui';
+import { fullName, isOnline } from '../lib/util';
+import { roleColorOf, roleNameOf } from '../lib/store';
 import { run } from '../views/ServerView';
+import EspaceSettingsModal from './EspaceSettings';
 
 // Hôte unique : ouvre la modale demandée par openModal(name, props).
 export function ModalHost({ modal, onClose }) {
@@ -171,7 +170,7 @@ function MiniProfileModal({ userId, serverId, onClose }) {
             <button className="btn-ghost flex-1" onClick={() => go({ name: 'messages', withId: user.id })}>
               <Icon name="chat" className="h-4 w-4" /> Message
             </button>
-            <button className="btn-danger flex-1" onClick={() => openModal('report', { userId: user.id })}>
+            <button className="btn-danger flex-1" onClick={() => openModal('report', { userId: user.id, serverId })}>
               <Icon name="flag" className="h-4 w-4" /> Signaler
             </button>
           </div>
@@ -181,13 +180,13 @@ function MiniProfileModal({ userId, serverId, onClose }) {
   );
 }
 
-function ReportModal({ userId, onClose }) {
+function ReportModal({ userId, serverId = null, onClose }) {
   const s = useStore();
   const { toast } = useUI();
   const target = getUser(s, userId);
   const [reason, setReason] = useState('');
   const { error, busy, submit } = useSubmit(async () => {
-    await reportUser(userId, reason);
+    await reportUser(userId, reason, serverId);
     toast('Signalement envoyé. Merci.');
     onClose();
   });
@@ -228,7 +227,8 @@ function ChannelModal({ serverId, onClose }) {
           ))}
         </div>
         <label className="flex flex-col gap-2"><Label>Nom du salon</Label>
-          <input className="field" maxLength={24} value={name} autoFocus placeholder="ex. annonces" onChange={(e) => setName(e.target.value)} />
+          <input className="field" maxLength={16} value={name} autoFocus placeholder="ex. general-chat" onChange={(e) => setName(e.target.value)} />
+          <span className="text-xs text-slate-400">Lettres, chiffres et tirets uniquement, 16 caractères max.</span>
         </label>
         <ErrorLine>{error}</ErrorLine>
         <div className="flex justify-end gap-2">
@@ -240,72 +240,6 @@ function ChannelModal({ serverId, onClose }) {
   );
 }
 
-// Paramètres de l'espace (propriétaire) : rôles et attribution.
-function RolesModal({ serverId, onClose }) {
-  const s = useStore();
-  const { toast } = useUI();
-  const me = getMe(s);
-  const server = s.servers.find((x) => x.id === serverId);
-  const [name, setName] = useState('');
-  const [color, setColor] = useState(ROLE_COLORS[0]);
-  const [canManage, setCanManage] = useState(false);
-  const { error, busy, submit } = useSubmit(async () => {
-    await createRole(serverId, { name, color, can_manage_channels: canManage });
-    setName('');
-    setCanManage(false);
-    toast('Rôle créé');
-  });
-  if (!server) return null;
-  const roles = rolesOf(s, serverId);
-  const members = membersOf(s, serverId).filter((u) => u.id !== server.owner_id);
-
-  return (
-    <Modal open title="Rôles & permissions" onClose={onClose} width="max-w-lg">
-      {server.owner_id !== me.id ? (
-        <p className="text-sm text-slate-500">Seul le propriétaire de l’espace peut gérer les rôles.</p>
-      ) : (
-        <div className="flex flex-col gap-6">
-          <form onSubmit={submit} className="flex flex-col gap-4 rounded-3xl bg-slate-50 p-5">
-            <Label>Nouveau rôle</Label>
-            <input className="field" maxLength={20} placeholder="Nom du rôle" value={name} onChange={(e) => setName(e.target.value)} />
-            <div><p className="mb-2 text-sm text-slate-500">Couleur</p><ColorDiamonds value={color} onChange={setColor} /></div>
-            <label className="flex items-center gap-3 text-sm text-slate-600">
-              <input type="checkbox" className="h-4 w-4 accent-brand-500" checked={canManage} onChange={(e) => setCanManage(e.target.checked)} />
-              Peut gérer les salons (créer / supprimer)
-            </label>
-            <ErrorLine>{error}</ErrorLine>
-            <button type="submit" className="btn-primary self-end" disabled={busy || !name.trim()}>Créer le rôle</button>
-          </form>
-
-          <div className="flex flex-col gap-3">
-            <Label>Attribution</Label>
-            {members.length === 0 && <p className="text-sm text-slate-500">Aucun autre membre.</p>}
-            {members.map((u) => {
-              const m = membership(s, serverId, u.id);
-              return (
-                <div key={u.id} className="flex flex-col gap-2 rounded-2xl border border-slate-100 p-3">
-                  <div className="flex items-center gap-2"><Avatar user={u} size="xs" /><span className="text-sm font-bold">{fullName(u)}</span></div>
-                  <div className="flex flex-wrap gap-2">
-                    {roles.map((r) => {
-                      const on = m?.role_ids.includes(r.id);
-                      return (
-                        <button key={r.id} onClick={() => run(toast, () => toggleRole(serverId, u.id, r.id))} className={`rounded-full border px-3 py-1 text-xs font-bold transition ${on ? 'border-transparent text-white' : 'border-slate-200 text-slate-500'}`} style={on ? { background: r.color } : undefined}>
-                          {r.name}
-                        </button>
-                      );
-                    })}
-                    {roles.length === 0 && <span className="text-xs text-slate-400">Créez d’abord un rôle.</span>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </Modal>
-  );
-}
-
 const MODALS = {
   createServer: CreateServerModal,
   join: JoinServerModal,
@@ -313,5 +247,5 @@ const MODALS = {
   mini: MiniProfileModal,
   report: ReportModal,
   channel: ChannelModal,
-  roles: RolesModal,
+  'espace-settings': EspaceSettingsModal,
 };

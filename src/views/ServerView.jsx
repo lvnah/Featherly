@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   canManageChannels, deleteChannel, friendshipBetween, getMe, getUser, isFriend, isMember, joinVoice, kickMember,
   leaveVoice, membersOf, membership, roleColorOf, roleNameOf, roleRank, rolesOf, sendFriendRequest, sendMessage,
-  toggleRole,
+  assignRole, deleteMessage,
 } from '../lib/store';
 import { useStore, useUI, Avatar, EmptyState, ErrorLine, Icon } from '../components/ui';
 import { formatStamp, isOnline } from '../lib/util';
@@ -36,16 +36,20 @@ export function memberMenuItems({ s, me, serverId, userId, go, openModal, toast 
         onClick: () => run(toast, () => sendFriendRequest(userId), 'Demande d’ami envoyée'),
       });
     }
-    items.push({ label: 'Signaler', icon: '🚩', danger: true, onClick: () => openModal('report', { userId }) });
+    items.push({ label: 'Signaler', icon: '🚩', danger: true, onClick: () => openModal('report', { userId, serverId }) });
   }
   if (srv?.owner_id === me.id && userId !== me.id) {
     items.push({ separator: true });
+    items.push({
+      label: 'Retirer les rôles',
+      icon: '∅',
+      onClick: () => run(toast, () => assignRole(serverId, userId, null), 'Rôle retiré'),
+    });
     rolesOf(s, serverId).forEach((r) => {
-      const has = membership(s, serverId, userId)?.role_ids.includes(r.id);
       items.push({
-        label: `${has ? 'Retirer' : 'Attribuer'} « ${r.name} »`,
+        label: `Rôle : ${r.name}`,
         icon: '🏷️',
-        onClick: () => run(toast, () => toggleRole(serverId, userId, r.id), 'Rôles mis à jour'),
+        onClick: () => run(toast, () => assignRole(serverId, userId, r.id), 'Rôle modifié'),
       });
     });
     items.push({ label: 'Expulser de l’espace', icon: '🚪', danger: true, onClick: () => run(toast, () => kickMember(serverId, userId), 'Membre expulsé') });
@@ -228,7 +232,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
         </nav>
 
         <div className="flex items-center gap-2">
-          <button onClick={() => (isOwner ? openModal('roles', { serverId }) : toast('Réservé au propriétaire de l’espace.'))} className="btn-ghost !rounded-full !py-2.5">
+          <button onClick={() => (isOwner ? openModal('espace-settings', { serverId }) : toast('Réservé au propriétaire de l’espace.'))} className="btn-ghost !rounded-full !py-2.5">
             <Icon name="settings" className="h-4 w-4" />
             Paramètres
           </button>
@@ -263,7 +267,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
                   if (!author) return null;
                   const color = roleColorOf(s, serverId, author.id) || '#0f172a';
                   return (
-                    <div key={m.id} className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-white px-5 py-4 shadow-soft">
+                    <div key={m.id} className="group flex items-center gap-4 rounded-3xl border border-slate-100 bg-white px-5 py-4 shadow-soft">
                       <button onClick={() => openModal('mini', { userId: author.id, serverId })} onContextMenu={(e) => memberMenu(e, author.id)} aria-label={`Profil de ${author.pseudo}`}>
                         <Avatar user={author} size="md" />
                       </button>
@@ -277,6 +281,16 @@ export default function ServerView({ serverId, channelId, goHome }) {
                         <p className="mt-1 whitespace-pre-wrap break-words text-sm text-slate-700">{m.content}</p>
                       </div>
                       <span className="hidden shrink-0 text-xs text-slate-400 sm:block">{formatStamp(m.created_at)}</span>
+                      {(isOwner || author.id === me.id) && (
+                        <button
+                          title="Supprimer le message"
+                          aria-label="Supprimer le message"
+                          onClick={() => run(toast, () => deleteMessage(m.id), 'Message supprimé')}
+                          className="shrink-0 rounded-xl p-2 text-slate-300 opacity-0 transition hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
+                        >
+                          <Icon name="trash" className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   );
                 })}

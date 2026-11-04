@@ -45,7 +45,7 @@ export default function FriendsView() {
   return (
     <div className="thin-scroll flex min-w-0 flex-1 flex-col gap-6 overflow-y-auto pb-4">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-        <h1 className="text-2xl font-extrabold">Ami(s)</h1>
+        <h1 className="text-2xl font-extrabold">Gestion des amis</h1>
 
         <section className="panel p-6">
           <h2 className="font-bold">Ajouter un ami</h2>
@@ -59,7 +59,7 @@ export default function FriendsView() {
 
         {received.length > 0 && (
           <section className="flex flex-col gap-3">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">Demandes reçues · {received.length}</h2>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">Demandes en attente ({received.length})</h2>
             {received.map(({ f, user }) =>
               row(user,
                 <div key="a" className="flex gap-2">
@@ -83,8 +83,8 @@ export default function FriendsView() {
         )}
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">Tous les amis · {friends.length}</h2>
-          {friends.length === 0 && <p className="text-sm text-slate-500">Pas encore d’amis. Envoyez une première demande !</p>}
+          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">Mes amis ({friends.length})</h2>
+          {friends.length === 0 && <p className="text-sm text-slate-500">Vous n’avez pas encore d’amis. Explorez les espaces et faites de nouvelles rencontres !</p>}
           {friends.map((u) =>
             row(u,
               <div key="b" className="flex gap-1">
