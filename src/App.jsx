@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { getMe, sync, touch } from './lib/store';
+import { getMe, refresh } from './lib/store';
+import { getToken } from './lib/api';
 import { ContextMenu, UIContext, useStore } from './components/ui';
 import Layout from './components/Layout';
 import { ModalHost } from './components/Modals';
@@ -10,42 +11,36 @@ import MessagesView from './views/MessagesView';
 import FriendsView from './views/FriendsView';
 import ProfileView from './views/ProfileView';
 
-// Routage léger par état (équivalent des pages PHP : index, server, messages, friends, profile, view_profile).
+// Routage par état. La vue « espace » s'affiche plein écran (sans sidebar), comme la capture.
 export default function App() {
   const s = useStore();
-  const me = getMe(s);
-
+  const me = s ? getMe(s) : null;
   const [view, setView] = useState({ name: 'home' });
   const [modal, setModal] = useState(null);
   const [menu, setMenu] = useState(null);
   const [toastMsg, setToastMsg] = useState(null);
-  const [, setTick] = useState(0);
+  const [booting, setBooting] = useState(() => !!getToken());
 
-  // Polling toutes les 2 s : relit le stockage (autres onglets), rafraîchit la présence,
-  // et renvoie un heartbeat toutes les ~14 s pour rester « en ligne ».
+  // Synchronisation toutes les 2 s (messages, présence, relations).
   useEffect(() => {
-    let n = 0;
-    const id = setInterval(() => {
-      sync();
-      n += 1;
-      if (n % 7 === 0) touch();
-      setTick((t) => t + 1);
-    }, 2000);
-    const onStorage = () => sync();
-    window.addEventListener('storage', onStorage);
+    let alive = true;
+    const tick = () => refresh().finally(() => alive && setBooting(false));
+    tick();
+    const id = setInterval(tick, 2000);
     return () => {
+      alive = false;
       clearInterval(id);
-      window.removeEventListener('storage', onStorage);
     };
   }, []);
 
   const closeMenu = useCallback(() => setMenu(null), []);
   const closeModal = useCallback(() => setModal(null), []);
-
   const toast = useCallback((msg) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg((cur) => (cur === msg ? null : cur)), 2800);
   }, []);
+
+  const goHome = useCallback(() => setView({ name: 'home' }), []);
 
   const ui = useMemo(
     () => ({
@@ -67,33 +62,38 @@ export default function App() {
   );
 
   useEffect(() => {
-    // Quitter une session ferme les vues qui ne concernent que la session.
     if (!me) setView({ name: 'home' });
   }, [me]);
 
+  let content;
+  if (booting && !me) {
+    content = <div className="flex min-h-dvh items-center justify-center text-sm text-slate-500">Chargement…</div>;
+  } else if (!me) {
+    content = <Login toast={toast} />;
+  } else if (view.name === 'server') {
+    content = (
+      <div className="flex h-dvh min-w-0 flex-col p-4">
+        <ServerView key={view.serverId} serverId={view.serverId} channelId={view.channelId} goHome={goHome} />
+      </div>
+    );
+  } else {
+    content = (
+      <Layout view={view}>
+        {view.name === 'home' && <Home />}
+        {view.name === 'messages' && <MessagesView withId={view.withId} />}
+        {view.name === 'friends' && <FriendsView />}
+        {view.name === 'profile' && <ProfileView key={view.userId} userId={view.userId} goBack={goHome} />}
+      </Layout>
+    );
+  }
+
   return (
     <UIContext.Provider value={ui}>
-      {!me ? (
-        <Login toast={toast} />
-      ) : (
-        <Layout view={view}>
-          {view.name === 'home' && <Home />}
-          {view.name === 'server' && <ServerView key={view.serverId} serverId={view.serverId} channelId={view.channelId} />}
-          {view.name === 'messages' && <MessagesView withId={view.withId} />}
-          {view.name === 'friends' && <FriendsView />}
-          {view.name === 'profile' && <ProfileView key={view.userId} userId={view.userId} />}
-        </Layout>
-      )}
-
+      {content}
       <ModalHost modal={modal} onClose={closeModal} />
-
       {menu && <ContextMenu x={menu.x} y={menu.y} items={menu.items} onClose={closeMenu} />}
-
       {toastMsg && (
-        <div
-          role="status"
-          className="fixed right-4 top-4 z-[70] rounded-2xl border border-white/10 bg-ink-800/95 px-5 py-3 text-sm text-white shadow-soft backdrop-blur-xl"
-        >
+        <div role="status" className="panel fixed right-6 top-6 z-[70] rounded-2xl px-5 py-3 text-sm font-semibold text-slate-800">
           {toastMsg}
         </div>
       )}

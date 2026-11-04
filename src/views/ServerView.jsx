@@ -1,31 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  canManageChannels,
-  deleteChannel,
-  friendshipBetween,
-  getMe,
-  getUser,
-  isFriend,
-  isMember,
-  joinVoice,
-  kickMember,
-  leaveVoice,
-  membersOf,
-  membership,
-  roleColorOf,
-  roleRank,
-  rolesOf,
-  sendFriendRequest,
-  sendMessage,
+  canManageChannels, deleteChannel, friendshipBetween, getMe, getUser, isFriend, isMember, joinVoice, kickMember,
+  leaveVoice, membersOf, membership, roleColorOf, roleNameOf, roleRank, rolesOf, sendFriendRequest, sendMessage,
   toggleRole,
 } from '../lib/store';
-import { useStore, useUI, Avatar, EmptyState, ErrorLine } from '../components/ui';
-import { formatTime, isOnline } from '../lib/util';
+import { useStore, useUI, Avatar, EmptyState, ErrorLine, Icon } from '../components/ui';
+import { formatStamp, isOnline } from '../lib/util';
 
-// Action avec retour utilisateur (toast en cas de succès, erreur sinon).
-export function run(toast, fn, okMessage) {
+// Exécute une action async et affiche le résultat dans un toast.
+export async function run(toast, fn, okMessage) {
   try {
-    fn();
+    await fn();
     if (okMessage) toast(okMessage);
     return true;
   } catch (err) {
@@ -34,13 +19,12 @@ export function run(toast, fn, okMessage) {
   }
 }
 
-// Menu contextuel d'un membre (utilisé dans le chat et la liste des membres).
+// Menu contextuel d'un membre (chat et liste des membres).
 export function memberMenuItems({ s, me, serverId, userId, go, openModal, toast }) {
   const target = getUser(s, userId);
   if (!target) return [];
   const srv = s.servers.find((x) => x.id === serverId);
   const items = [{ label: 'Voir le profil', icon: '👤', onClick: () => go({ name: 'profile', userId }) }];
-
   if (userId !== me.id) {
     items.push({ label: 'Envoyer un message', icon: '💬', onClick: () => go({ name: 'messages', withId: userId }) });
     if (!isFriend(s, me.id, userId)) {
@@ -54,7 +38,6 @@ export function memberMenuItems({ s, me, serverId, userId, go, openModal, toast 
     }
     items.push({ label: 'Signaler', icon: '🚩', danger: true, onClick: () => openModal('report', { userId }) });
   }
-
   if (srv?.owner_id === me.id && userId !== me.id) {
     items.push({ separator: true });
     rolesOf(s, serverId).forEach((r) => {
@@ -65,17 +48,12 @@ export function memberMenuItems({ s, me, serverId, userId, go, openModal, toast 
         onClick: () => run(toast, () => toggleRole(serverId, userId, r.id), 'Rôles mis à jour'),
       });
     });
-    items.push({
-      label: 'Expulser du serveur',
-      icon: '🚪',
-      danger: true,
-      onClick: () => run(toast, () => kickMember(serverId, userId), 'Membre expulsé'),
-    });
+    items.push({ label: 'Expulser de l’espace', icon: '🚪', danger: true, onClick: () => run(toast, () => kickMember(serverId, userId), 'Membre expulsé') });
   }
   return items;
 }
 
-export default function ServerView({ serverId, channelId }) {
+export default function ServerView({ serverId, channelId, goHome }) {
   const s = useStore();
   const { go, openModal, openMenu, toast } = useUI();
   const me = getMe(s);
@@ -92,37 +70,37 @@ export default function ServerView({ serverId, channelId }) {
   const [error, setError] = useState('');
   const listRef = useRef(null);
 
-  // Scroll automatique en bas à chaque nouveau message (polling inclus).
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
   }, [messages.length, current?.id]);
 
   if (!allowed) {
     return (
-      <EmptyState icon="🔒" title="Serveur introuvable">
-        Ce serveur n’existe pas ou vous n’en êtes pas membre. Utilisez un code d’invitation pour le rejoindre.
-      </EmptyState>
+      <div className="panel flex flex-1">
+        <EmptyState icon="bolt" title="Espace introuvable">
+          Cet espace n’existe pas ou vous n’en êtes pas membre. Utilisez un code d’invitation pour le rejoindre.
+        </EmptyState>
+      </div>
     );
   }
 
   const isOwner = server.owner_id === me.id;
   const canManage = canManageChannels(s, serverId, me.id);
   const myVoice = s.voice.find((v) => v.user_id === me.id);
+  const myVoiceChannel = channels.find((c) => c.id === myVoice?.channel_id);
   const members = membersOf(s, serverId).sort(
     (a, b) => roleRank(s, serverId, a.id) - roleRank(s, serverId, b.id) || a.pseudo.localeCompare(b.pseudo),
   );
   const onlineMembers = members.filter(isOnline);
   const offlineMembers = members.filter((u) => !isOnline(u));
+  const voiceUsers = (c) => s.voice.filter((v) => v.channel_id === c.id).map((v) => getUser(s, v.user_id)).filter(Boolean);
 
-  const voiceUsers = (channel) =>
-    s.voice.filter((v) => v.channel_id === channel.id).map((v) => getUser(s, v.user_id)).filter(Boolean);
-
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    if (!current) return;
+    if (!current || !text.trim()) return;
     setError('');
     try {
-      sendMessage(current.id, text);
+      await sendMessage(current.id, text);
       setText('');
     } catch (err) {
       setError(err.message);
@@ -134,268 +112,200 @@ export default function ServerView({ serverId, channelId }) {
       e.preventDefault();
       return;
     }
-    openMenu(e, [
-      {
-        label: 'Supprimer le salon',
-        icon: '🗑️',
-        danger: true,
-        onClick: () => run(toast, () => deleteChannel(channel.id), 'Salon supprimé'),
-      },
-    ]);
+    openMenu(e, [{ label: 'Supprimer le salon', icon: '🗑️', danger: true, onClick: () => run(toast, () => deleteChannel(channel.id), 'Salon supprimé') }]);
   };
 
-  const openMember = (userId) => openModal('mini', { userId, serverId });
+  const memberMenu = (e, userId) =>
+    openMenu(e, memberMenuItems({ s, me, serverId, userId, go, openModal, toast }));
 
+  // Une ligne de membre (liste de droite).
   const memberRow = (u) => {
-    const color = roleColorOf(s, serverId, u.id);
-    const roleName = u.id === server.owner_id
-      ? 'Propriétaire'
-      : rolesOf(s, serverId).find((r) => membership(s, serverId, u.id)?.role_ids.includes(r.id))?.name;
+    const color = roleColorOf(s, serverId, u.id) || '#0f172a';
+    const online = isOnline(u);
     return (
       <button
         key={u.id}
-        onClick={() => openMember(u.id)}
-        onContextMenu={(e) =>
-          openMenu(e, memberMenuItems({ s, me, serverId, userId: u.id, go, openModal, toast }))
-        }
-        className="flex w-full items-center gap-3 rounded-xl px-2 py-1.5 text-left transition hover:bg-white/5"
+        onClick={() => openModal('mini', { userId: u.id, serverId })}
+        onContextMenu={(e) => memberMenu(e, u.id)}
+        className={`flex w-full items-center gap-3 rounded-2xl border border-slate-100 bg-white p-2.5 text-left transition hover:shadow-soft ${online ? '' : 'opacity-50'}`}
       >
         <Avatar user={u} size="sm" showStatus />
         <span className="min-w-0">
-          <span className="block truncate text-sm font-semibold" style={{ color: color || '#e2e8f0' }}>
-            {u.pseudo}
-          </span>
-          {roleName && <span className="block truncate text-[11px] text-slate-500">{roleName}</span>}
+          <span className="block truncate text-sm font-bold" style={{ color }}>{u.pseudo}</span>
+          <span className="block truncate text-[11px] text-slate-400">#{u.tag}</span>
         </span>
       </button>
     );
   };
 
+  // Groupes en ligne par rôle (ex. « OWNER — 1 »), puis hors ligne.
+  const onlineGroups = [];
+  onlineMembers.forEach((u) => {
+    const label = roleNameOf(s, serverId, u.id).toUpperCase();
+    const group = onlineGroups.find((g) => g.label === label);
+    if (group) group.users.push(u);
+    else onlineGroups.push({ label, color: roleColorOf(s, serverId, u.id), users: [u] });
+  });
+
   const membersPanel = (
-    <>
-      <p className="px-2 pb-1 text-[11px] font-bold uppercase tracking-widest text-slate-500">
-        En ligne · {onlineMembers.length}
-      </p>
-      {onlineMembers.map(memberRow)}
-      <p className="px-2 pb-1 pt-4 text-[11px] font-bold uppercase tracking-widest text-slate-500">
-        Hors ligne · {offlineMembers.length}
-      </p>
-      {offlineMembers.map(memberRow)}
-    </>
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
+        <p className="text-xs font-bold uppercase tracking-wide text-brand-600">En ligne — {onlineMembers.length}</p>
+        {onlineGroups.map((g) => (
+          <div key={g.label} className="flex flex-col gap-2">
+            <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: g.color || '#64748b' }}>
+              {g.label} — {g.users.length}
+            </p>
+            {g.users.map(memberRow)}
+          </div>
+        ))}
+      </div>
+      <div className="flex flex-col gap-2">
+        <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Hors ligne — {offlineMembers.length}</p>
+        {offlineMembers.map(memberRow)}
+      </div>
+    </div>
   );
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col md:flex-row">
-      {/* Colonne des salons */}
-      <aside className="flex max-h-56 shrink-0 flex-col border-b border-white/5 bg-ink-900/40 md:max-h-none md:w-60 md:border-b-0 md:border-r">
-        <div className="flex items-center justify-between gap-2 border-b border-white/5 p-4">
-          <h2 className="truncate font-bold text-white" title={server.name}>
-            {server.name}
-          </h2>
-          <div className="flex shrink-0 gap-1">
-            <button
-              title="Inviter"
-              onClick={() => openModal('invite', { serverId })}
-              className="rounded-lg px-2 py-1 text-sm hover:bg-white/10"
-            >
-              🔗
-            </button>
-            {isOwner && (
-              <button
-                title="Rôles"
-                onClick={() => openModal('roles', { serverId })}
-                className="rounded-lg px-2 py-1 text-sm hover:bg-white/10"
-              >
-                🏷️
-              </button>
-            )}
-            {canManage && (
-              <button
-                title="Créer un salon"
-                onClick={() => openModal('channel', { serverId })}
-                className="rounded-lg px-2 py-1 text-lg leading-none hover:bg-white/10"
-              >
-                +
-              </button>
-            )}
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
+      {/* Barre d'en-tête de l'espace */}
+      <header className="panel flex flex-wrap items-center gap-4 rounded-[2rem] px-5 py-3">
+        <button onClick={goHome} aria-label="Retour à l’accueil" className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200">
+          <Icon name="back" className="h-5 w-5" />
+        </button>
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-brand-400 to-brand-700 font-bold text-white">
+            {server.icon ? <img src={server.icon} alt="" className="h-full w-full object-cover" /> : server.name.charAt(0).toUpperCase()}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-lg font-extrabold">{server.name}</p>
+            <span className="pill !bg-brand-50 !text-brand-700">
+              <span className="h-2 w-2 rounded-full bg-brand-500" />
+              Hub Communautaire Actif
+            </span>
           </div>
         </div>
 
-        <div className="thin-scroll flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-3">
-          <ChannelGroup title="Salons texte">
-            {textChannels.map((c) => (
+        {/* Contrôle segmenté des salons */}
+        <nav className="thin-scroll mx-auto flex max-w-full items-center gap-1 overflow-x-auto rounded-full bg-slate-100 p-1">
+          {textChannels.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => go({ name: 'server', serverId, channelId: c.id })}
+              onContextMenu={(e) => channelMenu(e, c)}
+              className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition ${
+                current?.id === c.id ? 'bg-slate-900 text-brand-400' : 'text-slate-600 hover:bg-white'
+              }`}
+            >
+              <Icon name="hash" className="h-4 w-4" />
+              {c.name}
+            </button>
+          ))}
+          {voiceChannels.map((c) => {
+            const inside = myVoice?.channel_id === c.id;
+            return (
               <button
                 key={c.id}
-                onClick={() => go({ name: 'server', serverId, channelId: c.id })}
+                onClick={() => run(toast, () => joinVoice(c.id), `Connecté à ${c.name}`)}
                 onContextMenu={(e) => channelMenu(e, c)}
-                className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm transition ${
-                  current?.id === c.id ? 'bg-white/10 font-semibold text-white' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition ${
+                  inside ? 'bg-brand-500 text-white' : 'text-slate-600 hover:bg-white'
                 }`}
               >
-                <span className="text-slate-500">#</span>
-                <span className="truncate">{c.name}</span>
+                <Icon name="speaker" className="h-4 w-4" />
+                {c.name}
+                {voiceUsers(c).length > 0 && <span className="text-xs opacity-70">{voiceUsers(c).length}</span>}
               </button>
-            ))}
-          </ChannelGroup>
+            );
+          })}
+          {canManage && (
+            <button onClick={() => openModal('channel', { serverId })} className="flex shrink-0 items-center gap-1 rounded-full bg-brand-100 px-4 py-2 text-sm font-bold text-brand-700 hover:bg-brand-200">
+              <Icon name="plus" className="h-4 w-4" />
+              Salon
+            </button>
+          )}
+        </nav>
 
-          <ChannelGroup title="Salons vocaux">
-            {voiceChannels.map((c) => {
-              const users = voiceUsers(c);
-              const inside = myVoice?.channel_id === c.id;
-              return (
-                <div key={c.id}>
-                  <button
-                    onClick={() => run(toast, () => joinVoice(c.id), `Connecté à ${c.name}`)}
-                    onContextMenu={(e) => channelMenu(e, c)}
-                    className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm transition ${
-                      inside ? 'bg-brand-500/15 text-brand-300' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                    }`}
-                  >
-                    <span>🔊</span>
-                    <span className="truncate">{c.name}</span>
-                  </button>
-                  {users.length > 0 && (
-                    <div className="ml-6 flex flex-col gap-1 py-1">
-                      {users.map((u) => (
-                        <div key={u.id} className="flex items-center gap-2 text-xs text-slate-400">
-                          <Avatar user={u} size="xs" />
-                          <span className="truncate">{u.pseudo}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-            {voiceChannels.length === 0 && <p className="px-3 text-xs text-slate-600">Aucun salon vocal.</p>}
-          </ChannelGroup>
+        <div className="flex items-center gap-2">
+          <button onClick={() => (isOwner ? openModal('roles', { serverId }) : toast('Réservé au propriétaire de l’espace.'))} className="btn-ghost !rounded-full !py-2.5">
+            <Icon name="settings" className="h-4 w-4" />
+            Paramètres
+          </button>
+          <button onClick={() => openModal('invite', { serverId })} className="btn-primary !rounded-full !py-2.5">
+            Inviter
+          </button>
         </div>
+      </header>
 
-        {myVoice && (
-          <VoicePanel
-            channel={channels.find((c) => c.id === myVoice.channel_id)}
-            users={voiceUsers(channels.find((c) => c.id === myVoice.channel_id) || { id: '' })}
-            onLeave={() => run(toast, () => leaveVoice(), 'Vous avez quitté le vocal')}
-          />
-        )}
-      </aside>
-
-      {/* Chat */}
-      <section className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <header className="flex items-center gap-3 border-b border-white/5 bg-ink-900/30 px-5 py-4 backdrop-blur">
-          <span className="text-xl text-slate-500">#</span>
-          <h3 className="truncate font-bold text-white">{current?.name ?? 'aucun salon'}</h3>
-          <span className="hidden truncate text-sm text-slate-500 sm:block">
-            {server.is_public ? 'Serveur public' : 'Serveur privé'}
-          </span>
-        </header>
-
-        {current ? (
-          <>
-            <div ref={listRef} className="thin-scroll flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-4">
-              {messages.length === 0 && (
-                <p className="m-auto text-sm text-slate-500">Aucun message dans #{current.name}. Lancez la discussion !</p>
-              )}
-              {messages.map((m) => {
-                const author = getUser(s, m.user_id);
-                if (!author) return null;
-                const color = roleColorOf(s, serverId, author.id) || '#e2e8f0';
-                return (
-                  <div key={m.id} className="flex gap-3 rounded-2xl px-3 py-2 hover:bg-white/[0.03]">
-                    <button
-                      onClick={() => openMember(author.id)}
-                      onContextMenu={(e) =>
-                        openMenu(e, memberMenuItems({ s, me, serverId, userId: author.id, go, openModal, toast }))
-                      }
-                      className="mt-0.5"
-                      aria-label={`Profil de ${author.pseudo}`}
-                    >
-                      <Avatar user={author} size="sm" />
-                    </button>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-baseline gap-2">
-                        <button
-                          onClick={() => openMember(author.id)}
-                          onContextMenu={(e) =>
-                            openMenu(e, memberMenuItems({ s, me, serverId, userId: author.id, go, openModal, toast }))
-                          }
-                          className="font-semibold hover:underline"
-                          style={{ color }}
-                        >
-                          {author.pseudo}
-                        </button>
-                        <span className="text-xs text-slate-500">#{author.tag}</span>
-                        <span className="text-xs text-slate-600">{formatTime(m.created_at)}</span>
-                      </div>
-                      <p className="whitespace-pre-wrap break-words text-sm text-slate-200">{m.content}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <form onSubmit={submit} className="border-t border-white/5 p-4">
-              <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-ink-900/70 pl-4 pr-2 focus-within:border-brand-500/60">
-                <input
-                  className="min-w-0 flex-1 bg-transparent py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
-                  placeholder={`Écrire dans #${current.name}`}
-                  value={text}
-                  maxLength={2000}
-                  onChange={(e) => setText(e.target.value)}
-                />
-                <button type="submit" className="btn-primary !px-4 !py-2" disabled={!text.trim()}>
-                  Envoyer
+      <div className="flex min-h-0 flex-1 gap-4">
+        {/* Chat */}
+        <section className="panel flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4">
+            <span className="pill !bg-brand-100 !px-3 !py-1 !text-sm !font-bold !text-brand-700">Salon #{current?.name ?? '—'}</span>
+            {myVoiceChannel && (
+              <span className="ml-auto flex items-center gap-3 rounded-full bg-brand-50 py-1 pl-3 pr-1 text-sm font-semibold text-brand-700">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-brand-500" />
+                Vocal · {myVoiceChannel.name}
+                <button onClick={() => run(toast, () => leaveVoice(), 'Vous avez quitté le vocal')} className="rounded-full bg-white px-3 py-1 text-xs text-red-600 shadow-soft">
+                  Quitter
                 </button>
+              </span>
+            )}
+          </div>
+
+          {current ? (
+            <>
+              <div ref={listRef} className="thin-scroll flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-5">
+                {messages.length === 0 && <p className="m-auto text-sm text-slate-500">Aucun message dans #{current.name}. Lancez la discussion !</p>}
+                {messages.map((m) => {
+                  const author = getUser(s, m.user_id);
+                  if (!author) return null;
+                  const color = roleColorOf(s, serverId, author.id) || '#0f172a';
+                  return (
+                    <div key={m.id} className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-white px-5 py-4 shadow-soft">
+                      <button onClick={() => openModal('mini', { userId: author.id, serverId })} onContextMenu={(e) => memberMenu(e, author.id)} aria-label={`Profil de ${author.pseudo}`}>
+                        <Avatar user={author} size="md" />
+                      </button>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button onClick={() => openModal('mini', { userId: author.id, serverId })} onContextMenu={(e) => memberMenu(e, author.id)} className="font-bold hover:underline" style={{ color }}>
+                            {author.pseudo}
+                          </button>
+                          <span className="pill">#{author.tag}</span>
+                        </div>
+                        <p className="mt-1 whitespace-pre-wrap break-words text-sm text-slate-700">{m.content}</p>
+                      </div>
+                      <span className="hidden shrink-0 text-xs text-slate-400 sm:block">{formatStamp(m.created_at)}</span>
+                    </div>
+                  );
+                })}
               </div>
-              <ErrorLine>{error}</ErrorLine>
-            </form>
-          </>
-        ) : (
-          <EmptyState icon="#" title="Aucun salon texte">
-            Demandez à un membre disposant de la permission « gérer les salons » d’en créer un.
-          </EmptyState>
-        )}
-      </section>
 
-      {/* Membres : sidebar desktop, repli mobile */}
-      <aside className="thin-scroll hidden w-60 shrink-0 flex-col overflow-y-auto border-l border-white/5 bg-ink-900/40 p-3 lg:flex">
-        {membersPanel}
-      </aside>
-      <details className="border-t border-white/5 bg-ink-900/40 p-3 lg:hidden">
-        <summary className="cursor-pointer text-sm font-semibold text-slate-300">
-          Membres · {members.length}
-        </summary>
-        <div className="mt-2 max-h-60 overflow-y-auto">{membersPanel}</div>
-      </details>
-    </div>
-  );
-}
+              <form onSubmit={submit} className="border-t border-slate-100 p-4">
+                <div className="flex items-center gap-3">
+                  <input
+                    className="field !rounded-2xl !bg-slate-100 !py-3.5"
+                    placeholder={`Partager quelque chose dans #${current.name}...`}
+                    value={text}
+                    maxLength={2000}
+                    onChange={(e) => setText(e.target.value)}
+                  />
+                  <button type="submit" disabled={!text.trim()} aria-label="Envoyer" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-500 text-white shadow-[0_10px_24px_-10px_rgba(34,197,94,0.8)] transition hover:bg-brand-600 disabled:opacity-40">
+                    <Icon name="send" className="h-5 w-5" />
+                  </button>
+                </div>
+                <ErrorLine>{error}</ErrorLine>
+              </form>
+            </>
+          ) : (
+            <EmptyState icon="hash" title="Aucun salon texte">Demandez à un membre disposant de la permission « gérer les salons » d’en créer un.</EmptyState>
+          )}
+        </section>
 
-function ChannelGroup({ title, children }) {
-  return (
-    <div className="flex flex-col gap-1">
-      <p className="px-2 text-[11px] font-bold uppercase tracking-widest text-slate-500">{title}</p>
-      {children}
-    </div>
-  );
-}
-
-// Panneau flottant de l'état vocal actif.
-function VoicePanel({ channel, users, onLeave }) {
-  return (
-    <div className="card m-3 p-4">
-      <div className="mb-3 flex items-center gap-2">
-        <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-brand-500" />
-        <p className="truncate text-sm font-semibold text-brand-300">Vocal · {channel?.name ?? '—'}</p>
+        {/* Membres (desktop) */}
+        <aside className="panel thin-scroll hidden w-72 shrink-0 overflow-y-auto p-5 lg:block">{membersPanel}</aside>
       </div>
-      <div className="mb-3 flex -space-x-2">
-        {users.slice(0, 6).map((u) => (
-          <Avatar key={u.id} user={u} size="xs" className="ring-2 ring-ink-850" />
-        ))}
-      </div>
-      <button onClick={onLeave} className="btn-danger w-full !py-2">
-        Quitter le vocal
-      </button>
     </div>
   );
 }

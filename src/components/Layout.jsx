@@ -1,17 +1,18 @@
 import { useState } from 'react';
-import { getMe, serversOf } from '../lib/store';
-import { useStore, useUI, Avatar } from './ui';
+import { getMe, serversOf, logout } from '../lib/store';
+import { useStore, useUI, Avatar, Icon } from './ui';
 
 const NAV = [
-  { key: 'home', label: 'Accueil', icon: '🏠', view: { name: 'home' } },
-  { key: 'messages', label: 'Messages', icon: '💬', view: { name: 'messages' } },
-  { key: 'friends', label: 'Amis', icon: '👥', view: { name: 'friends' } },
+  { key: 'home', label: 'Accueil', icon: 'home', view: { name: 'home' } },
+  { key: 'messages', label: 'Message', icon: 'message', view: { name: 'messages' } },
+  { key: 'friends', label: 'Ami(s)', icon: 'users', view: { name: 'friends' } },
+  { key: 'settings', label: 'Paramètres', icon: 'settings', view: { name: 'profile', userId: null } },
 ];
 
-// Layout global : sidebar (desktop) ou tiroir coulissant (mobile) + conteneur dynamique.
+// Sidebar flottante (desktop) ou tiroir coulissant (mobile) + zone de contenu.
 export default function Layout({ view, children }) {
   const s = useStore();
-  const { go, openModal } = useUI();
+  const { go, openModal, toast } = useUI();
   const me = getMe(s);
   const [drawer, setDrawer] = useState(false);
   const servers = serversOf(s, me.id);
@@ -20,133 +21,110 @@ export default function Layout({ view, children }) {
     go(v);
     setDrawer(false);
   };
-
-  const isActive = (item) => view.name === item.key;
-  const currentTitle =
-    NAV.find((n) => n.key === view.name)?.label ??
-    (view.name === 'server' ? s.servers.find((x) => x.id === view.serverId)?.name : 'Profil') ??
-    'Hevenly';
+  const isActive = (item) =>
+    item.key === 'settings' ? view.name === 'profile' && view.userId === me.id : view.name === item.key;
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-ink-950">
-      {/* Tiroir / sidebar */}
+    <div className="flex h-dvh gap-4 p-4">
       <aside
-        className={`sidebar-drawer fixed inset-y-0 left-0 z-40 flex w-72 flex-col gap-5 border-r border-white/5 bg-ink-900/95 p-4 backdrop-blur-xl lg:static lg:translate-x-0 ${
-          drawer ? 'translate-x-0' : '-translate-x-full'
+        className={`panel sidebar-drawer fixed inset-y-4 left-4 z-40 flex w-72 flex-col gap-6 overflow-hidden p-5 lg:static lg:z-auto lg:flex lg:w-64 lg:shrink-0 ${
+          drawer ? 'translate-x-0' : '-translate-x-[120%] lg:translate-x-0'
         }`}
       >
         <div className="flex items-center gap-3 px-2 pt-1">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-500 text-lg font-extrabold text-ink-950">
-            H
-          </div>
-          <span className="text-xl font-extrabold tracking-tight text-white">Hevenly</span>
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-soft">
+            <LeafLogo />
+          </span>
+          <span className="text-xl font-extrabold tracking-tight text-slate-900">Hevenly</span>
+          <span className="h-2 w-2 rounded-full bg-brand-500" />
         </div>
 
         <nav className="flex flex-col gap-1">
           {NAV.map((item) => (
             <button
               key={item.key}
-              onClick={() => navigate(item.view)}
-              className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-semibold transition ${
-                isActive(item) ? 'bg-brand-500/15 text-brand-300' : 'text-slate-300 hover:bg-white/5 hover:text-white'
+              onClick={() => (item.key === 'settings' ? navigate({ name: 'profile', userId: me.id }) : navigate(item.view))}
+              className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-[15px] font-semibold transition ${
+                isActive(item) ? 'bg-brand-100 text-brand-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
-              <span className="w-5 text-center">{item.icon}</span>
+              <Icon name={item.icon} className="h-5 w-5" />
               {item.label}
             </button>
           ))}
-          <button
-            onClick={() => {
-              setDrawer(false);
-              openModal('settings');
-            }}
-            className="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-semibold text-slate-300 transition hover:bg-white/5 hover:text-white"
-          >
-            <span className="w-5 text-center">⚙️</span>
-            Paramètres
-          </button>
         </nav>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-2">
-          <div className="flex items-center justify-between px-2">
-            <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Serveurs</span>
-            <div className="flex gap-1">
-              <button
-                onClick={() => {
-                  setDrawer(false);
-                  openModal('join');
-                }}
-                title="Rejoindre avec un code"
-                className="rounded-lg px-2 py-0.5 text-xs text-slate-400 hover:bg-white/10 hover:text-white"
-              >
-                ↪
-              </button>
-              <button
-                onClick={() => {
-                  setDrawer(false);
-                  openModal('createServer');
-                }}
-                title="Créer un serveur"
-                className="rounded-lg px-2 py-0.5 text-lg leading-none text-slate-400 hover:bg-white/10 hover:text-white"
-              >
-                +
-              </button>
-            </div>
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+          <p className="px-2 text-[11px] font-bold uppercase tracking-widest text-slate-400">Mes espaces</p>
+          <div className="flex flex-col gap-2">
+            <button onClick={() => { setDrawer(false); openModal('join'); }} className="btn-ghost !py-2.5">
+              Rejoindre un espace
+            </button>
+            <button onClick={() => { setDrawer(false); openModal('createServer'); }} className="btn !bg-brand-50 !py-2.5 text-brand-700 hover:!bg-brand-100">
+              Créer un espace
+            </button>
           </div>
-          <div className="thin-scroll flex min-h-0 flex-col gap-1 overflow-y-auto pr-1">
-            {servers.length === 0 && <p className="px-2 text-xs text-slate-500">Aucun serveur pour l’instant.</p>}
-            {servers.map((srv) => {
-              const active = view.name === 'server' && view.serverId === srv.id;
-              return (
-                <button
-                  key={srv.id}
-                  onClick={() => navigate({ name: 'server', serverId: srv.id })}
-                  className={`flex items-center gap-3 rounded-2xl px-2 py-2 text-left transition ${
-                    active ? 'bg-white/10 text-white' : 'text-slate-300 hover:bg-white/5'
-                  }`}
-                >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-brand-500 to-teal-700 text-sm font-bold text-white">
-                    {srv.icon ? <img src={srv.icon} alt="" className="h-full w-full object-cover" /> : srv.name.charAt(0).toUpperCase()}
-                  </span>
-                  <span className="truncate text-sm font-semibold">{srv.name}</span>
-                </button>
-              );
-            })}
+          <div className="thin-scroll flex min-h-0 flex-col gap-1 overflow-y-auto">
+            {servers.map((srv) => (
+              <button
+                key={srv.id}
+                onClick={() => navigate({ name: 'server', serverId: srv.id })}
+                className={`flex items-center gap-3 rounded-2xl px-2 py-2 text-left transition hover:bg-slate-50 ${
+                  view.name === 'server' && view.serverId === srv.id ? 'bg-slate-100' : ''
+                }`}
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-brand-400 to-brand-700 text-sm font-bold text-white">
+                  {srv.icon ? <img src={srv.icon} alt="" className="h-full w-full object-cover" /> : srv.name.charAt(0).toUpperCase()}
+                </span>
+                <span className="truncate text-sm font-semibold text-slate-800">{srv.name}</span>
+              </button>
+            ))}
+            {servers.length === 0 && <p className="px-2 text-xs text-slate-400">Aucun espace pour le moment.</p>}
           </div>
         </div>
 
-        <button
-          onClick={() => navigate({ name: 'profile', userId: me.id })}
-          className="flex items-center gap-3 rounded-2xl border border-white/5 bg-white/5 p-2.5 text-left transition hover:bg-white/10"
-        >
-          <Avatar user={me} size="sm" showStatus />
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-white">{me.pseudo}</p>
-            <p className="truncate text-xs text-slate-400">
-              #{me.tag}
-              {me.is_plus ? <span className="ml-2 rounded-md bg-brand-500/20 px-1.5 text-[10px] font-bold text-brand-300">PLUS</span> : null}
-            </p>
-          </div>
-        </button>
+        <div className="flex items-center gap-3 border-t border-slate-100 pt-4">
+          <button onClick={() => navigate({ name: 'profile', userId: me.id })} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+            <Avatar user={me} size="md" showStatus />
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-bold text-slate-900">{me.pseudo}</span>
+              <span className="block text-xs font-semibold text-brand-600">En ligne</span>
+            </span>
+          </button>
+          <button
+            title="Se déconnecter"
+            aria-label="Se déconnecter"
+            onClick={async () => {
+              await logout();
+              toast('Vous êtes déconnecté.');
+            }}
+            className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+          >
+            <Icon name="logout" className="h-5 w-5" />
+          </button>
+        </div>
       </aside>
 
-      {drawer && (
-        <div className="mobile-overlay fixed inset-0 z-30 bg-black/60 lg:hidden" onClick={() => setDrawer(false)} />
-      )}
+      {drawer && <div className="mobile-overlay fixed inset-0 z-30 bg-slate-900/20 lg:hidden" onClick={() => setDrawer(false)} />}
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center gap-3 border-b border-white/5 bg-ink-900/80 p-3 backdrop-blur-xl lg:hidden">
-          <button
-            onClick={() => setDrawer(true)}
-            aria-label="Ouvrir le menu"
-            className="rounded-xl bg-white/5 px-3 py-2 text-lg hover:bg-white/10"
-          >
-            ☰
+      <div className="flex min-w-0 flex-1 flex-col gap-4">
+        <div className="flex items-center gap-3 lg:hidden">
+          <button onClick={() => setDrawer(true)} aria-label="Ouvrir le menu" className="panel rounded-2xl px-4 py-3">
+            <Icon name="home" className="h-5 w-5" />
           </button>
-          <span className="truncate font-bold text-white">{currentTitle}</span>
-        </header>
-        <main className="flex min-h-0 flex-1 overflow-hidden">{children}</main>
+          <span className="font-bold text-slate-900">Hevenly</span>
+        </div>
+        <main className="flex min-h-0 flex-1 gap-4 overflow-hidden">{children}</main>
       </div>
     </div>
+  );
+}
+
+export function LeafLogo() {
+  return (
+    <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden="true">
+      <path d="M6 24C6 12 14 6 27 5c0 13-6 21-18 21-1 0-2 0-3-2z" fill="#22c55e" />
+      <path d="M6 26 17 14" stroke="#14532d" strokeWidth="2" strokeLinecap="round" />
+    </svg>
   );
 }
