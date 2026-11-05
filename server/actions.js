@@ -70,17 +70,40 @@ const randomCode = () => {
 };
 // Images envoyées depuis le navigateur (data URL redimensionnée côté client).
 // Limites de taille : ce sont des miniatures, elles sont renvoyées à chaque synchronisation.
+// Images fixes : tout le monde. GIF animés : PLUS seulement, et plus légers (poids limité).
 const IMAGE_LIMITS = { avatar: 60_000, banner: 160_000, icon: 60_000 };
-const imageData = (value, kind) => {
+const GIF_LIMITS = { avatar: 200_000, banner: 300_000 };
+const imageData = (value, kind, isPlus = false) => {
   const v = String(value ?? '').trim();
   if (!v) return '';
-  if (v.length > IMAGE_LIMITS[kind] || !/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(v)) {
-    fail('Image invalide ou trop lourde. Choisissez une image plus petite (PNG, JPEG, WebP ou GIF).');
+  if (!/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(v)) {
+    fail('Format non pris en charge : PNG, JPEG, WebP ou GIF.');
   }
+  const isGif = v.startsWith('data:image/gif');
+  if (isGif && !isPlus) fail('Les GIF animés sont réservés aux membres PLUS.', 403);
+  const limit = isGif && GIF_LIMITS[kind] ? GIF_LIMITS[kind] : IMAGE_LIMITS[kind];
+  if (v.length > limit) fail('Image trop lourde. Choisissez une image plus légère.');
   return v;
 };
 
 const handlers = {
+  // Statistiques de jeux (3 maximum) : rang et heures, affichées dans le profil.
+  setGames(me, p) {
+    const list = Array.isArray(p.games) ? p.games.slice(0, 3) : [];
+    const rows = list.map((g) => {
+      const game = String(g.game ?? '').trim();
+      if (!game || game.length > 24) fail('Nom de jeu : 1 à 24 caractères.');
+      const rank = String(g.rank ?? '').trim();
+      if (rank.length > 24) fail('Rang : 24 caractères maximum.');
+      const hours = Math.max(0, Math.min(99999, Math.floor(Number(g.hours) || 0)));
+      return { game, rank, hours };
+    });
+    transaction(() => {
+      run('DELETE FROM user_games WHERE user_id = ?', me.id);
+      rows.forEach((r, i) => run('INSERT INTO user_games (user_id, position, game, rank, hours) VALUES (?, ?, ?, ?, ?)', me.id, i, r.game, r.rank, r.hours));
+    });
+  },
+
   setStatus(me, p) {
     if (!['online', 'game', 'away', 'offline'].includes(p.status)) fail('Statut inconnu.');
     run('UPDATE users SET status = ? WHERE id = ?', p.status, me.id);
@@ -94,6 +117,12 @@ const handlers = {
   updateProfile(me, p) {
     if (p.country !== undefined && p.country !== '' && !COUNTRY_CODES.has(p.country)) fail('Pays non proposé.');
     if (p.country !== undefined) run('UPDATE users SET country = ? WHERE id = ?', p.country, me.id);
+    if (p.customStatus !== undefined) {
+      const cs = String(p.customStatus).trim();
+      if (cs.length > 16) fail('Le statut personnalisé fait 16 caractères maximum.');
+      if (!/^[\p{L}\p{N} ]*$/u.test(cs)) fail("Le statut personnalisé n'accepte que des lettres et des chiffres.");
+      run('UPDATE users SET custom_status = ? WHERE id = ?', cs, me.id);
+    }
     const pseudo = p.pseudo !== undefined
       ? text(p.pseudo, 2, 24, 'Le pseudo doit faire entre 2 et 24 caractères.')
       : me.pseudo;
@@ -106,15 +135,14 @@ const handlers = {
     if (one('SELECT 1 FROM users WHERE pseudo = ? COLLATE NOCASE AND tag = ? AND id <> ?', pseudo, tag, me.id)) {
       fail('Ce pseudo et ce tag sont déjà utilisés.', 409);
     }
-    const avatar = p.avatar !== undefined ? imageData(p.avatar, 'avatar') : me.avatar;
+    const avatar = p.avatar !== undefined ? imageData(p.avatar, 'avatar', !!me.is_plus) : me.avatar;
     const bio = p.bio !== undefined ? String(p.bio).slice(0, 190) : me.bio;
     let bannerType = me.banner_type;
     let bannerValue = me.banner_value;
     if (p.banner !== undefined) {
       if (p.banner.type === 'image') {
-        if (!me.is_plus) fail('La bannière personnalisée est réservée aux membres PLUS.', 403);
         bannerType = 'image';
-        bannerValue = imageData(p.banner.value, 'banner');
+        bannerValue = imageData(p.banner.value, 'banner', !!me.is_plus);
         if (!bannerValue) fail('Image de bannière manquante.');
       } else {
         bannerType = 'gradient';
@@ -220,7 +248,7 @@ const handlers = {
       fail(me.is_plus ? 'Limite atteinte : 5 espaces maximum pour un membre PLUS.' : 'Limite atteinte : 3 espaces maximum. Passez PLUS pour en créer 5.', 403);
     }
     const name = text(p.name, 1, 16, 'Le nom doit faire entre 1 et 16 caractères.');
-    const icon = imageData(p.icon, 'icon');
+    const icon = imageData(p.icon, 'icon', false);
     let code;
     if (String(p.customCode ?? '').trim()) {
       if (!me.is_plus) fail('Le code personnalisé est réservé aux membres PLUS.', 403);
@@ -405,7 +433,7 @@ const handlers = {
 
   updateServerIcon(me, p) {
     requireOwner(p.serverId, me);
-    const icon = imageData(p.icon, 'icon');
+    const icon = imageData(p.icon, 'icon', false);
     if (!icon) fail('Image manquante.');
     run('UPDATE servers SET icon = ? WHERE id = ?', icon, p.serverId);
   },

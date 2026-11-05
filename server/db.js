@@ -118,6 +118,18 @@ addColumn('dms', 'status', "TEXT NOT NULL DEFAULT 'ok'");
 addColumn('users', 'country', "TEXT NOT NULL DEFAULT ''");
 addColumn('users', 'status', "TEXT NOT NULL DEFAULT 'online'");
 addColumn('voice_connections', 'muted', 'INTEGER NOT NULL DEFAULT 0');
+addColumn('users', 'custom_status', "TEXT NOT NULL DEFAULT ''");
+// Statistiques de jeux affichées dans le profil (3 maximum par membre).
+db.exec(`
+CREATE TABLE IF NOT EXISTS user_games (
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  position INTEGER NOT NULL,
+  game TEXT NOT NULL,
+  rank TEXT NOT NULL DEFAULT '',
+  hours INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, position)
+);
+`);
 db.exec(`
 CREATE TABLE IF NOT EXISTS dm_reads (user_id TEXT NOT NULL, peer_id TEXT NOT NULL, read_at INTEGER NOT NULL, PRIMARY KEY (user_id, peer_id));
 CREATE TABLE IF NOT EXISTS channel_reads (user_id TEXT NOT NULL, channel_id TEXT NOT NULL, read_at INTEGER NOT NULL, PRIMARY KEY (user_id, channel_id));

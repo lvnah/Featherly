@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { getMe, getUser, friendshipBetween, isFriend, sendFriendRequest, setStatus, updateProfile } from '../lib/store';
 import { useStore, useUI, Avatar, Banner, EmptyState, ErrorLine, Icon } from '../components/ui';
 import { BANNER_GRADIENTS, bannerStyle, fullName, isOnline, statusLabel, statusColor } from '../lib/util';
-import { fileToDataUrl, AVATAR_OPTS, BANNER_OPTS } from '../lib/images';
+import { fileToDataUrl, readGif, AVATAR_OPTS, BANNER_OPTS, GIF_MAX_AVATAR, GIF_MAX_BANNER } from '../lib/images';
 import PlusBadge from '../components/PlusBadge';
 import Flag from '../components/Flag';
 import CountrySelect from '../components/CountrySelect';
@@ -27,6 +27,7 @@ function OwnProfile() {
   const [avatar, setAvatar] = useState(me.avatar || '');
   const [bio, setBio] = useState(me.bio || '');
   const [country, setCountry] = useState(me.country || '');
+  const [customStatus, setCustomStatus] = useState(me.custom_status || '');
   const [banner, setBanner] = useState(me.banner?.type === 'image' ? me.banner : { type: 'gradient', index: me.banner?.index ?? 0 });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -38,7 +39,9 @@ function OwnProfile() {
     e.target.value = '';
     if (!file) return;
     try {
-      const data = await fileToDataUrl(file, opts);
+      const data = file.type === 'image/gif'
+        ? await readGif(file, asBanner ? GIF_MAX_BANNER : GIF_MAX_AVATAR, !!me.is_plus)
+        : await fileToDataUrl(file, opts);
       setter(asBanner ? { type: 'image', value: data } : data);
       setError('');
     } catch (err) {
@@ -51,7 +54,7 @@ function OwnProfile() {
     setError('');
     setBusy(true);
     try {
-      await updateProfile({ pseudo, tag: me.is_plus ? tag : undefined, avatar, bio, banner, country });
+      await updateProfile({ pseudo, tag: me.is_plus ? tag : undefined, avatar, bio, banner, country, customStatus });
       // Enregistré : retour sur la vue de son profil.
       go({ name: 'profile', userId: me.id });
     } catch (err) {
@@ -70,10 +73,15 @@ function OwnProfile() {
 
       <div className="flex justify-center p-8">
         <form onSubmit={save} className="w-full max-w-lg overflow-hidden rounded-[2.5rem] border border-slate-100 bg-surface shadow-soft">
-          <div className="relative h-40" style={bannerStyle(preview)}>
-            <div className="absolute -bottom-12 left-7 h-24 w-24 rounded-full ring-2 ring-surface">
+          <div className="relative h-40">
+            {/* Cliquer sur la bannière ou la photo ouvre le choix du fichier */}
+            <label className="absolute inset-0 cursor-pointer" style={bannerStyle(preview)} title="Changer la bannière">
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={pick(setBanner, BANNER_OPTS, true)} />
+            </label>
+            <label className="absolute -bottom-12 left-7 h-24 w-24 cursor-pointer rounded-full ring-2 ring-surface" title="Changer la photo">
               <Avatar user={preview} size="xl" className="!h-full !w-full" />
-            </div>
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={pick(setAvatar, AVATAR_OPTS)} />
+            </label>
           </div>
 
           <div className="flex flex-col gap-5 px-7 pb-7">
@@ -89,6 +97,16 @@ function OwnProfile() {
                 <input className="field font-mono" value={tag} disabled={!me.is_plus} inputMode="numeric" maxLength={4} onChange={(e) => setTag(e.target.value.replace(/\D/g, '').slice(0, 4))} />
               </Field>
             </div>
+
+            <Field label="Statut personnalisé (16 caractères, lettres et chiffres)">
+              <input
+                className="field"
+                maxLength={16}
+                value={customStatus}
+                placeholder="Ex. Dispo ce soir"
+                onChange={(e) => setCustomStatus(e.target.value.replace(/[^\p{L}\p{N} ]/gu, '').slice(0, 16))}
+              />
+            </Field>
 
             <div className="grid grid-cols-2 gap-4">
               <Field label="Statut">
@@ -108,13 +126,12 @@ function OwnProfile() {
               <ImportButton onChange={pick(setAvatar, AVATAR_OPTS)} label={avatar ? 'Changer la photo' : 'Importer une photo'} />
             </Field>
 
-            <Field label="Bannière personnalisée (réservé PLUS)" accent>
+            <Field label="Bannière (GIF animé : PLUS)" accent>
               <ImportButton
-                disabled={!me.is_plus}
                 onChange={pick(setBanner, BANNER_OPTS, true)}
                 label={banner.type === 'image' ? 'Changer la bannière' : 'Importer une image de bannière'}
               />
-              {!!me.is_plus && banner.type === 'image' && (
+              {banner.type === 'image' && (
                 <button type="button" onClick={() => setBanner({ type: 'gradient', index: 0 })} className="self-start text-xs font-bold text-slate-500 hover:text-slate-900">
                   Revenir au dégradé vert
                 </button>
@@ -173,6 +190,7 @@ function PublicProfile({ user, goBack }) {
                   {user.is_plus ? <PlusBadge /> : null}
                   {user.country ? <Flag code={user.country} name={countryName(user.country)} /> : null}
                 </h2>
+                {user.custom_status ? <p className="text-sm font-semibold text-slate-500">{user.custom_status}</p> : null}
                 <p className={`text-sm font-semibold ${isOnline(user) ? 'text-brand-600' : 'text-slate-400'}`}><span style={{ color: statusColor(user) }}>{statusLabel(user)}</span></p>
               </div>
             </div>
@@ -180,6 +198,7 @@ function PublicProfile({ user, goBack }) {
               <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-400">À propos</h3>
               <p className="text-sm text-slate-700">{user.bio || "Cet utilisateur n’a pas encore rédigé de biographie."}</p>
             </div>
+            <GamesBlock user={user} editable={user.id === me.id} />
                         {user.id === me.id && (
               <div className="flex gap-2 pt-2">
                 <button className="btn-primary" onClick={() => go({ name: 'profile', userId: me.id, edit: true })}>Modifier le profil</button>
@@ -212,5 +231,38 @@ function Field({ label, children, accent = false, className = '' }) {
       <span className={`text-[11px] font-bold uppercase tracking-widest ${accent ? 'text-brand-600' : 'text-slate-400'}`}>{label}</span>
       {children}
     </div>
+  );
+}
+
+// Mini-statut des jeux (rang, heures) : un clic pour modifier, si c'est son profil.
+function GamesBlock({ user, editable }) {
+  const { openModal } = useUI();
+  const games = user.games ?? [];
+  if (!editable && games.length === 0) return null;
+  return (
+    <button
+      type="button"
+      disabled={!editable}
+      onClick={() => openModal('games')}
+      className={`flex w-full flex-col gap-3 rounded-2xl border border-line bg-slate-50 p-4 text-left ${editable ? 'cursor-pointer hover:bg-slate-100' : 'cursor-default'}`}
+    >
+      <span className="flex items-center justify-between">
+        <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">Mes jeux</span>
+        {editable && <span className="text-xs font-bold text-brand-600">Modifier</span>}
+      </span>
+      {games.length === 0 ? (
+        <span className="text-sm text-slate-500">Ajoutez vos jeux, votre rang et vos heures.</span>
+      ) : (
+        <span className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {games.map((g) => (
+            <span key={g.game} className="flex flex-col rounded-xl bg-surface px-3 py-2 shadow-soft">
+              <span className="truncate text-sm font-extrabold">{g.game}</span>
+              <span className="truncate text-xs font-semibold text-brand-600">{g.rank || 'Sans rang'}</span>
+              <span className="text-xs text-slate-500">{g.hours} h</span>
+            </span>
+          ))}
+        </span>
+      )}
+    </button>
   );
 }

@@ -186,3 +186,5 @@ export const adminListServers = () => act('adminListServers');
 export const adminDeleteServer = (serverId) => act('adminDeleteServer', { serverId });
 export const adminListReports = () => act('adminListReports');
 export const adminDismissReport = (reportId) => act('adminDismissReport', { reportId });
+
+export const setGames = (games) => act('setGames', { games });
