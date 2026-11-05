@@ -217,6 +217,11 @@ export default function ServerView({ serverId, channelId, goHome }) {
 
 
         <div className="flex items-center gap-2">
+          {!isOwner && (
+            <button onClick={() => { if (window.confirm(`Quitter « ${server.name} » ?`)) run(toast, () => leaveServer(serverId)).then((ok) => ok && goHome()); }} className="btn-danger !rounded-full !py-2.5">
+              Quitter
+            </button>
+          )}
           <button onClick={() => (isOwner ? openModal('espace-settings', { serverId }) : toast('Réservé au propriétaire de l’espace.'))} className="btn-ghost !rounded-full !py-2.5">
             <Icon name="settings" className="h-4 w-4" />
             Paramètres

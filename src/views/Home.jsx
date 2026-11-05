@@ -112,15 +112,15 @@ export default function Home() {
                   <button key={srv.id} onClick={() => go({ name: 'server', serverId: srv.id })} onContextMenu={(e) => {
                     if (srv.owner_id === me.id) { e.preventDefault(); return; }
                     openMenu(e, [{ label: 'Quitter l’espace', danger: true, onClick: () => { if (window.confirm(`Quitter « ${srv.name} » ?`)) run(toast, () => leaveServer(srv.id)); } }]);
-                  }} className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-white p-4 text-left shadow-soft transition hover:-translate-y-0.5">
-                    <ServerIcon server={srv} className="h-12 w-12" />
-                    <span className="ml-auto"><CountBadge n={serverUnread(s, srv.id)} /></span>
-                    <span className="min-w-0">
-                      <span className="block truncate font-bold">{srv.name}</span>
-                      <span className="text-xs text-slate-500">
+                  }} className="flex items-center gap-4 rounded-3xl border-2 border-brand-100 bg-white p-5 text-left shadow-panel transition hover:-translate-y-0.5 hover:border-brand-300">
+                    <ServerIcon server={srv} className="h-14 w-14 shrink-0" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-lg font-extrabold text-slate-900">{srv.name}</span>
+                      <span className="mt-0.5 block text-sm font-semibold text-slate-500">
                         {membersOf(s, srv.id).length} membre(s) · {srv.is_public ? 'Public' : 'Privé'}
                       </span>
                     </span>
+                    <CountBadge n={serverUnread(s, srv.id)} />
                   </button>
                 ))}
               </div>
