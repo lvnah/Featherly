@@ -168,4 +168,4 @@ createServer(async (req, res) => {
       if (!res.headersSent) send(res, 500, { error: 'Erreur interne du serveur.' });
     }
   }
-}).listen(PORT, () => console.log(`Hevenly API sur http://localhost:${PORT}`));
+}).listen(PORT, () => console.log(`Feathery API sur http://localhost:${PORT}`));

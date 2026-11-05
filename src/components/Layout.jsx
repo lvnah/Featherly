@@ -38,7 +38,7 @@ export default function Layout({ view, children }) {
           <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-soft">
             <LeafLogo />
           </span>
-          <span className="text-xl font-extrabold tracking-tight text-slate-900">Hevenly</span>
+          <span className="text-xl font-extrabold tracking-tight text-slate-900">Feathery</span>
           <span className="h-2 w-2 rounded-full bg-brand-500" />
         </div>
 
@@ -112,7 +112,7 @@ export default function Layout({ view, children }) {
           <button onClick={() => setDrawer(true)} aria-label="Ouvrir le menu" className="panel rounded-2xl px-4 py-3">
             <Icon name="home" className="h-5 w-5" />
           </button>
-          <span className="font-bold text-slate-900">Hevenly</span>
+          <span className="font-bold text-slate-900">Feathery</span>
         </div>
         <main className="flex min-h-0 flex-1 gap-4 overflow-hidden">{children}</main>
       </div>

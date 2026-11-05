@@ -36,7 +36,7 @@ export default function Login({ toast }) {
           <span className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-soft">
             <LeafLogo />
           </span>
-          <h1 className="text-2xl font-extrabold text-slate-900">Bienvenue sur Hevenly</h1>
+          <h1 className="text-2xl font-extrabold text-slate-900">Bienvenue sur Feathery</h1>
           <p className="text-sm text-slate-500">Une communauté unique, un univers infini.</p>
         </div>
 

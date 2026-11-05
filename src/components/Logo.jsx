@@ -12,5 +12,5 @@ export default function Logo({ className = 'h-7 w-7', animated = false }) {
       </svg>
     );
   }
-  return <img src={LOGO_URL} alt="Hevenly" onError={() => setBroken(true)} className={`${className} object-contain ${animated ? 'splash-logo' : ''}`} />;
+  return <img src={LOGO_URL} alt="Feathery" onError={() => setBroken(true)} className={`${className} object-contain ${animated ? 'splash-logo' : ''}`} />;
 }
