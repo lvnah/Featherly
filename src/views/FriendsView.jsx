@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { friendsOf, getMe, getUser, pendingReceived, pendingSent, removeFriend, respondFriendRequest, sendFriendRequestByTag } from '../lib/store';
 import { useStore, useUI, Avatar, ErrorLine, Icon } from '../components/ui';
-import { fullName, isOnline } from '../lib/util';
+import { fullName, isOnline, statusLabel } from '../lib/util';
 import { run } from './ServerView';
 
 export default function FriendsView() {
@@ -95,7 +95,7 @@ export default function FriendsView() {
                   <Icon name="trash" className="h-5 w-5" />
                 </button>
               </div>,
-              isOnline(u) ? 'En ligne' : 'Hors ligne')
+              statusLabel(u))
           )}
         </section>
       </div>

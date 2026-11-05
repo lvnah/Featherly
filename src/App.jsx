@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Splash from './components/Splash';
-import { getMe, getState, leaveVoice, refresh } from './lib/store';
-import { setVoiceErrorHandler, stopVoice, syncVoice } from './lib/voice';
+import { getMe, getState, leaveVoice, refresh, setVoiceMutedRemote } from './lib/store';
+import { isVoiceMuted, setVoiceErrorHandler, stopVoice, syncVoice } from './lib/voice';
 import { getToken } from './lib/api';
 import { ContextMenu, UIContext, useStore } from './components/ui';
 import Layout from './components/Layout';
@@ -29,6 +29,8 @@ function reconcileVoice() {
   const mine = st.voice.find((v) => v.user_id === me.id);
   if (!mine) return syncVoice(null, me.id, []);
   const participants = st.voice.filter((v) => v.channel_id === mine.channel_id).map((v) => v.user_id);
+  // Le serveur doit connaître notre micro (il repart ouvert à chaque connexion au salon).
+  if (!!mine.muted !== isVoiceMuted()) setVoiceMutedRemote(isVoiceMuted()).catch(() => {});
   return syncVoice(mine.channel_id, me.id, participants);
 }
 

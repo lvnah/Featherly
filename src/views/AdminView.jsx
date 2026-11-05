@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { adminDeleteServer, adminDeleteUser, adminDismissReport, adminListReports, adminListServers, adminListUsers, adminSetPlus, getMe } from '../lib/store';
 import { useStore, useUI, Avatar, EmptyState, Icon, ServerIcon } from '../components/ui';
-import { formatStamp, isOnline } from '../lib/util';
+import { formatStamp, isOnline, statusLabel } from '../lib/util';
 import { run } from './ServerView';
 
 const TABS = [
@@ -79,7 +79,7 @@ export default function AdminView() {
                   {u.pseudo} <span className="text-xs font-normal text-slate-400">#{u.tag}</span>
                   {u.is_admin ? <span className="ml-2 rounded-md bg-slate-900 px-1.5 py-0.5 text-[10px] font-bold text-brand-400">ADMIN</span> : null}
                 </p>
-                <p className="text-xs text-slate-500">Inscrit le {formatStamp(u.created_at)} · {isOnline(u) ? 'En ligne' : 'Hors ligne'}</p>
+                <p className="text-xs text-slate-500">Inscrit le {formatStamp(u.created_at)} · {statusLabel(u)}</p>
               </div>
               <button className="btn-ghost !py-2" onClick={() => after(adminSetPlus(u.id, !u.is_plus), u.is_plus ? 'PLUS retiré' : 'PLUS accordé')}>
                 {u.is_plus ? 'Retirer PLUS' : 'Accorder PLUS'}
