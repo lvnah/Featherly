@@ -139,6 +139,19 @@ export const sendFriendRequestByTag = (query) => act('sendFriendRequest', { quer
 export const respondFriendRequest = (id, accept) => act('respondFriendRequest', { id, accept });
 export const removeFriend = (userId) => act('removeFriend', { userId });
 export const sendDM = (toId, content) => act('sendDM', { toId, content });
+export const acceptDM = (peerId) => act('acceptDM', { peerId });
+export const refuseDM = (peerId) => act('refuseDM', { peerId });
+export const markDmRead = (peerId) => act('markDmRead', { peerId });
+export const markChannelRead = (channelId) => act('markChannelRead', { channelId });
+
+// Compteurs de non-lus (renvoyés par le serveur).
+export const unreadCount = (s) => s.unread ?? { dms: {}, requests: [], friendRequests: 0, channels: {} };
+export const serverUnread = (s, serverId) =>
+  s.channels.filter((c) => c.server_id === serverId).reduce((sum, c) => sum + (unreadCount(s).channels[c.id] || 0), 0);
+export const messagesBadge = (s) => {
+  const u = unreadCount(s);
+  return Object.values(u.dms).reduce((a, b) => a + b, 0) + u.requests.length;
+};
 export const createServer = (payload) => act('createServer', payload);
 export const joinPublicServer = (serverId) => act('joinPublicServer', { serverId });
 export const joinServer = (code) => act('joinServer', { code });

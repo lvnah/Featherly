@@ -85,7 +85,35 @@ export function buildSnapshot(me) {
   );
   const ids_member = new Set(servers.map((s) => s.id));
 
+  // Compteurs de non-lus : par conversation privée, par salon, et demandes en attente.
+  const dmUnread = all(
+    `SELECT d.from_id AS peer, COUNT(*) AS n FROM dms d
+     LEFT JOIN dm_reads r ON r.user_id = ? AND r.peer_id = d.from_id
+     WHERE d.to_id = ? AND d.status = 'ok' AND d.created_at > COALESCE(r.read_at, 0)
+     GROUP BY d.from_id`,
+    me.id, me.id,
+  );
+  const requests = all(
+    "SELECT DISTINCT from_id AS peer FROM dms WHERE to_id = ? AND status = 'request'",
+    me.id,
+  ).map((r) => r.peer);
+  const channelUnread = all(
+    `SELECT m.channel_id AS channel, COUNT(*) AS n FROM messages m
+     JOIN channels c ON c.id = m.channel_id
+     JOIN memberships ms ON ms.server_id = c.server_id AND ms.user_id = ?
+     LEFT JOIN channel_reads cr ON cr.user_id = ? AND cr.channel_id = m.channel_id
+     WHERE m.user_id <> ? AND m.created_at > COALESCE(cr.read_at, 0)
+     GROUP BY m.channel_id`,
+    me.id, me.id, me.id,
+  );
+
   return {
+    unread: {
+      dms: Object.fromEntries(dmUnread.map((r) => [r.peer, r.n])),
+      requests,
+      friendRequests: friendships.filter((f) => f.status === 'pending' && f.to_id === me.id).length,
+      channels: Object.fromEntries(channelUnread.map((r) => [r.channel, r.n])),
+    },
     stats: { total: counts.total, online: counts.online },
     me: publicUser(me),
     users: users.map(publicUser),
@@ -108,7 +136,7 @@ export function buildSnapshot(me) {
     channels: channels.map((c) => ({ id: c.id, server_id: c.server_id, name: c.name, type: c.type })),
     messages,
     friendships: friendships.map((f) => ({ id: f.id, from: f.from_id, to: f.to_id, status: f.status })),
-    dms: dms.map((d) => ({ id: d.id, from: d.from_id, to: d.to_id, content: d.content, created_at: d.created_at })),
+    dms: dms.map((d) => ({ id: d.id, from: d.from_id, to: d.to_id, content: d.content, created_at: d.created_at, status: d.status })),
     // Espaces publics (liste « Communauté ») : sans code d'invitation.
     communities: communities.map((c) => ({ ...c, is_member: ids_member.has(c.id) })),
     voice: voice.map((v) => ({ user_id: v.user_id, channel_id: v.channel_id })),

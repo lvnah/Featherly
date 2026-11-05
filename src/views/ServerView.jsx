@@ -4,9 +4,10 @@ import {
   leaveVoice, membersOf, membership, roleColorOf, roleNameOf, roleRank, rolesOf, sendFriendRequest, sendMessage,
   assignRole, deleteMessage,
 } from '../lib/store';
-import { useStore, useUI, Avatar, EmptyState, ErrorLine, Icon, ServerIcon } from '../components/ui';
+import { useStore, useUI, Avatar, CountBadge, EmptyState, ErrorLine, Icon, ServerIcon } from '../components/ui';
 import PlusBadge from '../components/PlusBadge';
 import { isVoiceMuted, setVoiceMuted } from '../lib/voice';
+import { markChannelRead, unreadCount } from '../lib/store';
 import { formatStamp, isOnline } from '../lib/util';
 
 // Exécute une action async et affiche le résultat dans un toast.
@@ -69,6 +70,11 @@ export default function ServerView({ serverId, channelId, goHome }) {
   const [text, setText] = useState('');
   const [error, setError] = useState('');
   const [, setVoiceTick] = useState(0);
+  // Salon ouvert : on le marque comme lu dès qu'il a des messages non lus.
+  const unreadHere = current ? (unreadCount(s).channels[current.id] || 0) : 0;
+  useEffect(() => {
+    if (current && unreadHere > 0) markChannelRead(current.id).catch(() => {});
+  }, [current?.id, unreadHere]); // eslint-disable-line react-hooks/exhaustive-deps
   const listRef = useRef(null);
 
   useEffect(() => {
@@ -206,45 +212,6 @@ export default function ServerView({ serverId, channelId, goHome }) {
           </div>
         </div>
 
-        {/* Contrôle segmenté des salons */}
-        <nav className="thin-scroll mx-auto flex max-w-full items-center gap-1 overflow-x-auto rounded-full bg-slate-100 p-1">
-          {textChannels.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => go({ name: 'server', serverId, channelId: c.id })}
-              onContextMenu={(e) => channelMenu(e, c)}
-              className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition ${
-                current?.id === c.id ? 'bg-slate-900 text-brand-400' : 'text-slate-600 hover:bg-white'
-              }`}
-            >
-              <Icon name="hash" className="h-4 w-4" />
-              {c.name}
-            </button>
-          ))}
-          {voiceChannels.map((c) => {
-            const inside = myVoice?.channel_id === c.id;
-            return (
-              <button
-                key={c.id}
-                onClick={() => run(toast, () => joinVoice(c.id), `Connecté à ${c.name}`)}
-                onContextMenu={(e) => channelMenu(e, c)}
-                className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  inside ? 'bg-brand-500 text-white' : 'text-slate-600 hover:bg-white'
-                }`}
-              >
-                <Icon name="speaker" className="h-4 w-4" />
-                {c.name}
-                {voiceUsers(c).length > 0 && <span className="text-xs opacity-70">{voiceUsers(c).length}</span>}
-              </button>
-            );
-          })}
-          {canManage && (
-            <button onClick={() => openModal('channel', { serverId })} className="flex shrink-0 items-center gap-1 rounded-full bg-brand-100 px-4 py-2 text-sm font-bold text-brand-700 hover:bg-brand-200">
-              <Icon name="plus" className="h-4 w-4" />
-              Salon
-            </button>
-          )}
-        </nav>
 
         <div className="flex items-center gap-2">
           <button onClick={() => (isOwner ? openModal('espace-settings', { serverId }) : toast('Réservé au propriétaire de l’espace.'))} className="btn-ghost !rounded-full !py-2.5">
@@ -257,40 +224,79 @@ export default function ServerView({ serverId, channelId, goHome }) {
         </div>
       </header>
 
-      {/* Qui est dans quel vocal : photo et pseudo, au-dessus du chat */}
-      {voiceChannels.some((c) => voiceUsers(c).length > 0) && (
-        <div className="panel flex flex-wrap items-center gap-x-6 gap-y-3 px-5 py-3">
-          {voiceChannels.filter((c) => voiceUsers(c).length > 0).map((c) => (
-            <div key={c.id} className="flex flex-wrap items-center gap-3">
-              <span className="text-xs font-bold uppercase tracking-wide text-brand-600">Vocal · {c.name}</span>
-              {voiceUsers(c).map((u) => (
-                <span key={u.id} className="flex items-center gap-2 rounded-full bg-white px-2 py-1 shadow-soft">
-                  <Avatar user={u} size="xs" />
-                  <span className="text-xs font-bold text-slate-800">{u.pseudo}</span>
+      {/* Salons : tuiles toujours visibles. Un vocal montre qui est dedans (photos) et sa capacité. */}
+      <nav className="panel thin-scroll flex items-stretch gap-3 overflow-x-auto p-3">
+        {textChannels.map((c) => {
+          const active = current?.id === c.id;
+          const n = unreadCount(s).channels[c.id] || 0;
+          return (
+            <button
+              key={c.id}
+              onClick={() => go({ name: 'server', serverId, channelId: c.id })}
+              onContextMenu={(e) => channelMenu(e, c)}
+              className={`flex min-w-[9rem] shrink-0 flex-col justify-between gap-3 rounded-3xl px-4 py-3 text-left transition ${
+                active ? 'bg-slate-900 text-white shadow-soft' : 'bg-white text-slate-700 shadow-soft hover:-translate-y-0.5'
+              }`}
+            >
+              <span className="flex items-center justify-between">
+                <span className={`flex h-8 w-8 items-center justify-center rounded-xl ${active ? 'bg-white/10 text-brand-400' : 'bg-brand-50 text-brand-600'}`}>
+                  <Icon name="hash" className="h-4 w-4" />
                 </span>
-              ))}
-            </div>
-          ))}
-        </div>
-      )}
+                <CountBadge n={active ? 0 : n} />
+              </span>
+              <span className="truncate text-sm font-bold">{c.name}</span>
+              <span className={`text-[11px] font-semibold ${active ? 'text-white/60' : 'text-slate-400'}`}>Texte</span>
+            </button>
+          );
+        })}
+        {voiceChannels.map((c) => {
+          const users = voiceUsers(c);
+          const inside = myVoice?.channel_id === c.id;
+          return (
+            <button
+              key={c.id}
+              onClick={() => run(toast, () => joinVoice(c.id), `Connecté à ${c.name}`)}
+              onContextMenu={(e) => channelMenu(e, c)}
+              className={`flex min-w-[12rem] shrink-0 flex-col justify-between gap-3 rounded-3xl px-4 py-3 text-left transition ${
+                inside ? 'bg-brand-500 text-white shadow-[0_12px_30px_-12px_rgba(0,116,84,0.8)]' : 'bg-white text-slate-700 shadow-soft hover:-translate-y-0.5'
+              }`}
+            >
+              <span className="flex items-center justify-between">
+                <span className="flex items-center gap-2 text-sm font-bold">
+                  <span className={`flex h-8 w-8 items-center justify-center rounded-xl ${inside ? 'bg-white/15' : 'bg-brand-50 text-brand-600'}`}>
+                    <Icon name="speaker" className="h-4 w-4" />
+                  </span>
+                  {c.name}
+                </span>
+                <span className={`text-[11px] font-bold ${inside ? 'text-white/80' : 'text-slate-400'}`}>{users.length}/5</span>
+              </span>
+              <span className="flex min-h-7 items-center">
+                {users.length === 0 ? (
+                  <span className={`text-xs ${inside ? 'text-white/70' : 'text-slate-400'}`}>Vide</span>
+                ) : (
+                  <span className="flex -space-x-2">
+                    {users.slice(0, 5).map((u) => (
+                      <Avatar key={u.id} user={u} size="xs" className="ring-2 ring-white" />
+                    ))}
+                  </span>
+                )}
+              </span>
+            </button>
+          );
+        })}
+        {canManage && (
+          <button onClick={() => openModal('channel', { serverId })} className="flex min-w-[8rem] shrink-0 flex-col items-center justify-center gap-1 rounded-3xl border-2 border-dashed border-brand-200 text-sm font-bold text-brand-700 hover:bg-brand-50">
+            <Icon name="plus" className="h-5 w-5" />
+            Nouveau salon
+          </button>
+        )}
+      </nav>
 
       <div className="flex min-h-0 flex-1 gap-4">
         {/* Chat */}
         <section className="panel flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4">
             <span className="pill !bg-brand-100 !px-3 !py-1 !text-sm !font-bold !text-brand-700">Salon #{current?.name ?? '—'}</span>
-            {myVoiceChannel && (
-              <span className="ml-auto flex items-center gap-3 rounded-full bg-brand-50 py-1 pl-3 pr-1 text-sm font-semibold text-brand-700">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-brand-500" />
-                Vocal · {myVoiceChannel.name}
-                <button onClick={() => { setVoiceMuted(!isVoiceMuted()); setVoiceTick((t) => t + 1); }} className="rounded-full bg-white px-3 py-1 text-xs text-slate-700 shadow-soft">
-                  {isVoiceMuted() ? 'Micro coupé' : 'Micro actif'}
-                </button>
-                <button onClick={() => run(toast, () => leaveVoice(), 'Vous avez quitté le vocal')} className="rounded-full bg-white px-3 py-1 text-xs text-red-600 shadow-soft">
-                  Quitter
-                </button>
-              </span>
-            )}
           </div>
 
           {current ? (
@@ -350,6 +356,21 @@ export default function ServerView({ serverId, channelId, goHome }) {
             </>
           ) : (
             <EmptyState icon="hash" title="Aucun salon texte">Demandez à un membre disposant de la permission « gérer les salons » d’en créer un.</EmptyState>
+          )}
+          {myVoiceChannel && (
+            <div className="flex flex-wrap items-center gap-3 border-t border-brand-100 bg-brand-50 px-5 py-3">
+              <span className="flex items-center gap-2 text-sm font-bold text-brand-800">
+                <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-brand-500" />
+                En vocal · {myVoiceChannel.name}
+                <span className="font-semibold text-brand-600">{voiceUsers(myVoiceChannel).length}/5</span>
+              </span>
+              <div className="ml-auto flex gap-2">
+                <button onClick={() => { setVoiceMuted(!isVoiceMuted()); setVoiceTick((t) => t + 1); }} className="btn-ghost !py-2">
+                  {isVoiceMuted() ? 'Micro coupé' : 'Micro actif'}
+                </button>
+                <button onClick={() => run(toast, () => leaveVoice())} className="btn-danger !py-2">Quitter</button>
+              </div>
+            </div>
           )}
         </section>
 

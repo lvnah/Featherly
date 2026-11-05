@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getMe, serversOf, friendsOf, membersOf } from '../lib/store';
-import { useStore, useUI, Avatar, Icon, ServerIcon } from '../components/ui';
+import { useStore, useUI, Avatar, CountBadge, Icon, ServerIcon } from '../components/ui';
+import { serverUnread } from '../lib/store';
 import { fullName, isOnline } from '../lib/util';
 
 export default function Home() {
@@ -109,6 +110,7 @@ export default function Home() {
                 {servers.map((srv) => (
                   <button key={srv.id} onClick={() => go({ name: 'server', serverId: srv.id })} className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-white p-4 text-left shadow-soft transition hover:-translate-y-0.5">
                     <ServerIcon server={srv} className="h-12 w-12" />
+                    <span className="ml-auto"><CountBadge n={serverUnread(s, srv.id)} /></span>
                     <span className="min-w-0">
                       <span className="block truncate font-bold">{srv.name}</span>
                       <span className="text-xs text-slate-500">

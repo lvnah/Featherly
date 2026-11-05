@@ -154,18 +154,49 @@ const handlers = {
     );
   },
 
+  // Message privé. Sans amitié ni conversation acceptée, c'est une demande de message :
+  // le destinataire doit l'accepter avant de voir la conversation. Répondre vaut acceptation.
   sendDM(me, p) {
     const content = text(p.content, 1, 1000, 'Message vide ou trop long (1000 caractères max).');
+    if (p.toId === me.id) fail('Vous ne pouvez pas vous écrire à vous-même.');
+    if (!one('SELECT 1 FROM users WHERE id = ?', p.toId)) fail('Utilisateur introuvable.', 404);
+    const pair = (a, b) => one('SELECT 1 FROM dms WHERE status = ? AND ((from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?)) LIMIT 1', 'ok', a, b, b, a);
     const friend = one(
       "SELECT 1 FROM friendships WHERE status = 'accepted' AND ((from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?))",
       me.id, p.toId, p.toId, me.id,
     );
-    const history = one(
-      'SELECT 1 FROM dms WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?) LIMIT 1',
-      me.id, p.toId, p.toId, me.id,
+    const accepted = friend || pair(me.id, p.toId);
+    // Le destinataire m'a déjà écrit une demande : je réponds, donc j'accepte.
+    const theirRequest = one("SELECT 1 FROM dms WHERE status = 'request' AND from_id = ? AND to_id = ? LIMIT 1", p.toId, me.id);
+    if (theirRequest) run("UPDATE dms SET status = 'ok' WHERE status = 'request' AND from_id = ? AND to_id = ?", p.toId, me.id);
+    const status = accepted || theirRequest ? 'ok' : 'request';
+    if (status === 'request') {
+      const pending = one("SELECT COUNT(*) AS n FROM dms WHERE status = 'request' AND from_id = ? AND to_id = ?", me.id, p.toId).n;
+      if (pending >= 3) fail('Demande envoyée. Attendez sa réponse avant d’écrire à nouveau.', 429);
+    }
+    run(
+      'INSERT INTO dms (id, from_id, to_id, content, created_at, status) VALUES (?, ?, ?, ?, ?, ?)',
+      newId('d'), me.id, p.toId, content, now(), status,
     );
-    if (!friend && !history) fail('Ajoutez cet utilisateur en ami pour lui écrire.', 403);
-    run('INSERT INTO dms (id, from_id, to_id, content, created_at) VALUES (?, ?, ?, ?, ?)', newId('d'), me.id, p.toId, content, now());
+  },
+
+  acceptDM(me, p) {
+    run("UPDATE dms SET status = 'ok' WHERE status = 'request' AND from_id = ? AND to_id = ?", p.peerId, me.id);
+  },
+
+  // Refuser : les messages de la demande sont supprimés.
+  refuseDM(me, p) {
+    run("DELETE FROM dms WHERE status = 'request' AND from_id = ? AND to_id = ?", p.peerId, me.id);
+  },
+
+  markDmRead(me, p) {
+    run('INSERT OR REPLACE INTO dm_reads (user_id, peer_id, read_at) VALUES (?, ?, ?)', me.id, p.peerId, now());
+  },
+
+  markChannelRead(me, p) {
+    const ch = one('SELECT * FROM channels WHERE id = ?', p.channelId);
+    if (!ch || !isMember(ch.server_id, me.id)) return;
+    run('INSERT OR REPLACE INTO channel_reads (user_id, channel_id, read_at) VALUES (?, ?, ?)', me.id, ch.id, now());
   },
 
   createServer(me, p) {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { getMe, serversOf, logout } from '../lib/store';
-import { useStore, useUI, Avatar, Icon, ServerIcon } from './ui';
+import { getMe, serversOf, logout, messagesBadge, serverUnread, unreadCount } from '../lib/store';
+import { useStore, useUI, Avatar, CountBadge, Icon, ServerIcon } from './ui';
 import Logo from './Logo';
 
 const NAV = [
@@ -52,7 +52,8 @@ export default function Layout({ view, children }) {
               }`}
             >
               <Icon name={item.icon} className="h-5 w-5" />
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              <CountBadge n={item.key === 'messages' ? messagesBadge(s) : item.key === 'friends' ? unreadCount(s).friendRequests : 0} />
             </button>
           ))}
         </nav>
@@ -78,6 +79,7 @@ export default function Layout({ view, children }) {
               >
                 <ServerIcon server={srv} className="h-10 w-10" />
                 <span className="truncate text-sm font-semibold text-slate-800">{srv.name}</span>
+                <span className="ml-auto"><CountBadge n={serverUnread(s, srv.id)} /></span>
               </button>
             ))}
             {servers.length === 0 && <p className="px-2 text-xs text-slate-400">Aucun espace pour le moment.</p>}
