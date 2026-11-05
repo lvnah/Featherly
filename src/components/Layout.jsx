@@ -71,7 +71,7 @@ export default function Layout({ view, children }) {
               key={item.key}
               onClick={() => (item.key === 'settings' ? navigate({ name: 'profile', userId: me.id, edit: true }) : navigate(item.view))}
               className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-[15px] font-semibold transition ${
-                isActive(item) ? 'bg-brand-100 text-brand-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                isActive(item) ? 'bg-brand-100 text-brand-700' : 'text-slate-500 hover:bg-slate-200 hover:text-slate-900'
               }`}
             >
               <Icon name={item.icon} className="h-5 w-5" />
@@ -128,7 +128,7 @@ export default function Layout({ view, children }) {
             onClick={async () => {
               await logout();
             }}
-            className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            className="rounded-xl p-2 text-slate-400 hover:bg-slate-300 hover:text-slate-700"
           >
             <Icon name="logout" className="h-5 w-5" />
           </button>

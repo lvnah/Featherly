@@ -256,7 +256,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
               onClick={() => go({ name: 'server', serverId, channelId: c.id })}
               onContextMenu={(e) => channelMenu(e, c)}
               className={`flex min-w-[9rem] shrink-0 flex-col justify-between gap-3 rounded-3xl px-4 py-3 text-left transition ${
-                active ? 'bg-ink text-white shadow-soft' : 'bg-surface text-slate-700 shadow-soft'
+                active ? 'border-2 border-brand-500 bg-brand-600 text-white shadow-soft' : 'border-2 border-slate-300 bg-surface text-slate-900 shadow-soft'
               }`}
             >
               <span className="flex items-center justify-between">
@@ -279,7 +279,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
               onClick={() => run(toast, () => joinVoice(c.id), `Connecté à ${c.name}`)}
               onContextMenu={(e) => channelMenu(e, c)}
               className={`flex min-w-[12rem] shrink-0 flex-col justify-between gap-3 rounded-3xl px-4 py-3 text-left transition ${
-                inside ? 'bg-brand-500 text-white shadow-[0_12px_30px_-12px_rgba(0,116,84,0.8)]' : 'bg-surface text-slate-700 shadow-soft'
+                inside ? 'bg-brand-500 text-white shadow-[0_12px_30px_-12px_rgba(0,116,84,0.8)]' : 'border-2 border-slate-300 bg-surface text-slate-900 shadow-soft'
               }`}
             >
               <span className="flex items-center justify-between">
@@ -335,7 +335,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
                   return (
                     <div key={m.id} className="group flex items-center gap-4 rounded-3xl border border-slate-100 bg-surface px-5 py-4 shadow-soft">
                       <button onClick={() => openModal('mini', { userId: author.id, serverId })} onContextMenu={(e) => memberMenu(e, author.id)} aria-label={`Profil de ${author.pseudo}`}>
-                        <Avatar user={author} size="md" />
+                        <Avatar user={author} size="md" showStatus />
                       </button>
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
