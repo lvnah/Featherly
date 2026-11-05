@@ -16,6 +16,8 @@ export function publicUser(u) {
     bio: u.bio,
     is_plus: u.is_plus,
     is_admin: u.is_admin ?? 0,
+    country: u.country ?? '',
+    status: u.status ?? 'online',
     banner:
       u.banner_type === 'image' || u.banner_type === 'url'
         ? { type: 'image', value: u.banner_value }
@@ -75,7 +77,7 @@ export function buildSnapshot(me) {
 
   // Totaux globaux (agrégés, sans données personnelles) : membres inscrits et connectés.
   const counts = db
-    .prepare('SELECT COUNT(*) AS total, COALESCE(SUM(CASE WHEN last_activity > ? THEN 1 ELSE 0 END), 0) AS online FROM users')
+    .prepare("SELECT COUNT(*) AS total, COALESCE(SUM(CASE WHEN last_activity > ? AND status <> 'offline' THEN 1 ELSE 0 END), 0) AS online FROM users")
     .get(Date.now() - ONLINE_WINDOW_MS);
 
   const communities = all(
@@ -139,6 +141,6 @@ export function buildSnapshot(me) {
     dms: dms.map((d) => ({ id: d.id, from: d.from_id, to: d.to_id, content: d.content, created_at: d.created_at, status: d.status })),
     // Espaces publics (liste « Communauté ») : sans code d'invitation.
     communities: communities.map((c) => ({ ...c, is_member: ids_member.has(c.id) })),
-    voice: voice.map((v) => ({ user_id: v.user_id, channel_id: v.channel_id })),
+    voice: voice.map((v) => ({ user_id: v.user_id, channel_id: v.channel_id, muted: !!v.muted })),
   };
 }

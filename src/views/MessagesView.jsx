@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { acceptDM, friendsOf, friendshipBetween, getMe, getUser, markDmRead, refuseDM, respondFriendRequest, sendDM, sendFriendRequest, unreadCount } from '../lib/store';
 import { useStore, useUI, Avatar, CountBadge, EmptyState, ErrorLine, Icon } from '../components/ui';
-import { formatStamp, fullName, isOnline } from '../lib/util';
+import { formatStamp, fullName, isOnline, statusLabel } from '../lib/util';
 import PlusBadge from '../components/PlusBadge';
 import { run } from './ServerView';
 
@@ -85,7 +85,7 @@ export default function MessagesView({ withId }) {
               </button>
               <span className="min-w-0 flex-1">
                 <span onClick={(e) => { e.stopPropagation(); openUser(user.id); }} className="inline-block max-w-full truncate font-bold hover:underline">{fullName(user)}</span>
-                <span className="block truncate text-xs text-slate-500">{last ? last.content : isOnline(user) ? 'En ligne' : 'Hors ligne'}</span>
+                <span className="block truncate text-xs text-slate-500">{last ? last.content : statusLabel(user)}</span>
               </span>
               <CountBadge n={unread.dms[user.id] || 0} />
             </div>
@@ -104,7 +104,7 @@ export default function MessagesView({ withId }) {
                 <Avatar user={partner} size="sm" showStatus />
                 <span className="min-w-0">
                   <span className="flex items-center gap-2 font-bold"><span className="truncate">{fullName(partner)}</span>{partner.is_plus ? <PlusBadge /> : null}</span>
-                  <span className="block text-xs text-slate-500">{isOnline(partner) ? 'En ligne' : 'Hors ligne'}</span>
+                  <span className="block text-xs text-slate-500">{statusLabel(partner)}</span>
                 </span>
               </button>
               {partner && (() => {

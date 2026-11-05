@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useSyncExternalStore } from 'react';
 import { subscribe, getState } from '../lib/store';
-import { avatarGradient, bannerStyle, isOnline, ROLE_COLORS } from '../lib/util';
+import { avatarGradient, bannerStyle, ROLE_COLORS, statusKey, STATUS_DOT, statusLabel } from '../lib/util';
 import Logo from './Logo';
 
 export const UIContext = createContext(null);
@@ -52,7 +52,7 @@ export function Avatar({ user, size = 'md', showStatus = false, className = '' }
     lg: 'h-20 w-20',
     xl: 'h-28 w-28',
   }[size];
-  const online = isOnline(user);
+  const key = statusKey(user);
   const dot = size === 'xs' ? 'h-2 w-2' : 'h-3 w-3';
   const hasPhoto = !!user?.avatar && !broken;
   return (
@@ -66,8 +66,8 @@ export function Avatar({ user, size = 'md', showStatus = false, className = '' }
       )}
       {showStatus && (
         <span
-          className={`absolute bottom-0 right-0 ${dot} rounded-full border-2 border-white ${online ? 'bg-brand-500' : 'bg-slate-300'}`}
-          title={online ? 'En ligne' : 'Hors ligne'}
+          className={`absolute bottom-0 right-0 ${dot} rounded-full border-2 border-white ${STATUS_DOT[key]}`}
+          title={statusLabel(user)}
         />
       )}
     </div>

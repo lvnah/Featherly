@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { getMe, getUser, friendshipBetween, isFriend, sendFriendRequest, updateProfile } from '../lib/store';
+import { getMe, getUser, friendshipBetween, isFriend, sendFriendRequest, setStatus, updateProfile } from '../lib/store';
 import { useStore, useUI, Avatar, Banner, EmptyState, ErrorLine, Icon } from '../components/ui';
-import { BANNER_GRADIENTS, bannerStyle, fullName, isOnline } from '../lib/util';
+import { BANNER_GRADIENTS, bannerStyle, fullName, isOnline, statusLabel } from '../lib/util';
 import { fileToDataUrl, AVATAR_OPTS, BANNER_OPTS } from '../lib/images';
 import PlusBadge from '../components/PlusBadge';
+import Flag from '../components/Flag';
+import CountrySelect from '../components/CountrySelect';
+import { countryName } from '../lib/countries';
 import { run } from './ServerView';
 
 // Mon profil : page Paramètres du profil. Autre utilisateur : profil public.
@@ -23,6 +26,7 @@ function OwnProfile() {
   const [tag, setTag] = useState(me.tag);
   const [avatar, setAvatar] = useState(me.avatar || '');
   const [bio, setBio] = useState(me.bio || '');
+  const [country, setCountry] = useState(me.country || '');
   const [banner, setBanner] = useState(me.banner?.type === 'image' ? me.banner : { type: 'gradient', index: me.banner?.index ?? 0 });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -47,7 +51,7 @@ function OwnProfile() {
     setError('');
     setBusy(true);
     try {
-      await updateProfile({ pseudo, tag: me.is_plus ? tag : undefined, avatar, bio, banner });
+      await updateProfile({ pseudo, tag: me.is_plus ? tag : undefined, avatar, bio, banner, country });
       // Enregistré : retour sur la vue de son profil.
       go({ name: 'profile', userId: me.id });
     } catch (err) {
@@ -83,6 +87,20 @@ function OwnProfile() {
               </Field>
               <Field label="Tag # (4 chiffres)">
                 <input className="field font-mono" value={tag} disabled={!me.is_plus} inputMode="numeric" maxLength={4} onChange={(e) => setTag(e.target.value.replace(/\D/g, '').slice(0, 4))} />
+              </Field>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Statut">
+                <select className="field" value={me.status || 'online'} onChange={(e) => run(toast, () => setStatus(e.target.value))}>
+                  <option value="online">En ligne</option>
+                  <option value="game">En game</option>
+                  <option value="away">Absent</option>
+                  <option value="offline">Hors ligne</option>
+                </select>
+              </Field>
+              <Field label="Pays (Europe)">
+                <CountrySelect value={country} onChange={setCountry} />
               </Field>
             </div>
 
@@ -153,8 +171,9 @@ function PublicProfile({ user, goBack }) {
                 <h2 className="flex min-w-0 flex-wrap items-center gap-2 text-2xl font-extrabold">
                   <span className="truncate">{user.pseudo}</span> <span className="text-base font-semibold text-slate-400">#{user.tag}</span>
                   {user.is_plus ? <PlusBadge /> : null}
+                  {user.country ? <Flag code={user.country} name={countryName(user.country)} /> : null}
                 </h2>
-                <p className={`text-sm font-semibold ${isOnline(user) ? 'text-brand-600' : 'text-slate-400'}`}>{isOnline(user) ? 'En ligne' : 'Hors ligne'}</p>
+                <p className={`text-sm font-semibold ${isOnline(user) ? 'text-brand-600' : 'text-slate-400'}`}>{statusLabel(user)}</p>
               </div>
             </div>
             <div className="flex flex-col gap-2 rounded-2xl border border-slate-100 bg-slate-50 p-4">

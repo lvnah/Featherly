@@ -3,7 +3,7 @@ import { getMe, serversOf, friendsOf, membersOf } from '../lib/store';
 import { useStore, useUI, Avatar, CountBadge, Icon, ServerIcon } from '../components/ui';
 import { serverUnread, leaveServer } from '../lib/store';
 import { run } from './ServerView';
-import { fullName, isOnline } from '../lib/util';
+import { fullName, isOnline, statusLabel } from '../lib/util';
 
 export default function Home() {
   const s = useStore();
@@ -112,7 +112,7 @@ export default function Home() {
                   <button key={srv.id} onClick={() => go({ name: 'server', serverId: srv.id })} onContextMenu={(e) => {
                     if (srv.owner_id === me.id) { e.preventDefault(); return; }
                     openMenu(e, [{ label: 'Quitter l’espace', danger: true, onClick: () => { if (window.confirm(`Quitter « ${srv.name} » ?`)) run(toast, () => leaveServer(srv.id)); } }]);
-                  }} className="flex items-center gap-4 rounded-3xl border-2 border-brand-100 bg-white p-5 text-left shadow-panel transition hover:-translate-y-0.5 hover:border-brand-300">
+                  }} className="flex items-center gap-4 rounded-3xl border-2 border-brand-100 bg-white p-5 text-left shadow-panel transition hover:border-brand-300">
                     <ServerIcon server={srv} className="h-14 w-14 shrink-0" />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-lg font-extrabold text-slate-900">{srv.name}</span>
@@ -160,7 +160,7 @@ export default function Home() {
                   <Avatar user={f} size="md" showStatus />
                   <span className="min-w-0">
                     <span className="block truncate font-bold">{f.pseudo}</span>
-                    <span className="block text-xs text-slate-500">{isOnline(f) ? 'En ligne' : 'Hors ligne'}</span>
+                    <span className="block text-xs text-slate-500">{statusLabel(f)}</span>
                   </span>
                 </button>
                 <button title="Envoyer un message" onClick={() => go({ name: 'messages', withId: f.id })} className="rounded-2xl bg-slate-100 p-2.5 text-slate-600 hover:bg-slate-200">

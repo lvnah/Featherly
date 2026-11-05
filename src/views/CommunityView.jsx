@@ -27,7 +27,7 @@ export default function CommunityView() {
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {list.map((c) => (
-            <button key={c.id} onClick={() => setSelected(c.id)} className="panel flex items-center gap-4 p-5 text-left transition hover:-translate-y-0.5">
+            <button key={c.id} onClick={() => setSelected(c.id)} className="panel flex items-center gap-4 p-5 text-left transition">
               <ServerIcon server={c} className="h-14 w-14" />
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-bold">{c.name}</span>

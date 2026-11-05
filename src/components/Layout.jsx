@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { getMe, serversOf, logout, messagesBadge, serverUnread, unreadCount, leaveServer } from '../lib/store';
+import { getMe, serversOf, logout, messagesBadge, serverUnread, unreadCount, leaveServer, setStatus } from '../lib/store';
+import { STATUS_LABEL, STATUS_DOT, statusKey, statusLabel } from '../lib/util';
 import { run } from '../views/ServerView';
 import { useStore, useUI, Avatar, CountBadge, Icon, ServerIcon } from './ui';
 import InstallButton from './InstallButton';
@@ -91,7 +92,7 @@ export default function Layout({ view, children }) {
                 key={srv.id}
                 onClick={() => navigate({ name: 'server', serverId: srv.id })}
                 onContextMenu={(e) => leaveMenu(e, srv)}
-                className={`flex items-center gap-3 rounded-2xl border px-2.5 py-2.5 text-left shadow-soft transition hover:-translate-y-0.5 ${
+                className={`flex items-center gap-3 rounded-2xl border px-2.5 py-2.5 text-left shadow-soft transition ${
                   view.name === 'server' && view.serverId === srv.id ? 'border-brand-300 bg-brand-50' : 'border-slate-100 bg-white hover:border-brand-200'
                 }`}
               >
@@ -110,7 +111,21 @@ export default function Layout({ view, children }) {
             <Avatar user={me} size="md" showStatus />
             <span className="min-w-0">
               <span className="block truncate text-sm font-bold text-slate-900">{me.pseudo}</span>
-              <span className="block text-xs font-semibold text-brand-600">En ligne</span>
+              <span
+                role="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openMenu(e, ['online', 'game', 'away', 'offline'].map((k) => ({
+                    label: STATUS_LABEL[k],
+                    checked: me.status === k,
+                    onClick: () => run(toast, () => setStatus(k)),
+                  })));
+                }}
+                className="flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:underline"
+              >
+                <span className={`h-2 w-2 rounded-full ${STATUS_DOT[statusKey(me)]}`} />
+                {statusLabel(me)}
+              </span>
             </span>
           </button>
           <button

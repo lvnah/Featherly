@@ -15,9 +15,24 @@ export const BANNER_GRADIENTS = [
   'linear-gradient(135deg,#334155 0%,#0f172a 100%)',
 ];
 
-export function isOnline(user) {
+// Connecté = heartbeat récent. Le statut choisi par le membre s'y ajoute.
+export function connected(user) {
   return !!user && Date.now() - (user.last_activity || 0) < ONLINE_WINDOW_MS;
 }
+
+// 'online' | 'game' | 'away' | 'offline' : ce que tout le monde voit.
+export function statusKey(user) {
+  if (!connected(user) || user.status === 'offline') return 'offline';
+  if (user.status === 'game') return 'game';
+  if (user.status === 'away') return 'away';
+  return 'online';
+}
+
+export const isOnline = (user) => statusKey(user) !== 'offline';
+
+export const STATUS_LABEL = { online: 'En ligne', game: 'En game', away: 'Absent', offline: 'Hors ligne' };
+export const STATUS_DOT = { online: 'bg-brand-500', game: 'bg-violet-500', away: 'bg-amber-400', offline: 'bg-slate-300' };
+export const statusLabel = (user) => STATUS_LABEL[statusKey(user)];
 
 export function fullName(user) {
   return user ? `${user.pseudo}#${user.tag}` : '';

@@ -7,7 +7,7 @@ import {
 import { useStore, useUI, Avatar, CountBadge, EmptyState, ErrorLine, Icon, ServerIcon } from '../components/ui';
 import PlusBadge from '../components/PlusBadge';
 import { isVoiceMuted, setVoiceMuted } from '../lib/voice';
-import { markChannelRead, unreadCount, leaveServer } from '../lib/store';
+import { markChannelRead, unreadCount, leaveServer, setVoiceMutedRemote } from '../lib/store';
 import { formatStamp, isOnline } from '../lib/util';
 
 // Exécute une action async et affiche le résultat dans un toast.
@@ -105,6 +105,14 @@ export default function ServerView({ serverId, channelId, goHome }) {
     return v ? channels.find((c) => c.id === v.channel_id) : null;
   };
   const offlineMembers = members.filter((u) => !isOnline(u));
+  // Micro de chaque membre : visible par tout le monde dans le salon vocal.
+  const voiceMuted = (userId) => !!s.voice.find((v) => v.user_id === userId)?.muted;
+  const toggleMute = () => {
+    const next = !isVoiceMuted();
+    setVoiceMuted(next);
+    setVoiceTick((t) => t + 1);
+    setVoiceMutedRemote(next).catch(() => {});
+  };
   const voiceUsers = (c) => s.voice.filter((v) => v.channel_id === c.id).map((v) => getUser(s, v.user_id)).filter(Boolean);
 
   const submit = async (e) => {
@@ -150,7 +158,10 @@ export default function ServerView({ serverId, channelId, goHome }) {
           <span className="flex min-w-0 items-center gap-1.5"><span className="truncate text-sm font-bold" style={{ color }}>{u.pseudo}</span>{u.is_plus ? <PlusBadge /> : null}</span>
           <span className="block truncate text-xs font-semibold text-slate-500">#{u.tag}</span>
           {voiceChannelOf(u.id) && (
-            <span className="block truncate text-xs font-bold text-brand-600">Vocal · {voiceChannelOf(u.id).name}</span>
+            <span className="flex items-center gap-1 truncate text-xs font-bold text-brand-600">
+              <Icon name={voiceMuted(u.id) ? 'micOff' : 'mic'} className="h-3 w-3 shrink-0" />
+              Vocal · {voiceChannelOf(u.id).name}
+            </span>
           )}
         </span>
       </button>
@@ -222,10 +233,12 @@ export default function ServerView({ serverId, channelId, goHome }) {
               Quitter
             </button>
           )}
-          <button onClick={() => (isOwner ? openModal('espace-settings', { serverId }) : toast('Réservé au propriétaire de l’espace.'))} className="btn-ghost !rounded-full !py-2.5">
-            <Icon name="settings" className="h-4 w-4" />
-            Paramètres
-          </button>
+          {isOwner && (
+            <button onClick={() => openModal('espace-settings', { serverId })} className="btn-ghost !rounded-full !py-2.5">
+              <Icon name="settings" className="h-4 w-4" />
+              Paramètres
+            </button>
+          )}
           <button onClick={() => openModal('invite', { serverId })} className="btn-primary !rounded-full !py-2.5">
             Inviter
           </button>
@@ -243,7 +256,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
               onClick={() => go({ name: 'server', serverId, channelId: c.id })}
               onContextMenu={(e) => channelMenu(e, c)}
               className={`flex min-w-[9rem] shrink-0 flex-col justify-between gap-3 rounded-3xl px-4 py-3 text-left transition ${
-                active ? 'bg-slate-900 text-white shadow-soft' : 'bg-white text-slate-700 shadow-soft hover:-translate-y-0.5'
+                active ? 'bg-slate-900 text-white shadow-soft' : 'bg-white text-slate-700 shadow-soft'
               }`}
             >
               <span className="flex items-center justify-between">
@@ -266,7 +279,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
               onClick={() => run(toast, () => joinVoice(c.id), `Connecté à ${c.name}`)}
               onContextMenu={(e) => channelMenu(e, c)}
               className={`flex min-w-[12rem] shrink-0 flex-col justify-between gap-3 rounded-3xl px-4 py-3 text-left transition ${
-                inside ? 'bg-brand-500 text-white shadow-[0_12px_30px_-12px_rgba(0,116,84,0.8)]' : 'bg-white text-slate-700 shadow-soft hover:-translate-y-0.5'
+                inside ? 'bg-brand-500 text-white shadow-[0_12px_30px_-12px_rgba(0,116,84,0.8)]' : 'bg-white text-slate-700 shadow-soft'
               }`}
             >
               <span className="flex items-center justify-between">
@@ -285,7 +298,10 @@ export default function ServerView({ serverId, channelId, goHome }) {
                 ) : (
                   <span className="flex -space-x-2">
                     {users.slice(0, 5).map((u) => (
-                      <Avatar key={u.id} user={u} size="xs" className="ring-2 ring-white" />
+                      <span key={u.id} className="relative">
+                        <Avatar user={u} size="xs" className="ring-2 ring-white" />
+                        <MicBadge muted={voiceMuted(u.id)} />
+                      </span>
                     ))}
                   </span>
                 )}
@@ -374,7 +390,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
                 <span className="font-semibold text-brand-600">{voiceUsers(myVoiceChannel).length}/5</span>
               </span>
               <div className="ml-auto flex gap-2">
-                <button onClick={() => { setVoiceMuted(!isVoiceMuted()); setVoiceTick((t) => t + 1); }} className={`btn-ghost !py-2 ${isVoiceMuted() ? 'text-red-600' : 'text-brand-700'}`} aria-label={isVoiceMuted() ? 'Activer le micro' : 'Couper le micro'}>
+                <button onClick={toggleMute} className={`btn-ghost !py-2 ${isVoiceMuted() ? 'text-red-600' : 'text-brand-700'}`} aria-label={isVoiceMuted() ? 'Activer le micro' : 'Couper le micro'}>
                   <Icon name={isVoiceMuted() ? 'micOff' : 'mic'} className="h-4 w-4" />
                   {isVoiceMuted() ? 'Micro coupé' : 'Micro ouvert'}
                 </button>
@@ -388,5 +404,14 @@ export default function ServerView({ serverId, channelId, goHome }) {
         <aside className="panel thin-scroll hidden w-72 shrink-0 overflow-y-auto p-5 lg:block">{membersPanel}</aside>
       </div>
     </div>
+  );
+}
+
+// Petit badge micro (ouvert / coupé) posé sur l'avatar d'un membre du vocal.
+function MicBadge({ muted }) {
+  return (
+    <span className={`absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white shadow-soft ${muted ? 'text-red-500' : 'text-brand-600'}`} title={muted ? 'Micro coupé' : 'Micro ouvert'}>
+      <Icon name={muted ? 'micOff' : 'mic'} className="h-2.5 w-2.5" />
+    </span>
   );
 }

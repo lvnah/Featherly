@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { createChannel, createServer, getMe, getUser, joinServer, regenerateInvite, reportUser, updateChannel } from '../lib/store';
 import { Modal, Avatar, Banner, ErrorLine, Icon, ServerIcon, useStore, useUI } from './ui';
-import { fullName, isOnline } from '../lib/util';
+import { fullName, isOnline, statusLabel } from '../lib/util';
 import { fileToDataUrl, ICON_OPTS } from '../lib/images';
 import PlusBadge from './PlusBadge';
+import Flag from './Flag';
+import { countryName } from '../lib/countries';
 import { roleColorOf, roleNameOf } from '../lib/store';
 import { run } from '../views/ServerView';
 import EspaceSettingsModal from './EspaceSettings';
@@ -161,8 +163,8 @@ function MiniProfileModal({ userId, serverId, onClose }) {
           Voir profil complet
         </button>
         <div>
-          <p className="flex items-center gap-2 text-lg font-extrabold" style={{ color }}>{user.pseudo}{user.is_plus ? <PlusBadge /> : null}</p>
-          <p className="text-sm text-slate-400">#{user.tag} · {isOnline(user) ? 'En ligne' : 'Hors ligne'}</p>
+          <p className="flex items-center gap-2 text-lg font-extrabold" style={{ color }}>{user.pseudo}{user.is_plus ? <PlusBadge /> : null}{user.country ? <Flag code={user.country} name={countryName(user.country)} /> : null}</p>
+          <p className="text-sm text-slate-400">#{user.tag} · {statusLabel(user)}</p>
         </div>
         <p className="text-sm text-slate-600">{user.bio || 'Aucune biographie.'}</p>
         <div className="rounded-2xl bg-slate-50 p-4">

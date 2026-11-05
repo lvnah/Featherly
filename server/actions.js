@@ -4,6 +4,7 @@ import { randomBytes } from 'node:crypto';
 import { db } from './db.js';
 import { hashPassword, verifyPassword, createSession, deleteSession } from './auth.js';
 import { publicUser } from './sync.js';
+import { COUNTRY_CODES } from './countries.js';
 
 export class HttpError extends Error {
   constructor(status, message) {
@@ -80,7 +81,19 @@ const imageData = (value, kind) => {
 };
 
 const handlers = {
+  setStatus(me, p) {
+    if (!['online', 'game', 'away', 'offline'].includes(p.status)) fail('Statut inconnu.');
+    run('UPDATE users SET status = ? WHERE id = ?', p.status, me.id);
+  },
+
+  // Micro coupé ou ouvert : visible par tous les membres du salon vocal.
+  setVoiceMuted(me, p) {
+    run('UPDATE voice_connections SET muted = ? WHERE user_id = ?', p.muted ? 1 : 0, me.id);
+  },
+
   updateProfile(me, p) {
+    if (p.country !== undefined && p.country !== '' && !COUNTRY_CODES.has(p.country)) fail('Pays non proposé.');
+    if (p.country !== undefined) run('UPDATE users SET country = ? WHERE id = ?', p.country, me.id);
     const pseudo = p.pseudo !== undefined
       ? text(p.pseudo, 2, 24, 'Le pseudo doit faire entre 2 et 24 caractères.')
       : me.pseudo;

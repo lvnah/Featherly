@@ -153,6 +153,8 @@ export const messagesBadge = (s) => {
   return Object.values(u.dms).reduce((a, b) => a + b, 0) + u.requests.length;
 };
 export const createServer = (payload) => act('createServer', payload);
+export const setStatus = (status) => act('setStatus', { status });
+export const setVoiceMutedRemote = (muted) => act('setVoiceMuted', { muted });
 export const leaveServer = (serverId) => act('leaveServer', { serverId });
 export const joinPublicServer = (serverId) => act('joinPublicServer', { serverId });
 export const joinServer = (code) => act('joinServer', { code });
