@@ -17,6 +17,7 @@ export function publicUser(u) {
     is_plus: u.is_plus,
     is_admin: u.is_admin ?? 0,
     country: u.country ?? '',
+    custom_status: u.custom_status ?? '',
     status: u.status ?? 'online',
     banner:
       u.banner_type === 'image' || u.banner_type === 'url'
@@ -74,6 +75,7 @@ export function buildSnapshot(me) {
   voice.forEach((v) => ids.add(v.user_id));
   const uIds = [...ids];
   const users = all(`SELECT * FROM users WHERE id IN (${marks(uIds)})`, ...uIds);
+  const gameRows = all(`SELECT * FROM user_games WHERE user_id IN (${marks(uIds)}) ORDER BY position`, ...uIds);
 
   // Totaux globaux (agrégés, sans données personnelles) : membres inscrits et connectés.
   const counts = db
@@ -118,7 +120,7 @@ export function buildSnapshot(me) {
     },
     stats: { total: counts.total, online: counts.online },
     me: publicUser(me),
-    users: users.map(publicUser),
+    users: users.map((u) => ({ ...publicUser(u), games: gameRows.filter((g) => g.user_id === u.id).map((g) => ({ game: g.game, rank: g.rank, hours: g.hours })) })),
     servers: servers.map((s) => ({
       id: s.id,
       name: s.name,

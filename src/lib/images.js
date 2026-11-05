@@ -43,3 +43,23 @@ export function fileToDataUrl(file, { maxWidth = 128, maxHeight = 128, square = 
 export const AVATAR_OPTS = { maxWidth: 128, maxHeight: 128, square: true };
 export const ICON_OPTS = { maxWidth: 128, maxHeight: 128, square: true };
 export const BANNER_OPTS = { maxWidth: 800, maxHeight: 280, square: false };
+
+// GIF animé : pas de redimensionnement (il perdrait l'animation). Réservé aux PLUS, poids limité.
+export function readGif(file, maxBytes, isPlus) {
+  return new Promise((resolve, reject) => {
+    if (!isPlus) {
+      reject(new Error('Les GIF animés sont réservés aux membres PLUS.'));
+      return;
+    }
+    if (file.size > maxBytes) {
+      reject(new Error(`GIF trop lourd (${Math.round(maxBytes / 1024)} Ko maximum).`));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Lecture du GIF impossible.'));
+    reader.readAsDataURL(file);
+  });
+}
+export const GIF_MAX_AVATAR = 150_000; // octets du fichier
+export const GIF_MAX_BANNER = 225_000;

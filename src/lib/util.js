@@ -38,7 +38,7 @@ export const STATUS_LABEL = { online: 'En ligne', game: 'En game', away: 'Absent
 export const STATUS_DOT = { online: 'bg-brand-500', game: 'bg-violet-500', away: 'bg-amber-400', offline: 'bg-slate-300' };
 export const statusLabel = (user) => STATUS_LABEL[statusKey(user)];
 // Couleur du texte de statut (lisible sur fond sombre).
-export const STATUS_TEXT = { online: '#2fd69a', game: '#a78bfa', away: '#fbbf24', offline: '#7b8494' };
+export const STATUS_TEXT = { online: '#00875f', game: '#7c3aed', away: '#b45309', offline: '#64748b' };
 export const statusColor = (user) => STATUS_TEXT[statusKey(user)];
 
 export function fullName(user) {
