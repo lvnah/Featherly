@@ -31,6 +31,8 @@ const ICONS = {
   arrow: 'M5 12h14M12 5l7 7-7 7',
   user: 'M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
   check: 'M20 6 9 17l-5-5',
+  mic: 'M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3zM19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8',
+  micOff: 'M1 1l22 22M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6M19 10v2a7 7 0 0 1-.11 1.23M5 10v2a7 7 0 0 0 12 5M12 19v4M8 23h8',
 };
 
 export function Icon({ name, className = 'h-5 w-5' }) {

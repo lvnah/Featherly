@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { getMe, serversOf, friendsOf, membersOf } from '../lib/store';
 import { useStore, useUI, Avatar, CountBadge, Icon, ServerIcon } from '../components/ui';
-import { serverUnread } from '../lib/store';
+import { serverUnread, leaveServer } from '../lib/store';
+import { run } from './ServerView';
 import { fullName, isOnline } from '../lib/util';
 
 export default function Home() {
   const s = useStore();
-  const { go, openModal } = useUI();
+  const { go, openModal, openMenu, toast } = useUI();
   const me = getMe(s);
   const [q, setQ] = useState('');
 
@@ -78,7 +79,7 @@ export default function Home() {
                 Bienvenue sur <span className="text-brand-400">Feathery !</span>
               </h1>
               <p className="mt-3 max-w-md text-sm text-white/75">
-                Une communauté unique, un univers infini. Rejoignez un espace ou créez le vôtre pour commencer à échanger.
+                Client web léger pour les gamers ou autre communauté. Rejoignez un espace ou créez le vôtre pour commencer à échanger.
               </p>
               <button onClick={() => openModal('join')} className="btn-soft mt-6 !rounded-full !px-6">
                 Rejoindre un espace
@@ -108,7 +109,10 @@ export default function Home() {
             ) : (
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {servers.map((srv) => (
-                  <button key={srv.id} onClick={() => go({ name: 'server', serverId: srv.id })} className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-white p-4 text-left shadow-soft transition hover:-translate-y-0.5">
+                  <button key={srv.id} onClick={() => go({ name: 'server', serverId: srv.id })} onContextMenu={(e) => {
+                    if (srv.owner_id === me.id) { e.preventDefault(); return; }
+                    openMenu(e, [{ label: 'Quitter l’espace', danger: true, onClick: () => { if (window.confirm(`Quitter « ${srv.name} » ?`)) run(toast, () => leaveServer(srv.id)); } }]);
+                  }} className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-white p-4 text-left shadow-soft transition hover:-translate-y-0.5">
                     <ServerIcon server={srv} className="h-12 w-12" />
                     <span className="ml-auto"><CountBadge n={serverUnread(s, srv.id)} /></span>
                     <span className="min-w-0">

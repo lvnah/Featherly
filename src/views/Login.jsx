@@ -37,7 +37,7 @@ export default function Login({ toast }) {
             <LeafLogo />
           </span>
           <h1 className="text-2xl font-extrabold text-slate-900">Bienvenue sur Feathery</h1>
-          <p className="text-sm text-slate-500">Une communauté unique, un univers infini.</p>
+          <p className="text-sm text-slate-500">Client web léger pour les gamers ou autre communauté.</p>
         </div>
 
         <div className="mb-6 grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-1">
