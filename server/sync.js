@@ -38,7 +38,7 @@ export function buildSnapshot(me) {
     ? all(`SELECT * FROM member_roles WHERE server_id IN (${marks(sIds)})`, ...sIds)
     : [];
   const roles = sIds.length
-    ? all(`SELECT * FROM roles WHERE server_id IN (${marks(sIds)}) ORDER BY created_at, id`, ...sIds)
+    ? all(`SELECT * FROM roles WHERE server_id IN (${marks(sIds)}) ORDER BY position, created_at, id`, ...sIds)
     : [];
   const channels = sIds.length
     ? all(`SELECT * FROM channels WHERE server_id IN (${marks(sIds)}) ORDER BY created_at, id`, ...sIds)

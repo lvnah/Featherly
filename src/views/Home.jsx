@@ -147,8 +147,8 @@ export default function Home() {
                 Voir tout →
               </button>
             </div>
-            {friends.length === 0 && <p className="text-sm text-slate-500">Aucun ami pour le moment.</p>}
-            {friends.slice(0, 6).map((f) => (
+            {onlineFriends.length === 0 && <p className="text-sm text-slate-500">Aucun ami en ligne pour le moment.</p>}
+            {onlineFriends.slice(0, 6).map((f) => (
               <div key={f.id} className="flex items-center gap-3">
                 <button onClick={() => go({ name: 'profile', userId: f.id })} className="flex min-w-0 flex-1 items-center gap-3 text-left">
                   <Avatar user={f} size="md" showStatus />

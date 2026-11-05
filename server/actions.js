@@ -219,6 +219,9 @@ const handlers = {
     if (!canManageChannels(p.serverId, me.id)) fail('Permission insuffisante.', 403);
     const raw = String(p.name ?? '').trim();
     if (!/^[a-zA-Z0-9-]{1,16}$/.test(raw)) fail('Nom invalide (uniquement lettres, chiffres, tirets, max 16 caractères).');
+    if (one('SELECT 1 FROM channels WHERE server_id = ? AND name = ?', p.serverId, raw.toLowerCase())) {
+      fail('Un salon porte déjà ce nom dans cet espace.', 409);
+    }
     run(
       'INSERT INTO channels (id, server_id, name, type, created_at) VALUES (?, ?, ?, ?, ?)',
       newId('c'), p.serverId, raw.toLowerCase(), p.type === 'voice' ? 'voice' : 'text', now(),
@@ -242,10 +245,26 @@ const handlers = {
     run('INSERT INTO messages (id, channel_id, user_id, content, created_at) VALUES (?, ?, ?, ?, ?)', newId('m'), ch.id, me.id, content, now());
   },
 
+  // Renommer un salon : même règle de nom et unicité dans l'espace.
+  updateChannel(me, p) {
+    const ch = one('SELECT * FROM channels WHERE id = ?', p.channelId);
+    if (!ch) fail('Salon introuvable.', 404);
+    if (!canManageChannels(ch.server_id, me.id)) fail('Permission insuffisante.', 403);
+    const raw = String(p.name ?? '').trim();
+    if (!/^[a-zA-Z0-9-]{1,16}$/.test(raw)) fail('Nom invalide (uniquement lettres, chiffres, tirets, max 16 caractères).');
+    if (one('SELECT 1 FROM channels WHERE server_id = ? AND name = ? AND id <> ?', ch.server_id, raw.toLowerCase(), ch.id)) {
+      fail('Un salon porte déjà ce nom dans cet espace.', 409);
+    }
+    run('UPDATE channels SET name = ? WHERE id = ?', raw.toLowerCase(), ch.id);
+  },
+
   joinVoice(me, p) {
     const ch = one('SELECT * FROM channels WHERE id = ?', p.channelId);
     if (!ch || ch.type !== 'voice') fail('Salon vocal introuvable.', 404);
     if (!isMember(ch.server_id, me.id)) fail('Vous n’êtes pas membre de cet espace.', 403);
+    // 5 personnes maximum par vocal (hors soi-même si l'on y est déjà).
+    const count = one('SELECT COUNT(*) AS n FROM voice_connections WHERE channel_id = ? AND user_id <> ?', ch.id, me.id).n;
+    if (count >= 5) fail('Ce vocal est complet (5 personnes maximum).', 409);
     run('INSERT OR REPLACE INTO voice_connections (user_id, channel_id) VALUES (?, ?)', me.id, ch.id);
   },
 
@@ -257,10 +276,26 @@ const handlers = {
     requireOwner(p.serverId, me);
     const name = text(p.name, 1, 20, 'Le nom du rôle doit faire entre 1 et 20 caractères.');
     const color = /^#[0-9a-f]{6}$/i.test(p.color ?? '') ? p.color : '#38bdf8';
+    const next = one('SELECT COALESCE(MAX(position), 0) + 1 AS n FROM roles WHERE server_id = ?', p.serverId).n;
     run(
-      'INSERT INTO roles (id, server_id, name, color, can_manage_channels, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-      newId('r'), p.serverId, name, color, p.can_manage_channels ? 1 : 0, now(),
+      'INSERT INTO roles (id, server_id, name, color, can_manage_channels, created_at, position) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      newId('r'), p.serverId, name, color, p.can_manage_channels ? 1 : 0, now(), next,
     );
+  },
+
+  // Déplacer un rôle vers le haut (-1) ou le bas (+1) : change l'ordre d'affichage des groupes.
+  moveRole(me, p) {
+    requireOwner(p.serverId, me);
+    const role = one('SELECT * FROM roles WHERE id = ? AND server_id = ?', p.roleId, p.serverId);
+    if (!role) fail('Rôle introuvable.', 404);
+    const other = p.direction < 0
+      ? one('SELECT * FROM roles WHERE server_id = ? AND position < ? ORDER BY position DESC LIMIT 1', p.serverId, role.position)
+      : one('SELECT * FROM roles WHERE server_id = ? AND position > ? ORDER BY position ASC LIMIT 1', p.serverId, role.position);
+    if (!other) return;
+    transaction(() => {
+      run('UPDATE roles SET position = ? WHERE id = ?', other.position, role.id);
+      run('UPDATE roles SET position = ? WHERE id = ?', role.position, other.id);
+    });
   },
 
   // Un seul rôle par membre (roleId vide = retirer les rôles), comme assign_role de server.php.
@@ -449,13 +484,9 @@ export function register({ pseudo, password, tag: wanted }) {
 
 export function login({ fullName, password }) {
   const [pseudo = '', tag = ''] = String(fullName ?? '').split('#').map((x) => x.trim());
-  // Avec tag : Pseudo#1234. Sans tag : accepté seulement si le pseudo est unique.
-  const user = tag
-    ? one('SELECT * FROM users WHERE pseudo = ? COLLATE NOCASE AND tag = ?', pseudo, tag)
-    : (() => {
-        const rows = all('SELECT * FROM users WHERE pseudo = ? COLLATE NOCASE', pseudo);
-        return rows.length === 1 ? rows[0] : null;
-      })();
+  // Le tag est obligatoire : Pseudo#1234. Sans lui, impossible de se connecter.
+  if (!tag) fail('Saisissez votre pseudo avec son tag, par exemple Pseudo#1234.', 400);
+  const user = one('SELECT * FROM users WHERE pseudo = ? COLLATE NOCASE AND tag = ?', pseudo, tag);
   if (!user || typeof password !== 'string' || !verifyPassword(password, user.password_hash)) {
     fail('Pseudo#tag ou mot de passe incorrect.', 401);
   }
