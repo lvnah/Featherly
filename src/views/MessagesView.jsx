@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { acceptDM, friendsOf, getMe, getUser, markDmRead, refuseDM, sendDM, unreadCount } from '../lib/store';
+import { acceptDM, friendsOf, friendshipBetween, getMe, getUser, markDmRead, refuseDM, respondFriendRequest, sendDM, sendFriendRequest, unreadCount } from '../lib/store';
 import { useStore, useUI, Avatar, CountBadge, EmptyState, ErrorLine, Icon } from '../components/ui';
 import { formatStamp, fullName, isOnline } from '../lib/util';
 import PlusBadge from '../components/PlusBadge';
@@ -8,7 +8,7 @@ import { run } from './ServerView';
 // Messages privés. Une personne qui n'est pas amie peut écrire : cela crée une demande de message.
 export default function MessagesView({ withId }) {
   const s = useStore();
-  const { go, toast } = useUI();
+  const { go, toast, openUser } = useUI();
   const me = getMe(s);
   const unread = unreadCount(s);
   const [text, setText] = useState('');
@@ -79,14 +79,16 @@ export default function MessagesView({ withId }) {
         {conversations.length === 0 && requests.length === 0 && <p className="px-2 text-sm text-slate-500">Aucune conversation active.</p>}
         <div className="flex flex-col gap-1">
           {conversations.map(({ user, last }) => (
-            <button key={user.id} onClick={() => go({ name: 'messages', withId: user.id })} className={`flex items-center gap-3 rounded-2xl p-3 text-left transition hover:bg-slate-50 ${withId === user.id ? 'bg-brand-50' : ''}`}>
-              <Avatar user={user} size="md" showStatus />
+            <div key={user.id} role="button" tabIndex={0} onClick={() => go({ name: 'messages', withId: user.id })} className={`flex cursor-pointer items-center gap-3 rounded-2xl p-3 text-left transition hover:bg-slate-50 ${withId === user.id ? 'bg-brand-50' : ''}`}>
+              <button type="button" onClick={(e) => { e.stopPropagation(); openUser(user.id); }} className="shrink-0 rounded-full" aria-label={`Profil de ${user.pseudo}`}>
+                <Avatar user={user} size="md" showStatus />
+              </button>
               <span className="min-w-0 flex-1">
-                <span className="block truncate font-bold">{fullName(user)}</span>
+                <span onClick={(e) => { e.stopPropagation(); openUser(user.id); }} className="block truncate font-bold hover:underline">{fullName(user)}</span>
                 <span className="block truncate text-xs text-slate-500">{last ? last.content : isOnline(user) ? 'En ligne' : 'Hors ligne'}</span>
               </span>
               <CountBadge n={unread.dms[user.id] || 0} />
-            </button>
+            </div>
           ))}
         </div>
       </aside>
@@ -105,6 +107,22 @@ export default function MessagesView({ withId }) {
                   <span className="block text-xs text-slate-500">{isOnline(partner) ? 'En ligne' : 'Hors ligne'}</span>
                 </span>
               </button>
+              {partner && (() => {
+                const fr = friendshipBetween(s, me.id, partner.id);
+                if (fr?.status === 'accepted') return null;
+                return (
+                  <div className="ml-auto flex shrink-0 gap-2">
+                    {!fr && <button className="btn-primary !py-2" onClick={() => run(toast, () => sendFriendRequest(partner.id), 'Demande d’ami envoyée')}>Demander en ami</button>}
+                    {fr?.status === 'pending' && fr.from === me.id && <button className="btn-ghost !py-2" disabled>Demande d’ami envoyée</button>}
+                    {fr?.status === 'pending' && fr.to === me.id && (
+                      <>
+                        <button className="btn-ghost !py-2" onClick={() => run(toast, () => respondFriendRequest(fr.id, false))}>Refuser</button>
+                        <button className="btn-primary !py-2" onClick={() => run(toast, () => respondFriendRequest(fr.id, true), 'Ami ajouté')}>Accepter la demande d’ami</button>
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
             </header>
 
             {incomingRequest && (
@@ -128,10 +146,12 @@ export default function MessagesView({ withId }) {
                 const author = d.from === me.id ? me : partner;
                 return (
                   <div key={d.id} className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-white px-5 py-4 shadow-soft">
-                    <Avatar user={author} size="md" />
+                    <button type="button" onClick={() => openUser(author.id)} className="shrink-0 rounded-full" aria-label={`Profil de ${author.pseudo}`}>
+                      <Avatar user={author} size="md" />
+                    </button>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-bold text-slate-900">{author.pseudo}</span>
+                        <span onClick={() => openUser(author.id)} className="cursor-pointer font-bold text-slate-900 hover:underline">{author.pseudo}</span>
                         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">#{author.tag}</span>
                         {author.is_plus ? <PlusBadge /> : null}
                         {d.status === 'request' && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-700">En attente</span>}

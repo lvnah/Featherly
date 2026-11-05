@@ -7,7 +7,7 @@ import {
 import { useStore, useUI, Avatar, CountBadge, EmptyState, ErrorLine, Icon, ServerIcon } from '../components/ui';
 import PlusBadge from '../components/PlusBadge';
 import { isVoiceMuted, setVoiceMuted } from '../lib/voice';
-import { markChannelRead, unreadCount } from '../lib/store';
+import { markChannelRead, unreadCount, leaveServer } from '../lib/store';
 import { formatStamp, isOnline } from '../lib/util';
 
 // Exécute une action async et affiche le résultat dans un toast.
@@ -201,7 +201,10 @@ export default function ServerView({ serverId, channelId, goHome }) {
         <button onClick={goHome} aria-label="Retour à l’accueil" className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200">
           <Icon name="back" className="h-5 w-5" />
         </button>
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3" onContextMenu={(e) => {
+          if (isOwner) { e.preventDefault(); return; }
+          openMenu(e, [{ label: 'Quitter l’espace', danger: true, onClick: () => { if (window.confirm(`Quitter « ${server.name} » ?`)) run(toast, () => leaveServer(serverId)).then((ok) => ok && goHome()); } }]);
+        }}>
           <ServerIcon server={server} className="h-12 w-12" />
           <div className="min-w-0">
             <p className="truncate text-lg font-extrabold">{server.name}</p>
@@ -267,6 +270,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
                     <Icon name="speaker" className="h-4 w-4" />
                   </span>
                   {c.name}
+                  {inside && <Icon name={isVoiceMuted() ? 'micOff' : 'mic'} className="h-4 w-4 opacity-90" />}
                 </span>
                 <span className={`text-[11px] font-bold ${inside ? 'text-white/80' : 'text-slate-400'}`}>{users.length}/5</span>
               </span>
@@ -365,8 +369,9 @@ export default function ServerView({ serverId, channelId, goHome }) {
                 <span className="font-semibold text-brand-600">{voiceUsers(myVoiceChannel).length}/5</span>
               </span>
               <div className="ml-auto flex gap-2">
-                <button onClick={() => { setVoiceMuted(!isVoiceMuted()); setVoiceTick((t) => t + 1); }} className="btn-ghost !py-2">
-                  {isVoiceMuted() ? 'Micro coupé' : 'Micro actif'}
+                <button onClick={() => { setVoiceMuted(!isVoiceMuted()); setVoiceTick((t) => t + 1); }} className={`btn-ghost !py-2 ${isVoiceMuted() ? 'text-red-600' : 'text-brand-700'}`} aria-label={isVoiceMuted() ? 'Activer le micro' : 'Couper le micro'}>
+                  <Icon name={isVoiceMuted() ? 'micOff' : 'mic'} className="h-4 w-4" />
+                  {isVoiceMuted() ? 'Micro coupé' : 'Micro ouvert'}
                 </button>
                 <button onClick={() => run(toast, () => leaveVoice())} className="btn-danger !py-2">Quitter</button>
               </div>

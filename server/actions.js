@@ -224,6 +224,17 @@ const handlers = {
     });
   },
 
+  // Quitter un espace (membre seulement ; le propriétaire doit supprimer l'espace).
+  leaveServer(me, p) {
+    const srv = getServer(p.serverId);
+    if (!srv || !isMember(p.serverId, me.id)) fail('Espace introuvable.', 404);
+    if (srv.owner_id === me.id) fail('Le propriétaire ne peut pas quitter son espace : supprimez-le à la place.', 400);
+    transaction(() => {
+      run('DELETE FROM voice_connections WHERE user_id = ? AND channel_id IN (SELECT id FROM channels WHERE server_id = ?)', me.id, p.serverId);
+      run('DELETE FROM memberships WHERE server_id = ? AND user_id = ?', p.serverId, me.id);
+    });
+  },
+
   // Rejoindre un espace public depuis la « Communauté » (sans code).
   joinPublicServer(me, p) {
     const srv = one('SELECT * FROM servers WHERE id = ? AND is_public = 1', p.serverId);

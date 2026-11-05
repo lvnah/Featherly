@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { getMe, serversOf, logout, messagesBadge, serverUnread, unreadCount } from '../lib/store';
+import { getMe, serversOf, logout, messagesBadge, serverUnread, unreadCount, leaveServer } from '../lib/store';
+import { run } from '../views/ServerView';
 import { useStore, useUI, Avatar, CountBadge, Icon, ServerIcon } from './ui';
+import InstallButton from './InstallButton';
 import Logo from './Logo';
 
 const NAV = [
@@ -14,7 +16,7 @@ const NAV = [
 // Sidebar flottante (desktop) ou tiroir coulissant (mobile) + zone de contenu.
 export default function Layout({ view, children }) {
   const s = useStore();
-  const { go, openModal, toast } = useUI();
+  const { go, openModal, openMenu, toast } = useUI();
   const me = getMe(s);
   const [drawer, setDrawer] = useState(false);
   const servers = serversOf(s, me.id);
@@ -24,6 +26,21 @@ export default function Layout({ view, children }) {
     go(v);
     setDrawer(false);
   };
+  // Clic droit sur un espace : quitter (sauf si l'on en est le propriétaire).
+  const leaveMenu = (e, srv) => {
+    if (srv.owner_id === me.id) {
+      e.preventDefault();
+      return;
+    }
+    openMenu(e, [{
+      label: 'Quitter l’espace',
+      danger: true,
+      onClick: () => {
+        if (window.confirm(`Quitter « ${srv.name} » ?`)) run(toast, () => leaveServer(srv.id)).then((ok) => ok && goHome());
+      },
+    }]);
+  };
+  const goHome = () => navigate({ name: 'home' });
   const isActive = (item) =>
     item.key === 'settings' ? view.name === 'profile' && view.userId === me.id && view.edit : view.name === item.key;
 
@@ -73,6 +90,7 @@ export default function Layout({ view, children }) {
               <button
                 key={srv.id}
                 onClick={() => navigate({ name: 'server', serverId: srv.id })}
+                onContextMenu={(e) => leaveMenu(e, srv)}
                 className={`flex items-center gap-3 rounded-2xl px-2 py-2 text-left transition hover:bg-slate-50 ${
                   view.name === 'server' && view.serverId === srv.id ? 'bg-slate-100' : ''
                 }`}
@@ -86,6 +104,7 @@ export default function Layout({ view, children }) {
           </div>
         </div>
 
+        <InstallButton className="mb-3" />
         <div className="flex items-center gap-3 border-t border-slate-100 pt-4">
           <button onClick={() => navigate({ name: 'profile', userId: me.id })} className="flex min-w-0 flex-1 items-center gap-3 text-left">
             <Avatar user={me} size="md" showStatus />

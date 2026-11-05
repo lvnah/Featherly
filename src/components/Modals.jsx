@@ -268,7 +268,24 @@ function RenameChannelModal({ channelId, current, onClose }) {
   );
 }
 
+function InstallModal({ platform: os, onClose }) {
+  const steps = os === 'mac'
+    ? ['Ouvrez Feathery dans Chrome, Edge ou Safari.', 'Chrome / Edge : menu ⋮ ou icône d’installation dans la barre d’adresse, puis « Installer ».', 'Safari : menu Fichier, puis « Ajouter au Dock ».', 'Un raccourci Feathery apparaît dans le Dock ou le Launchpad.']
+    : os === 'windows'
+      ? ['Ouvrez Feathery dans Chrome ou Edge.', 'Cliquez sur l’icône d’installation dans la barre d’adresse, ou menu ⋮ puis « Installer Feathery ».', 'Un raccourci apparaît sur le bureau et dans le menu Démarrer.']
+      : ['Ouvrez Feathery dans Chrome ou Edge.', 'Utilisez le menu du navigateur puis « Installer Feathery » (ou « Ajouter à l’écran d’accueil » sur mobile).'];
+  return (
+    <Modal open title="Installer Feathery" onClose={onClose}>
+      <ol className="flex list-decimal flex-col gap-3 pl-5 text-sm text-slate-700">
+        {steps.map((st) => <li key={st}>{st}</li>)}
+      </ol>
+      <p className="mt-4 text-xs text-slate-400">L’application s’ouvre ensuite dans sa propre fenêtre, sans barre d’adresse.</p>
+    </Modal>
+  );
+}
+
 const MODALS = {
+  install: InstallModal,
   'rename-channel': RenameChannelModal,
   createServer: CreateServerModal,
   join: JoinServerModal,

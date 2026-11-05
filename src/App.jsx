@@ -127,6 +127,14 @@ export default function App() {
         setModal(null);
       },
       openModal: (name, props = {}) => setModal({ name, ...props }),
+      // Clic gauche sur une photo ou un nom : mini-profil dans un espace, profil ailleurs.
+      openUser: (userId, serverId = null) => {
+        if (serverId && view.name === 'server') setModal({ name: 'mini', userId, serverId });
+        else {
+          setView({ name: 'profile', userId });
+          setModal(null);
+        }
+      },
       closeModal,
       openMenu: (e, items) => {
         e.preventDefault();
