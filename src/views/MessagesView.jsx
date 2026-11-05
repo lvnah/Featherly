@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { acceptDM, friendsOf, friendshipBetween, getMe, getUser, markDmRead, refuseDM, respondFriendRequest, sendDM, sendFriendRequest, unreadCount } from '../lib/store';
 import { useStore, useUI, Avatar, CountBadge, EmptyState, ErrorLine, Icon } from '../components/ui';
-import { formatStamp, fullName, isOnline, statusLabel } from '../lib/util';
+import { formatStamp, fullName, isOnline, statusLabel, statusColor } from '../lib/util';
 import PlusBadge from '../components/PlusBadge';
 import { run } from './ServerView';
 
@@ -104,7 +104,7 @@ export default function MessagesView({ withId }) {
                 <Avatar user={partner} size="sm" showStatus />
                 <span className="min-w-0">
                   <span className="flex items-center gap-2 font-bold"><span className="truncate">{fullName(partner)}</span>{partner.is_plus ? <PlusBadge /> : null}</span>
-                  <span className="block text-xs text-slate-500">{statusLabel(partner)}</span>
+                  <span className="block text-xs text-slate-500"><span style={{ color: statusColor(partner) }}>{statusLabel(partner)}</span></span>
                 </span>
               </button>
               {partner && (() => {
@@ -145,7 +145,7 @@ export default function MessagesView({ withId }) {
               {thread.map((d) => {
                 const author = d.from === me.id ? me : partner;
                 return (
-                  <div key={d.id} className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-white px-5 py-4 shadow-soft">
+                  <div key={d.id} className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-surface px-5 py-4 shadow-soft">
                     <button type="button" onClick={() => openUser(author.id)} className="shrink-0 rounded-full" aria-label={`Profil de ${author.pseudo}`}>
                       <Avatar user={author} size="md" />
                     </button>

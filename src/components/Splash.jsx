@@ -13,7 +13,7 @@ export default function Splash({ onDone }) {
   }, [onDone]);
 
   return (
-    <div className="splash-screen fixed inset-0 z-[100] flex flex-col items-center justify-center gap-6 bg-white" aria-hidden="true">
+    <div className="splash-screen fixed inset-0 z-[100] flex flex-col items-center justify-center gap-6 bg-ink" aria-hidden="true">
       <div className="splash-glow pointer-events-none absolute h-72 w-72 rounded-full bg-brand-300/40 blur-3xl" />
       <div className="splash-mark relative h-40 w-40 overflow-hidden">
         <Logo animated className="h-full w-full" />

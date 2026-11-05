@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { getMe, getUser, friendshipBetween, isFriend, sendFriendRequest, setStatus, updateProfile } from '../lib/store';
 import { useStore, useUI, Avatar, Banner, EmptyState, ErrorLine, Icon } from '../components/ui';
-import { BANNER_GRADIENTS, bannerStyle, fullName, isOnline, statusLabel } from '../lib/util';
+import { BANNER_GRADIENTS, bannerStyle, fullName, isOnline, statusLabel, statusColor } from '../lib/util';
 import { fileToDataUrl, AVATAR_OPTS, BANNER_OPTS } from '../lib/images';
 import PlusBadge from '../components/PlusBadge';
 import Flag from '../components/Flag';
@@ -69,9 +69,9 @@ function OwnProfile() {
       </div>
 
       <div className="flex justify-center p-8">
-        <form onSubmit={save} className="w-full max-w-lg overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white shadow-soft">
+        <form onSubmit={save} className="w-full max-w-lg overflow-hidden rounded-[2.5rem] border border-slate-100 bg-surface shadow-soft">
           <div className="relative h-40" style={bannerStyle(preview)}>
-            <div className="absolute -bottom-12 left-7 h-24 w-24 rounded-full ring-2 ring-white">
+            <div className="absolute -bottom-12 left-7 h-24 w-24 rounded-full ring-2 ring-surface">
               <Avatar user={preview} size="xl" className="!h-full !w-full" />
             </div>
           </div>
@@ -166,14 +166,14 @@ function PublicProfile({ user, goBack }) {
           <Banner user={user} className="h-44" />
           <div className="flex flex-col gap-4 px-6 pb-6">
             <div className="-mt-10 flex items-end gap-4">
-              <Avatar user={user} size="xl" showStatus className="ring-2 ring-white" />
+              <Avatar user={user} size="xl" showStatus className="ring-2 ring-surface" />
               <div className="min-w-0 pb-1">
                 <h2 className="flex min-w-0 flex-wrap items-center gap-2 text-2xl font-extrabold">
                   <span className="truncate">{user.pseudo}</span> <span className="text-base font-semibold text-slate-400">#{user.tag}</span>
                   {user.is_plus ? <PlusBadge /> : null}
                   {user.country ? <Flag code={user.country} name={countryName(user.country)} /> : null}
                 </h2>
-                <p className={`text-sm font-semibold ${isOnline(user) ? 'text-brand-600' : 'text-slate-400'}`}>{statusLabel(user)}</p>
+                <p className={`text-sm font-semibold ${isOnline(user) ? 'text-brand-600' : 'text-slate-400'}`}><span style={{ color: statusColor(user) }}>{statusLabel(user)}</span></p>
               </div>
             </div>
             <div className="flex flex-col gap-2 rounded-2xl border border-slate-100 bg-slate-50 p-4">

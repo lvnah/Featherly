@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { createChannel, createServer, getMe, getUser, joinServer, regenerateInvite, reportUser, updateChannel } from '../lib/store';
 import { Modal, Avatar, Banner, ErrorLine, Icon, ServerIcon, useStore, useUI } from './ui';
-import { fullName, isOnline, statusLabel } from '../lib/util';
+import { fullName, isOnline, statusLabel, statusColor } from '../lib/util';
 import { fileToDataUrl, ICON_OPTS } from '../lib/images';
 import PlusBadge from './PlusBadge';
 import Flag from './Flag';
@@ -147,7 +147,7 @@ function MiniProfileModal({ userId, serverId, onClose }) {
   const me = getMe(s);
   const user = getUser(s, userId);
   if (!user) return null;
-  const color = roleColorOf(s, serverId, user.id) || '#0f172a';
+  const color = roleColorOf(s, serverId, user.id) || '#e2e8f0';
   const roleName = roleNameOf(s, serverId, user.id);
 
   return (
@@ -156,7 +156,7 @@ function MiniProfileModal({ userId, serverId, onClose }) {
         <Banner user={user} className="h-28" />
       </div>
       <div className="-mt-12">
-        <Avatar user={user} size="lg" showStatus className="ring-2 ring-white" />
+        <Avatar user={user} size="lg" showStatus className="ring-2 ring-surface" />
       </div>
       <div className="mt-4 flex flex-col gap-4">
         <button className="btn-primary w-full" onClick={() => go({ name: 'profile', userId: user.id })}>
@@ -164,7 +164,7 @@ function MiniProfileModal({ userId, serverId, onClose }) {
         </button>
         <div>
           <p className="flex items-center gap-2 text-lg font-extrabold" style={{ color }}>{user.pseudo}{user.is_plus ? <PlusBadge /> : null}{user.country ? <Flag code={user.country} name={countryName(user.country)} /> : null}</p>
-          <p className="text-sm text-slate-400">#{user.tag} · {statusLabel(user)}</p>
+          <p className="text-sm text-slate-400">#{user.tag} · <span style={{ color: statusColor(user) }}>{statusLabel(user)}</span></p>
         </div>
         <p className="text-sm text-slate-600">{user.bio || 'Aucune biographie.'}</p>
         <div className="rounded-2xl bg-slate-50 p-4">

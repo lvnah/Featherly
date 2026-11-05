@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { getMe, serversOf, logout, messagesBadge, serverUnread, unreadCount, leaveServer, setStatus } from '../lib/store';
-import { STATUS_LABEL, STATUS_DOT, statusKey, statusLabel } from '../lib/util';
+import { STATUS_LABEL, STATUS_DOT, statusKey, statusLabel, statusColor } from '../lib/util';
 import { run } from '../views/ServerView';
 import { useStore, useUI, Avatar, CountBadge, Icon, ServerIcon } from './ui';
 import InstallButton from './InstallButton';
@@ -42,6 +42,11 @@ export default function Layout({ view, children }) {
     }]);
   };
   const goHome = () => navigate({ name: 'home' });
+  const statusMenuItems = ['online', 'game', 'away', 'offline'].map((k) => ({
+    label: STATUS_LABEL[k],
+    checked: me.status === k,
+    onClick: () => run(toast, () => setStatus(k)),
+  }));
   const isActive = (item) =>
     item.key === 'settings' ? view.name === 'profile' && view.userId === me.id && view.edit : view.name === item.key;
 
@@ -53,7 +58,7 @@ export default function Layout({ view, children }) {
         }`}
       >
         <div className="flex items-center gap-3 px-2 pt-1">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-soft">
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-surface shadow-soft">
             <LeafLogo />
           </span>
           <span className="text-xl font-extrabold tracking-tight text-slate-900">Feathery</span>
@@ -93,7 +98,7 @@ export default function Layout({ view, children }) {
                 onClick={() => navigate({ name: 'server', serverId: srv.id })}
                 onContextMenu={(e) => leaveMenu(e, srv)}
                 className={`flex items-center gap-3 rounded-2xl border px-2.5 py-2.5 text-left shadow-soft transition ${
-                  view.name === 'server' && view.serverId === srv.id ? 'border-brand-300 bg-brand-50' : 'border-slate-100 bg-white hover:border-brand-200'
+                  view.name === 'server' && view.serverId === srv.id ? 'border-brand-300 bg-brand-50' : 'border-slate-100 bg-surface hover:border-brand-200'
                 }`}
               >
                 <ServerIcon server={srv} className="h-11 w-11 shrink-0" />
@@ -107,27 +112,16 @@ export default function Layout({ view, children }) {
 
         <InstallButton className="mb-3" />
         <div className="flex items-center gap-3 border-t border-slate-100 pt-4">
-          <button onClick={() => navigate({ name: 'profile', userId: me.id })} className="flex min-w-0 flex-1 items-center gap-3 text-left">
-            <Avatar user={me} size="md" showStatus />
-            <span className="min-w-0">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            {/* Photo : choisir son statut. Nom et statut : ouvrir son profil. */}
+            <button type="button" aria-label="Changer mon statut" onClick={(e) => openMenu(e, statusMenuItems)} className="shrink-0 rounded-full">
+              <Avatar user={me} size="md" showStatus />
+            </button>
+            <button type="button" onClick={() => navigate({ name: 'profile', userId: me.id })} className="min-w-0 text-left">
               <span className="block truncate text-sm font-bold text-slate-900">{me.pseudo}</span>
-              <span
-                role="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openMenu(e, ['online', 'game', 'away', 'offline'].map((k) => ({
-                    label: STATUS_LABEL[k],
-                    checked: me.status === k,
-                    onClick: () => run(toast, () => setStatus(k)),
-                  })));
-                }}
-                className="flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:underline"
-              >
-                <span className={`h-2 w-2 rounded-full ${STATUS_DOT[statusKey(me)]}`} />
-                {statusLabel(me)}
-              </span>
-            </span>
-          </button>
+              <span className="block truncate text-xs font-semibold" style={{ color: statusColor(me) }}>{statusLabel(me)}</span>
+            </button>
+          </div>
           <button
             title="Se déconnecter"
             aria-label="Se déconnecter"
@@ -141,7 +135,7 @@ export default function Layout({ view, children }) {
         </div>
       </aside>
 
-      {drawer && <div className="mobile-overlay fixed inset-0 z-30 bg-slate-900/20 lg:hidden" onClick={() => setDrawer(false)} />}
+      {drawer && <div className="mobile-overlay fixed inset-0 z-30 bg-ink/20 lg:hidden" onClick={() => setDrawer(false)} />}
 
       <div className="flex min-w-0 flex-1 flex-col gap-4">
         <div className="flex items-center gap-3 lg:hidden">

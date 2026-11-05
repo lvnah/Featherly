@@ -3,7 +3,7 @@ import { getMe, serversOf, friendsOf, membersOf } from '../lib/store';
 import { useStore, useUI, Avatar, CountBadge, Icon, ServerIcon } from '../components/ui';
 import { serverUnread, leaveServer } from '../lib/store';
 import { run } from './ServerView';
-import { fullName, isOnline, statusLabel } from '../lib/util';
+import { fullName, isOnline, statusLabel, statusColor } from '../lib/util';
 
 export default function Home() {
   const s = useStore();
@@ -33,7 +33,7 @@ export default function Home() {
       <div className="flex items-center gap-4">
         <div className="relative mx-auto w-full max-w-md">
           <input
-            className="w-full rounded-full border border-white bg-white/80 py-3 pl-12 pr-4 text-sm shadow-soft backdrop-blur focus:outline-none focus:ring-4 focus:ring-brand-500/15"
+            className="w-full rounded-full border border-line bg-surface/80 py-3 pl-12 pr-4 text-sm shadow-soft backdrop-blur focus:outline-none focus:ring-4 focus:ring-brand-500/15"
             placeholder="Rechercher une communauté, un membre..."
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -59,7 +59,7 @@ export default function Home() {
             </div>
           )}
         </div>
-        <button onClick={() => go({ name: 'messages' })} className="btn-ghost hidden shrink-0 !rounded-full !bg-white !py-2.5 shadow-soft sm:flex">
+        <button onClick={() => go({ name: 'messages' })} className="btn-ghost hidden shrink-0 !rounded-full !bg-surface !py-2.5 shadow-soft sm:flex">
           <Icon name="users" className="h-4 w-4 text-brand-600" />
           Message
         </button>
@@ -112,7 +112,7 @@ export default function Home() {
                   <button key={srv.id} onClick={() => go({ name: 'server', serverId: srv.id })} onContextMenu={(e) => {
                     if (srv.owner_id === me.id) { e.preventDefault(); return; }
                     openMenu(e, [{ label: 'Quitter l’espace', danger: true, onClick: () => { if (window.confirm(`Quitter « ${srv.name} » ?`)) run(toast, () => leaveServer(srv.id)); } }]);
-                  }} className="flex items-center gap-4 rounded-3xl border-2 border-brand-100 bg-white p-5 text-left shadow-panel transition hover:border-brand-300">
+                  }} className="flex items-center gap-4 rounded-3xl border-2 border-brand-100 bg-surface p-5 text-left shadow-panel transition hover:border-brand-300">
                     <ServerIcon server={srv} className="h-14 w-14 shrink-0" />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-lg font-extrabold text-slate-900">{srv.name}</span>
@@ -160,7 +160,7 @@ export default function Home() {
                   <Avatar user={f} size="md" showStatus />
                   <span className="min-w-0">
                     <span className="block truncate font-bold">{f.pseudo}</span>
-                    <span className="block text-xs text-slate-500">{statusLabel(f)}</span>
+                    <span className="block text-xs text-slate-500"><span style={{ color: statusColor(f) }}>{statusLabel(f)}</span></span>
                   </span>
                 </button>
                 <button title="Envoyer un message" onClick={() => go({ name: 'messages', withId: f.id })} className="rounded-2xl bg-slate-100 p-2.5 text-slate-600 hover:bg-slate-200">

@@ -33,7 +33,7 @@ export default function Login({ toast }) {
     <div className="flex min-h-dvh items-center justify-center p-4">
       <div className="panel w-full max-w-md p-8">
         <div className="mb-6 flex flex-col items-center gap-3 text-center">
-          <span className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-soft">
+          <span className="flex h-16 w-16 items-center justify-center rounded-3xl bg-surface shadow-soft">
             <LeafLogo />
           </span>
           <h1 className="text-2xl font-extrabold text-slate-900">Bienvenue sur Feathery</h1>
@@ -49,7 +49,7 @@ export default function Login({ toast }) {
               key={key}
               type="button"
               onClick={() => setMode(key)}
-              className={`rounded-xl py-2.5 text-sm font-semibold transition ${mode === key ? 'bg-white text-slate-900 shadow-soft' : 'text-slate-500'}`}
+              className={`rounded-xl py-2.5 text-sm font-semibold transition ${mode === key ? 'bg-surface text-slate-900 shadow-soft' : 'text-slate-500'}`}
             >
               {label}
             </button>
