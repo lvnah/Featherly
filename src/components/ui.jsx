@@ -83,6 +83,16 @@ export function ServerIcon({ server, icon, className = 'h-10 w-10' }) {
   );
 }
 
+// Compteur de notifications : 1 à 9, puis 9+.
+export function CountBadge({ n, className = '' }) {
+  if (!n || n <= 0) return null;
+  return (
+    <span className={`inline-flex min-w-[20px] items-center justify-center rounded-full bg-brand-500 px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-white ${className}`}>
+      {n > 9 ? '9+' : n}
+    </span>
+  );
+}
+
 export function Banner({ user, className = '' }) {
   return <div className={`h-24 w-full ${className}`} style={bannerStyle(user)} />;
 }

@@ -113,6 +113,12 @@ function addColumn(table, column, definition) {
 addColumn('users', 'is_admin', 'INTEGER NOT NULL DEFAULT 0');
 addColumn('reports', 'server_id', 'TEXT');
 addColumn('roles', 'position', 'INTEGER NOT NULL DEFAULT 0');
+// Messages privés : 'ok' = conversation acceptée, 'request' = demande de message en attente.
+addColumn('dms', 'status', "TEXT NOT NULL DEFAULT 'ok'");
+db.exec(`
+CREATE TABLE IF NOT EXISTS dm_reads (user_id TEXT NOT NULL, peer_id TEXT NOT NULL, read_at INTEGER NOT NULL, PRIMARY KEY (user_id, peer_id));
+CREATE TABLE IF NOT EXISTS channel_reads (user_id TEXT NOT NULL, channel_id TEXT NOT NULL, read_at INTEGER NOT NULL, PRIMARY KEY (user_id, channel_id));
+`);
 // Anciens rôles sans position : ordre de création.
 db.exec('UPDATE roles SET position = rowid WHERE position = 0');
 db.exec(`
