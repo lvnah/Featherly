@@ -53,7 +53,9 @@ export function Avatar({ user, size = 'md', showStatus = false, className = '' }
     xl: 'h-28 w-28',
   }[size];
   const key = statusKey(user);
-  const dot = size === 'xs' ? 'h-2 w-2' : 'h-3 w-3';
+  // Pastille sur le bord du cercle, à 45° (bas droite), à la même place sur toutes les tailles.
+  const DOT_PX = { xs: 8, sm: 10, md: 12, lg: 16, xl: 20 };
+  const dot = { xs: 'h-2 w-2', sm: 'h-2.5 w-2.5', md: 'h-3 w-3', lg: 'h-4 w-4', xl: 'h-5 w-5' }[size];
   const hasPhoto = !!user?.avatar && !broken;
   return (
     <div className={`relative shrink-0 rounded-full ${dims} ${className}`}>
@@ -66,7 +68,8 @@ export function Avatar({ user, size = 'md', showStatus = false, className = '' }
       )}
       {showStatus && (
         <span
-          className={`absolute bottom-0 right-0 ${dot} rounded-full border-2 border-line ${STATUS_DOT[key]}`}
+          style={{ right: `calc(14.6% - ${DOT_PX[size] / 2}px)`, bottom: `calc(14.6% - ${DOT_PX[size] / 2}px)` }}
+          className={`absolute ${dot} rounded-full border-2 border-surface ${STATUS_DOT[key]}`}
           title=<span style={{ color: statusColor(user) }}>{statusLabel(user)}</span>
         />
       )}
@@ -153,7 +156,7 @@ export function ContextMenu({ x, y, items, onClose }) {
               it.onClick?.();
             }}
             className={`flex w-full items-center gap-2 rounded-2xl px-3 py-2 text-left text-sm transition disabled:opacity-40 ${
-              it.danger ? 'text-red-600 hover:bg-red-50' : 'text-slate-700 hover:bg-slate-100'
+              it.danger ? 'text-red-600 hover:bg-red-50' : 'text-slate-700 hover:bg-slate-300'
             }`}
           >
             {it.checked !== undefined && (

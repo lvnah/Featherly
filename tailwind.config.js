@@ -7,10 +7,10 @@ export default {
         sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       colors: {
-        surface: '#12151b',
-        line: '#262c36',
+        surface: '#0a0a0b',
+        line: '#23262d',
         ink: '#0b0d10',
-        slate: { 50: '#161a21', 100: '#1c212a', 200: '#282e39', 300: '#3a414e', 400: '#5b6372', 500: '#8a93a3', 600: '#aab2c0', 700: '#c8cfdb', 800: '#dfe4ec', 900: '#f2f4f8' },
+        slate: { 50: '#0c0d10', 100: '#14161b', 200: '#1f2229', 300: '#2e323b', 400: '#4a5060', 500: '#8a93a3', 600: '#aab2c0', 700: '#c8cfdb', 800: '#dfe4ec', 900: '#f2f4f8' },
         red: { 50: '#2a1214', 100: '#3a171a', 500: '#ef4444', 600: '#f87171', 700: '#fca5a5' },
         amber: { 50: '#2a2110', 100: '#3a2d14', 400: '#fbbf24', 700: '#fcd34d' },
         brand: {

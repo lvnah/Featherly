@@ -126,10 +126,10 @@ function RolesTab({ serverId, toast }) {
             <div key={r.id} className="flex flex-col gap-3 rounded-2xl border border-slate-100 p-4">
               <div className="flex items-center gap-3">
                 <div className="flex flex-col">
-                  <button type="button" aria-label="Monter" disabled={i === 0} onClick={() => run(toast, () => moveRole(serverId, r.id, -1))} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30">
+                  <button type="button" aria-label="Monter" disabled={i === 0} onClick={() => run(toast, () => moveRole(serverId, r.id, -1))} className="rounded-lg p-1 text-slate-400 hover:bg-slate-300 hover:text-slate-900 disabled:opacity-30">
                     <Icon name="arrow" className="h-3.5 w-3.5 -rotate-90" />
                   </button>
-                  <button type="button" aria-label="Descendre" disabled={i === roles.length - 1} onClick={() => run(toast, () => moveRole(serverId, r.id, 1))} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30">
+                  <button type="button" aria-label="Descendre" disabled={i === roles.length - 1} onClick={() => run(toast, () => moveRole(serverId, r.id, 1))} className="rounded-lg p-1 text-slate-400 hover:bg-slate-300 hover:text-slate-900 disabled:opacity-30">
                     <Icon name="arrow" className="h-3.5 w-3.5 rotate-90" />
                   </button>
                 </div>

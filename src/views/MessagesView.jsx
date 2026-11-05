@@ -79,7 +79,7 @@ export default function MessagesView({ withId }) {
         {conversations.length === 0 && requests.length === 0 && <p className="px-2 text-sm text-slate-500">Aucune conversation active.</p>}
         <div className="flex flex-col gap-1">
           {conversations.map(({ user, last }) => (
-            <div key={user.id} role="button" tabIndex={0} onClick={() => go({ name: 'messages', withId: user.id })} className={`flex cursor-pointer items-center gap-3 rounded-2xl p-3 text-left transition hover:bg-slate-50 ${withId === user.id ? 'bg-brand-50' : ''}`}>
+            <div key={user.id} role="button" tabIndex={0} onClick={() => go({ name: 'messages', withId: user.id })} className={`flex cursor-pointer items-center gap-3 rounded-2xl p-3 text-left transition hover:bg-slate-200 ${withId === user.id ? 'bg-brand-50' : ''}`}>
               <button type="button" onClick={(e) => { e.stopPropagation(); openUser(user.id); }} className="shrink-0 rounded-full" aria-label={`Profil de ${user.pseudo}`}>
                 <Avatar user={user} size="md" showStatus />
               </button>
@@ -97,7 +97,7 @@ export default function MessagesView({ withId }) {
         {partner ? (
           <>
             <header className="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
-              <button onClick={() => go({ name: 'messages' })} className="rounded-xl p-2 hover:bg-slate-100 md:hidden" aria-label="Retour">
+              <button onClick={() => go({ name: 'messages' })} className="rounded-xl p-2 hover:bg-slate-300 md:hidden" aria-label="Retour">
                 <Icon name="back" className="h-5 w-5" />
               </button>
               <button onClick={() => go({ name: 'profile', userId: partner.id })} className="flex min-w-0 items-center gap-3 text-left">

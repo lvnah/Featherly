@@ -88,7 +88,7 @@ export default function FriendsView() {
           {friends.map((u) =>
             row(u,
               <div key="b" className="flex gap-1">
-                <button title="Envoyer un message" onClick={() => go({ name: 'messages', withId: u.id })} className="rounded-2xl p-2.5 text-slate-600 hover:bg-slate-100">
+                <button title="Envoyer un message" onClick={() => go({ name: 'messages', withId: u.id })} className="rounded-2xl p-2.5 text-slate-600 hover:bg-slate-300">
                   <Icon name="chat" className="h-5 w-5" />
                 </button>
                 <button title="Supprimer l’ami" onClick={() => confirmRemove(u)} className="rounded-2xl p-2.5 text-slate-400 hover:bg-red-50 hover:text-red-600">

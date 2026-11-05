@@ -45,13 +45,13 @@ export default function Home() {
             <div className="panel absolute left-0 right-0 top-14 z-20 max-h-80 overflow-y-auto thin-scroll p-2">
               {results.servers.length === 0 && results.users.length === 0 && <p className="p-3 text-sm text-slate-500">Aucun résultat.</p>}
               {results.servers.map((srv) => (
-                <button key={srv.id} onClick={() => { setQ(''); go({ name: 'server', serverId: srv.id }); }} className="flex w-full items-center gap-3 rounded-2xl p-3 text-left hover:bg-slate-50">
+                <button key={srv.id} onClick={() => { setQ(''); go({ name: 'server', serverId: srv.id }); }} className="flex w-full items-center gap-3 rounded-2xl p-3 text-left hover:bg-slate-200">
                   <Icon name="home" className="h-5 w-5 text-brand-600" />
                   <span className="text-sm font-semibold">{srv.name}</span>
                 </button>
               ))}
               {results.users.map((u) => (
-                <button key={u.id} onClick={() => { setQ(''); go({ name: 'profile', userId: u.id }); }} className="flex w-full items-center gap-3 rounded-2xl p-3 text-left hover:bg-slate-50">
+                <button key={u.id} onClick={() => { setQ(''); go({ name: 'profile', userId: u.id }); }} className="flex w-full items-center gap-3 rounded-2xl p-3 text-left hover:bg-slate-200">
                   <Avatar user={u} size="sm" showStatus />
                   <span className="text-sm font-semibold">{fullName(u)}</span>
                 </button>
@@ -133,7 +133,7 @@ export default function Home() {
           <section className="panel p-6">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="font-bold">Votre profil</h2>
-              <button onClick={() => go({ name: 'profile', userId: me.id, edit: true })} aria-label="Modifier mon profil" className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100">
+              <button onClick={() => go({ name: 'profile', userId: me.id, edit: true })} aria-label="Modifier mon profil" className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-300">
                 <Icon name="settings" className="h-5 w-5" />
               </button>
             </div>

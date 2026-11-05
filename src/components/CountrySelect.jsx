@@ -41,7 +41,7 @@ export default function CountrySelect({ value, onChange }) {
       {open && (
         <ul role="listbox" className="panel thin-scroll absolute left-0 right-0 z-30 mt-2 max-h-72 overflow-y-auto p-2">
           <li>
-            <button type="button" onClick={() => { onChange(''); setOpen(false); }} className="flex w-full items-center rounded-2xl px-3 py-2 text-left text-sm text-slate-500 hover:bg-slate-50">
+            <button type="button" onClick={() => { onChange(''); setOpen(false); }} className="flex w-full items-center rounded-2xl px-3 py-2 text-left text-sm text-slate-500 hover:bg-slate-200">
               Aucun pays
             </button>
           </li>
@@ -52,7 +52,7 @@ export default function CountrySelect({ value, onChange }) {
                 role="option"
                 aria-selected={code === value}
                 onClick={() => { onChange(code); setOpen(false); }}
-                className={`flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left text-sm font-semibold transition ${code === value ? 'bg-brand-100 text-brand-800' : 'text-slate-700 hover:bg-slate-50'}`}
+                className={`flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left text-sm font-semibold transition ${code === value ? 'bg-brand-100 text-brand-800' : 'text-slate-700 hover:bg-slate-200'}`}
               >
                 <Flag code={code} name={name} />
                 {name}
