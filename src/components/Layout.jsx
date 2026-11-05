@@ -91,12 +91,12 @@ export default function Layout({ view, children }) {
                 key={srv.id}
                 onClick={() => navigate({ name: 'server', serverId: srv.id })}
                 onContextMenu={(e) => leaveMenu(e, srv)}
-                className={`flex items-center gap-3 rounded-2xl px-2 py-2 text-left transition hover:bg-slate-50 ${
-                  view.name === 'server' && view.serverId === srv.id ? 'bg-slate-100' : ''
+                className={`flex items-center gap-3 rounded-2xl border px-2.5 py-2.5 text-left shadow-soft transition hover:-translate-y-0.5 ${
+                  view.name === 'server' && view.serverId === srv.id ? 'border-brand-300 bg-brand-50' : 'border-slate-100 bg-white hover:border-brand-200'
                 }`}
               >
-                <ServerIcon server={srv} className="h-10 w-10" />
-                <span className="truncate text-sm font-semibold text-slate-800">{srv.name}</span>
+                <ServerIcon server={srv} className="h-11 w-11 shrink-0" />
+                <span className="min-w-0 flex-1 truncate text-[15px] font-bold text-slate-900">{srv.name}</span>
                 <span className="ml-auto"><CountBadge n={serverUnread(s, srv.id)} /></span>
               </button>
             ))}
