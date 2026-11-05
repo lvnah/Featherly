@@ -350,9 +350,14 @@ const handlers = {
     return all('SELECT id, pseudo, tag, is_plus, is_admin, created_at, last_activity FROM users ORDER BY created_at DESC');
   },
 
+  // Retirer PLUS remet aussi la bannière de base (dégradé vert).
   adminSetPlus(me, p) {
     requireAdmin(me);
-    run('UPDATE users SET is_plus = ? WHERE id = ?', p.value ? 1 : 0, p.userId);
+    if (p.value) {
+      run('UPDATE users SET is_plus = 1 WHERE id = ?', p.userId);
+    } else {
+      run("UPDATE users SET is_plus = 0, banner_type = 'gradient', banner_value = '0' WHERE id = ?", p.userId);
+    }
   },
 
   adminDeleteUser(me, p) {

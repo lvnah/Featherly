@@ -31,6 +31,14 @@ function send(res, status, data) {
   res.end(JSON.stringify(data));
 }
 
+// Passe l'utilisateur hors ligne tout de suite (au lieu d'attendre 45 s), et prévient les autres clients.
+function setOffline(token) {
+  const user = userFromToken(token || null);
+  if (!user) return;
+  db.prepare('UPDATE users SET last_activity = 0 WHERE id = ?').run(user.id);
+  bumpVersion();
+}
+
 function readJson(req) {
   return new Promise((resolveBody, reject) => {
     let size = 0;
@@ -66,13 +74,24 @@ function requireUser(req) {
 
 async function handleApi(req, res, path) {
   if (req.method === 'POST' && path === '/api/auth/register') {
-    return send(res, 201, register(await readJson(req)));
+    const result = register(await readJson(req));
+    bumpVersion(); // nouveau compte : les totaux changent
+    return send(res, 201, result);
   }
   if (req.method === 'POST' && path === '/api/auth/login') {
-    return send(res, 200, login(await readJson(req)));
+    const result = login(await readJson(req));
+    bumpVersion(); // présence : le compte est désormais en ligne
+    return send(res, 200, result);
   }
   if (req.method === 'POST' && path === '/api/auth/logout') {
+    setOffline(bearer(req));
     logout(bearer(req));
+    return send(res, 200, { ok: true });
+  }
+  // Fermeture de la page (sendBeacon ne peut pas envoyer d'en-tête : le jeton est dans le corps).
+  if (req.method === 'POST' && path === '/api/presence/leave') {
+    const body = await readJson(req);
+    setOffline(String(body.token ?? ''));
     return send(res, 200, { ok: true });
   }
   if (req.method === 'GET' && path === '/api/sync') {

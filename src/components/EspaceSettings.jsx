@@ -65,6 +65,33 @@ function RolesTab({ serverId, toast }) {
   const [color, setColor] = useState(ROLE_COLORS[0]);
   const [manage, setManage] = useState(false);
   const [error, setError] = useState('');
+  const [drafts, setDrafts] = useState({}); // modifications en attente, par rôle
+  const [saving, setSaving] = useState(false);
+
+  const draftOf = (r) => drafts[r.id] ?? { name: r.name, color: r.color, manage: !!r.can_manage_channels };
+  const isDirty = (r) => {
+    const d = drafts[r.id];
+    return !!d && (d.name !== r.name || d.color !== r.color || d.manage !== !!r.can_manage_channels);
+  };
+  const dirty = roles.filter(isDirty);
+  const setDraft = (r, patch) => setDrafts((cur) => ({ ...cur, [r.id]: { ...draftOf(r), ...patch } }));
+
+  // Enregistre tous les rôles modifiés d'un coup.
+  const saveAll = async () => {
+    setSaving(true);
+    try {
+      for (const r of dirty) {
+        const d = drafts[r.id];
+        await updateRole(serverId, r.id, { name: d.name, color: d.color, can_manage_channels: d.manage });
+      }
+      setDrafts({});
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const create = async (e) => {
     e.preventDefault();
     setError('');
@@ -76,6 +103,7 @@ function RolesTab({ serverId, toast }) {
       setError(err.message);
     }
   };
+
   return (
     <div className="flex flex-col gap-6">
       <form onSubmit={create} className="flex flex-col gap-4 rounded-3xl bg-slate-50 p-5">
@@ -89,39 +117,34 @@ function RolesTab({ serverId, toast }) {
         <ErrorLine>{error}</ErrorLine>
         <button type="submit" className="btn-primary self-end" disabled={!name.trim()}>Ajouter le rôle</button>
       </form>
+
       <div className="flex flex-col gap-3">
         {roles.length === 0 && <p className="text-sm text-slate-500">Aucun rôle pour le moment.</p>}
-        {roles.map((r) => (
-          <RoleRow key={`${r.id}-${r.color}-${r.name}-${r.can_manage_channels}`} role={r} serverId={serverId} toast={toast} />
-        ))}
+        {roles.map((r) => {
+          const d = draftOf(r);
+          return (
+            <div key={r.id} className="flex flex-col gap-3 rounded-2xl border border-slate-100 p-4">
+              <div className="flex items-center gap-3">
+                <input className="field !py-2" maxLength={20} value={d.name} onChange={(e) => setDraft(r, { name: e.target.value })} />
+                <button className="btn-danger !py-2" onClick={() => window.confirm(`Supprimer le rôle « ${r.name} » ?`) && run(toast, () => deleteRole(serverId, r.id))}>
+                  Suppr.
+                </button>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <ColorDiamonds value={d.color} onChange={(c) => setDraft(r, { color: c })} />
+                <label className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                  <input type="checkbox" className="h-3.5 w-3.5 accent-brand-500" checked={d.manage} onChange={(e) => setDraft(r, { manage: e.target.checked })} />
+                  Gérer salons
+                </label>
+              </div>
+            </div>
+          );
+        })}
       </div>
-    </div>
-  );
-}
 
-function RoleRow({ role, serverId, toast }) {
-  const [name, setName] = useState(role.name);
-  const [color, setColor] = useState(role.color);
-  const [manage, setManage] = useState(!!role.can_manage_channels);
-  const dirty = name !== role.name || color !== role.color || manage !== !!role.can_manage_channels;
-  return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-slate-100 p-4">
-      <div className="flex items-center gap-3">
-        <input className="field !py-2" maxLength={20} value={name} onChange={(e) => setName(e.target.value)} />
-        <button className="btn-danger !py-2" onClick={() => window.confirm(`Supprimer le rôle « ${role.name} » ?`) && run(toast, () => deleteRole(serverId, role.id), 'Rôle supprimé')}>
-          Suppr.
-        </button>
-      </div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <ColorDiamonds value={color} onChange={setColor} />
-        <label className="flex items-center gap-2 text-xs font-bold text-slate-600">
-          <input type="checkbox" className="h-3.5 w-3.5 accent-brand-500" checked={manage} onChange={(e) => setManage(e.target.checked)} />
-          Gérer salons
-        </label>
-      </div>
-      {dirty && (
-        <button className="btn-primary self-end !py-2" onClick={() => run(toast, () => updateRole(serverId, role.id, { name, color, can_manage_channels: manage }), 'Rôle mis à jour')}>
-          Enregistrer
+      {roles.length > 0 && (
+        <button className="btn-primary w-full !py-3.5" disabled={dirty.length === 0 || saving} onClick={saveAll}>
+          {saving ? 'Enregistrement…' : 'Enregistrer les modifications'}
         </button>
       )}
     </div>
