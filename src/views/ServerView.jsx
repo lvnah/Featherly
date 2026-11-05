@@ -140,7 +140,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
           <span className="flex min-w-0 items-center gap-1.5"><span className="truncate text-sm font-bold" style={{ color }}>{u.pseudo}</span>{u.is_plus ? <PlusBadge /> : null}</span>
           <span className="block truncate text-xs font-semibold text-slate-500">#{u.tag}</span>
           {voiceChannelOf(u.id) && (
-            <span className="block truncate text-xs font-bold text-brand-600">Vocal</span>
+            <span className="block truncate text-xs font-bold text-brand-600">Vocal · {voiceChannelOf(u.id).name}</span>
           )}
         </span>
       </button>
@@ -252,6 +252,23 @@ export default function ServerView({ serverId, channelId, goHome }) {
           </button>
         </div>
       </header>
+
+      {/* Qui est dans quel vocal : photo et pseudo, au-dessus du chat */}
+      {voiceChannels.some((c) => voiceUsers(c).length > 0) && (
+        <div className="panel flex flex-wrap items-center gap-x-6 gap-y-3 px-5 py-3">
+          {voiceChannels.filter((c) => voiceUsers(c).length > 0).map((c) => (
+            <div key={c.id} className="flex flex-wrap items-center gap-3">
+              <span className="text-xs font-bold uppercase tracking-wide text-brand-600">Vocal · {c.name}</span>
+              {voiceUsers(c).map((u) => (
+                <span key={u.id} className="flex items-center gap-2 rounded-full bg-white px-2 py-1 shadow-soft">
+                  <Avatar user={u} size="xs" />
+                  <span className="text-xs font-bold text-slate-800">{u.pseudo}</span>
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="flex min-h-0 flex-1 gap-4">
         {/* Chat */}

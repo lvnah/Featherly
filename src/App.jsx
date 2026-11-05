@@ -11,6 +11,7 @@ import Home from './views/Home';
 import ServerView from './views/ServerView';
 import MessagesView from './views/MessagesView';
 import FriendsView from './views/FriendsView';
+import CommunityView from './views/CommunityView';
 import ProfileView from './views/ProfileView';
 import AdminView from './views/AdminView';
 
@@ -68,6 +69,13 @@ export default function App() {
       stopVoice();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Rafraîchit l'affichage de la présence toutes les 5 s (sans requête réseau).
+  const [, setNow] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 5000);
+    return () => clearInterval(id);
   }, []);
 
   // Fermer ou quitter la page : passer hors ligne tout de suite.
@@ -151,6 +159,7 @@ export default function App() {
         {view.name === 'home' && <Home />}
         {view.name === 'messages' && <MessagesView withId={view.withId} />}
         {view.name === 'friends' && <FriendsView />}
+        {view.name === 'community' && <CommunityView />}
         {view.name === 'admin' && <AdminView />}
         {view.name === 'profile' && <ProfileView key={`${view.userId}-${!!view.edit}`} userId={view.userId} edit={!!view.edit} goBack={goHome} />}
       </Layout>

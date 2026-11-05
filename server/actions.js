@@ -193,6 +193,15 @@ const handlers = {
     });
   },
 
+  // Rejoindre un espace public depuis la « Communauté » (sans code).
+  joinPublicServer(me, p) {
+    const srv = one('SELECT * FROM servers WHERE id = ? AND is_public = 1', p.serverId);
+    if (!srv) fail('Espace public introuvable.', 404);
+    if (isMember(srv.id, me.id)) fail('Vous êtes déjà membre de cet espace.', 409);
+    run('INSERT INTO memberships (server_id, user_id, joined_at) VALUES (?, ?, ?)', srv.id, me.id, now());
+    return { id: srv.id };
+  },
+
   joinServer(me, p) {
     const srv = one('SELECT * FROM servers WHERE invite_code = ?', String(p.code ?? '').trim().toUpperCase());
     if (!srv) fail('Code d’invitation invalide.', 404);

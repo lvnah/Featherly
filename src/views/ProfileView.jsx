@@ -48,6 +48,8 @@ function OwnProfile() {
     setBusy(true);
     try {
       await updateProfile({ pseudo, tag: me.is_plus ? tag : undefined, avatar, bio, banner });
+      // Enregistré : retour sur la vue de son profil.
+      go({ name: 'profile', userId: me.id });
     } catch (err) {
       setError(err.message);
     } finally {
