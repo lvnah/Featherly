@@ -245,7 +245,7 @@ function ChannelModal({ serverId, onClose }) {
   );
 }
 
-function RenameChannelModal({ channelId, name: current, onClose }) {
+function RenameChannelModal({ channelId, current, onClose }) {
   const [name, setName] = useState(current);
   const { error, busy, submit } = useSubmit(async () => {
     await updateChannel(channelId, name);

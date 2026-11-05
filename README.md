@@ -1,4 +1,4 @@
-# Hevenly
+# Feathery
 
 Application communautaire (type Discord) : espaces, salons texte et vocaux, messages privés, amis, rôles.
 Interface React + Tailwind CSS, backend Node.js avec base **SQLite**.

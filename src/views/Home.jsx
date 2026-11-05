@@ -74,7 +74,7 @@ export default function Home() {
             <Icon name="bolt" className="absolute right-10 top-1/2 hidden h-48 w-48 -translate-y-1/2 text-white/5 md:block" />
             <div className="relative">
               <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">
-                Bienvenue sur <span className="text-brand-400">Hevenly !</span>
+                Bienvenue sur <span className="text-brand-400">Feathery !</span>
               </h1>
               <p className="mt-3 max-w-md text-sm text-white/75">
                 Une communauté unique, un univers infini. Rejoignez un espace ou créez le vôtre pour commencer à échanger.
@@ -135,7 +135,7 @@ export default function Home() {
               <Avatar user={me} size="lg" />
               <div className="min-w-0">
                 <p className="truncate text-lg font-bold">{me.pseudo}</p>
-                <p className="text-sm font-semibold text-brand-600">{me.is_plus ? 'Membre PLUS' : 'Membre Hevenly'}</p>
+                <p className="text-sm font-semibold text-brand-600">{me.is_plus ? 'Membre PLUS' : 'Membre Feathery'}</p>
               </div>
             </div>
           </section>
