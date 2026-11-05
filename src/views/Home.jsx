@@ -10,8 +10,9 @@ export default function Home() {
   const [q, setQ] = useState('');
 
   const servers = serversOf(s, me.id);
-  const total = s.users.length;
-  const online = s.users.filter(isOnline).length;
+  // Totaux globaux renvoyés par le serveur (pas seulement les membres visibles).
+  const total = s.stats?.total ?? s.users.length;
+  const online = s.stats?.online ?? s.users.filter(isOnline).length;
   const percent = total ? Math.round((online / total) * 100) : 0;
   const friends = friendsOf(s, me.id).sort((a, b) => Number(isOnline(b)) - Number(isOnline(a)));
   const onlineFriends = friends.filter(isOnline);

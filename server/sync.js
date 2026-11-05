@@ -70,7 +70,13 @@ export function buildSnapshot(me) {
   const uIds = [...ids];
   const users = all(`SELECT * FROM users WHERE id IN (${marks(uIds)})`, ...uIds);
 
+  // Totaux globaux (agrégés, sans données personnelles) : membres inscrits et connectés.
+  const counts = db
+    .prepare('SELECT COUNT(*) AS total, COALESCE(SUM(CASE WHEN last_activity > ? THEN 1 ELSE 0 END), 0) AS online FROM users')
+    .get(Date.now() - 45_000);
+
   return {
+    stats: { total: counts.total, online: counts.online },
     me: publicUser(me),
     users: users.map(publicUser),
     servers: servers.map((s) => ({

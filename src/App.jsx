@@ -70,6 +70,29 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Fermer ou quitter la page : passer hors ligne tout de suite.
+  useEffect(() => {
+    const leave = () => {
+      const token = getToken();
+      if (!token || !navigator.sendBeacon) return;
+      navigator.sendBeacon('/api/presence/leave', new Blob([JSON.stringify({ token })], { type: 'application/json' }));
+    };
+    window.addEventListener('pagehide', leave);
+    return () => window.removeEventListener('pagehide', leave);
+  }, []);
+
+  // Clic droit : désactivé partout sauf sur les éléments qui ouvrent un menu de l'application.
+  // Dans les champs de saisie, le menu natif (copier / coller) reste disponible.
+  useEffect(() => {
+    const block = (e) => {
+      const el = e.target instanceof Element ? e.target : null;
+      if (el?.closest('input, textarea, [contenteditable="true"]')) return;
+      e.preventDefault();
+    };
+    window.addEventListener('contextmenu', block, true);
+    return () => window.removeEventListener('contextmenu', block, true);
+  }, []);
+
   // Navigation par URL : /admin ouvre le panel d'administration.
   useEffect(() => {
     const onPop = () => setView(viewFromPath(window.location.pathname));
