@@ -140,6 +140,7 @@ export const respondFriendRequest = (id, accept) => act('respondFriendRequest', 
 export const removeFriend = (userId) => act('removeFriend', { userId });
 export const sendDM = (toId, content) => act('sendDM', { toId, content });
 export const createServer = (payload) => act('createServer', payload);
+export const joinPublicServer = (serverId) => act('joinPublicServer', { serverId });
 export const joinServer = (code) => act('joinServer', { code });
 export const regenerateInvite = (serverId) => act('regenerateInvite', { serverId });
 export const createChannel = (serverId, name, type) => act('createChannel', { serverId, name, type });

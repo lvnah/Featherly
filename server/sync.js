@@ -1,6 +1,9 @@
 // Construit l'instantané de données visibles par un utilisateur (appelé par GET /api/sync).
 import { db } from './db.js';
 
+// Fenêtre de présence : un membre est « en ligne » si son heartbeat est plus récent que ce délai.
+export const ONLINE_WINDOW_MS = 15_000;
+
 const all = (sql, ...p) => db.prepare(sql).all(...p);
 const marks = (ids) => ids.map(() => '?').join(',') || 'NULL';
 
@@ -73,7 +76,14 @@ export function buildSnapshot(me) {
   // Totaux globaux (agrégés, sans données personnelles) : membres inscrits et connectés.
   const counts = db
     .prepare('SELECT COUNT(*) AS total, COALESCE(SUM(CASE WHEN last_activity > ? THEN 1 ELSE 0 END), 0) AS online FROM users')
-    .get(Date.now() - 45_000);
+    .get(Date.now() - ONLINE_WINDOW_MS);
+
+  const communities = all(
+    `SELECT s.id, s.name, s.icon, s.created_at, u.pseudo AS owner_pseudo, u.tag AS owner_tag,
+       (SELECT COUNT(*) FROM memberships m WHERE m.server_id = s.id) AS members
+     FROM servers s JOIN users u ON u.id = s.owner_id WHERE s.is_public = 1 ORDER BY s.created_at DESC LIMIT 200`,
+  );
+  const ids_member = new Set(servers.map((s) => s.id));
 
   return {
     stats: { total: counts.total, online: counts.online },
@@ -99,6 +109,8 @@ export function buildSnapshot(me) {
     messages,
     friendships: friendships.map((f) => ({ id: f.id, from: f.from_id, to: f.to_id, status: f.status })),
     dms: dms.map((d) => ({ id: d.id, from: d.from_id, to: d.to_id, content: d.content, created_at: d.created_at })),
+    // Espaces publics (liste « Communauté ») : sans code d'invitation.
+    communities: communities.map((c) => ({ ...c, is_member: ids_member.has(c.id) })),
     voice: voice.map((v) => ({ user_id: v.user_id, channel_id: v.channel_id })),
   };
 }

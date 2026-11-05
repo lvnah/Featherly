@@ -6,6 +6,7 @@ import Logo from './Logo';
 const NAV = [
   { key: 'home', label: 'Accueil', icon: 'home', view: { name: 'home' } },
   { key: 'messages', label: 'Message', icon: 'message', view: { name: 'messages' } },
+  { key: 'community', label: 'Communauté', icon: 'search', view: { name: 'community' } },
   { key: 'friends', label: 'Ami(s)', icon: 'users', view: { name: 'friends' } },
   { key: 'settings', label: 'Paramètres', icon: 'settings', view: { name: 'profile', userId: null } },
 ];
