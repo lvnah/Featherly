@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { friendsOf, getMe, getUser, sendDM } from '../lib/store';
 import { useStore, useUI, Avatar, EmptyState, ErrorLine, Icon } from '../components/ui';
-import { formatTime, fullName, isOnline } from '../lib/util';
+import { formatStamp, fullName, isOnline } from '../lib/util';
+import PlusBadge from '../components/PlusBadge';
 
 export default function MessagesView({ withId }) {
   const s = useStore();
@@ -79,13 +80,19 @@ export default function MessagesView({ withId }) {
             <div ref={listRef} className="thin-scroll flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-5">
               {thread.length === 0 && <p className="m-auto text-sm text-slate-500">Dites bonjour à {partner.pseudo}</p>}
               {thread.map((d) => {
-                const mine = d.from === me.id;
+                const author = d.from === me.id ? me : partner;
                 return (
-                  <div key={d.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] rounded-3xl px-4 py-2.5 text-sm md:max-w-md ${mine ? 'rounded-br-md bg-brand-500 text-white' : 'rounded-bl-md bg-slate-100 text-slate-800'}`}>
-                      <p className="whitespace-pre-wrap break-words">{d.content}</p>
-                      <p className={`mt-1 text-[10px] ${mine ? 'text-white/70' : 'text-slate-400'}`}>{formatTime(d.created_at)}</p>
+                  <div key={d.id} className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-white px-5 py-4 shadow-soft">
+                    <Avatar user={author} size="md" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-bold text-slate-900">{author.pseudo}</span>
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">#{author.tag}</span>
+                        {author.is_plus ? <PlusBadge /> : null}
+                      </div>
+                      <p className="mt-1 whitespace-pre-wrap break-words text-sm text-slate-700">{d.content}</p>
                     </div>
+                    <span className="hidden shrink-0 text-xs text-slate-400 sm:block">{formatStamp(d.created_at)}</span>
                   </div>
                 );
               })}

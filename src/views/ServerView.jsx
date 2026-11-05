@@ -93,6 +93,13 @@ export default function ServerView({ serverId, channelId, goHome }) {
     (a, b) => roleRank(s, serverId, a.id) - roleRank(s, serverId, b.id) || a.pseudo.localeCompare(b.pseudo),
   );
   const onlineMembers = members.filter(isOnline);
+  // Membres dans un salon vocal de cet espace : affichés en haut, avec le nom du vocal.
+  const inVoice = s.voice
+    .filter((v) => channels.some((c) => c.id === v.channel_id))
+    .map((v) => ({ user: getUser(s, v.user_id), channel: channels.find((c) => c.id === v.channel_id) }))
+    .filter((x) => x.user && x.channel);
+  const inVoiceIds = new Set(inVoice.map((x) => x.user.id));
+  const onlineNoVoice = onlineMembers.filter((u) => !inVoiceIds.has(u.id));
   const offlineMembers = members.filter((u) => !isOnline(u));
   const voiceUsers = (c) => s.voice.filter((v) => v.channel_id === c.id).map((v) => getUser(s, v.user_id)).filter(Boolean);
 
@@ -120,7 +127,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
     openMenu(e, memberMenuItems({ s, me, serverId, userId, go, openModal, toast }));
 
   // Une ligne de membre (liste de droite).
-  const memberRow = (u) => {
+  const memberRow = (u, subtitle = null) => {
     const color = roleColorOf(s, serverId, u.id) || '#0f172a';
     const online = isOnline(u);
     return (
@@ -133,7 +140,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
         <Avatar user={u} size="sm" showStatus />
         <span className="min-w-0">
           <span className="flex min-w-0 items-center gap-1.5"><span className="truncate text-sm font-bold" style={{ color }}>{u.pseudo}</span>{u.is_plus ? <PlusBadge /> : null}</span>
-          <span className="block truncate text-xs font-semibold text-slate-500">#{u.tag}</span>
+          <span className="block truncate text-xs font-semibold text-slate-500">{subtitle ?? `#${u.tag}`}</span>
         </span>
       </button>
     );
@@ -142,7 +149,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
   // Groupes en ligne par rôle (ex. « OWNER — 1 »), puis hors ligne.
   // Un groupe par rôle (dans l'ordre des rôles), les membres sans rôle en dernier.
   const onlineGroups = [];
-  onlineMembers.forEach((u) => {
+  onlineNoVoice.forEach((u) => {
     const role = roleOf(s, serverId, u.id);
     const key = role?.id ?? 'none';
     let group = onlineGroups.find((g) => g.key === key);
@@ -157,7 +164,13 @@ export default function ServerView({ serverId, channelId, goHome }) {
   const membersPanel = (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3">
-        <p className="text-xs font-bold uppercase tracking-wide text-brand-600">En ligne — {onlineMembers.length}</p>
+        {inVoice.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <p className="text-xs font-bold uppercase tracking-wide text-brand-600">En vocal — {inVoice.length}</p>
+            {inVoice.map(({ user, channel }) => memberRow(user, `En vocal · ${channel.name}`))}
+          </div>
+        )}
+        <p className="text-xs font-bold uppercase tracking-wide text-brand-600">En ligne — {onlineNoVoice.length}</p>
         {onlineGroups.map((g) => (
           <div key={g.label} className="flex flex-col gap-2">
             {g.label && (
@@ -165,13 +178,13 @@ export default function ServerView({ serverId, channelId, goHome }) {
                 {g.label} — {g.users.length}
               </p>
             )}
-            {g.users.map(memberRow)}
+            {g.users.map((u) => memberRow(u))}
           </div>
         ))}
       </div>
       <div className="flex flex-col gap-2">
         <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Hors ligne — {offlineMembers.length}</p>
-        {offlineMembers.map(memberRow)}
+        {offlineMembers.map((u) => memberRow(u))}
       </div>
     </div>
   );
@@ -285,7 +298,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
                           {author.is_plus ? <PlusBadge /> : null}
                           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">#{author.tag}</span>
                         </div>
-                        <p className="mt-1 whitespace-pre-wrap break-words text-sm text-slate-700">{m.content}</p>
+                        <p className="mt-1 whitespace-pre-wrap break-words text-sm font-bold text-slate-900">{m.content}</p>
                       </div>
                       <span className="hidden shrink-0 text-xs text-slate-400 sm:block">{formatStamp(m.created_at)}</span>
                       {(isOwner || author.id === me.id) && (

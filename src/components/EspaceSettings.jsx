@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { deleteRole, deleteServer, getMe, kickMember, membersOf, membership, rolesOf, assignRole, updateInvite, updateRole, updateServerIcon, createRole } from '../lib/store';
-import { Avatar, ColorDiamonds, ErrorLine, ServerIcon, useStore, useUI } from './ui';
+import { Avatar, ColorDiamonds, ErrorLine, Modal, ServerIcon, useStore, useUI } from './ui';
 import { fileToDataUrl, ICON_OPTS } from '../lib/images';
 import { updateServerName } from '../lib/store';
 import { fullName } from '../lib/util';
@@ -226,8 +226,19 @@ function InviteTab({ serverId, toast }) {
 
 function ManageTab({ serverId, toast, onDeleted }) {
   const s = useStore();
+  const { go } = useUI();
   const server = s.servers.find((x) => x.id === serverId);
   const [name, setName] = useState(server.name);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [typed, setTyped] = useState('');
+  const confirmDeletion = async () => {
+    const ok = await run(toast, () => deleteServer(serverId));
+    if (ok) {
+      setConfirmOpen(false);
+      onDeleted();
+      go({ name: 'home' });
+    }
+  };
   const [icon, setIcon] = useState(server.icon || '');
   const [error, setError] = useState('');
   const pick = async (e) => {
@@ -279,13 +290,26 @@ function ManageTab({ serverId, toast, onDeleted }) {
         <p className="text-sm text-slate-600">Salons, messages et rôles de cet espace disparaîtront définitivement.</p>
         <button
           className="btn-danger self-start"
-          onClick={() =>
-            window.confirm(`Supprimer définitivement « ${server.name} » ?`) &&
-            run(toast, () => deleteServer(serverId), 'Espace supprimé').then((ok) => ok && onDeleted())
-          }
+          onClick={() => {
+            setTyped('');
+            setConfirmOpen(true);
+          }}
         >
           Supprimer cet espace
         </button>
+        <Modal open={confirmOpen} title="Supprimer l’espace" onClose={() => setConfirmOpen(false)} width="max-w-md">
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-slate-600">
+              Cette action est définitive : salons, messages et rôles seront supprimés. Pour confirmer, écrivez le nom de l’espace :
+              <span className="ml-1 font-bold text-slate-900">{server.name}</span>
+            </p>
+            <input className="field" value={typed} placeholder={server.name} onChange={(e) => setTyped(e.target.value)} autoFocus />
+            <div className="flex justify-end gap-2">
+              <button className="btn-ghost" onClick={() => setConfirmOpen(false)}>Annuler</button>
+              <button className="btn-danger" disabled={typed !== server.name} onClick={confirmDeletion}>Supprimer définitivement</button>
+            </div>
+          </div>
+        </Modal>
       </div>
     </div>
   );
