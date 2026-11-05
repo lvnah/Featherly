@@ -153,6 +153,8 @@ export const kickMember = (serverId, userId) => act('kickMember', { serverId, us
 export const reportUser = (targetId, reason, serverId = null) => act('reportUser', { targetId, reason, serverId });
 export const assignRole = (serverId, userId, roleId) => act('assignRole', { serverId, userId, roleId });
 export const updateRole = (serverId, roleId, role) => act('updateRole', { serverId, roleId, ...role });
+export const moveRole = (serverId, roleId, direction) => act('moveRole', { serverId, roleId, direction });
+export const updateChannel = (channelId, name) => act('updateChannel', { channelId, name });
 export const deleteRole = (serverId, roleId) => act('deleteRole', { serverId, roleId });
 export const deleteMessage = (messageId) => act('deleteMessage', { messageId });
 export const updateServerName = (serverId, name) => act('updateServerName', { serverId, name });

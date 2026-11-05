@@ -114,11 +114,15 @@ export default function ServerView({ serverId, channelId, goHome }) {
   };
 
   const channelMenu = (e, channel) => {
-    if (!canManage || channels.length <= 1) {
+    if (!canManage) {
       e.preventDefault();
       return;
     }
-    openMenu(e, [{ label: 'Supprimer le salon', danger: true, onClick: () => run(toast, () => deleteChannel(channel.id), 'Salon supprimé') }]);
+    openMenu(e, [
+      { label: 'Renommer le salon', onClick: () => openModal('rename-channel', { channelId: channel.id, name: channel.name }) },
+      // Le dernier salon d'un espace ne peut pas être supprimé.
+      ...(channels.length > 1 ? [{ separator: true }, { label: 'Supprimer le salon', danger: true, onClick: () => run(toast, () => deleteChannel(channel.id)) }] : []),
+    ]);
   };
 
   const memberMenu = (e, userId) =>

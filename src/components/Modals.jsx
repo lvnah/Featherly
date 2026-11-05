@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createChannel, createServer, getMe, getUser, joinServer, regenerateInvite, reportUser } from '../lib/store';
+import { createChannel, createServer, getMe, getUser, joinServer, regenerateInvite, reportUser, updateChannel } from '../lib/store';
 import { Modal, Avatar, Banner, ErrorLine, Icon, ServerIcon, useStore, useUI } from './ui';
 import { fullName, isOnline } from '../lib/util';
 import { fileToDataUrl, ICON_OPTS } from '../lib/images';
@@ -153,13 +153,13 @@ function MiniProfileModal({ userId, serverId, onClose }) {
       <div className="-mx-6 -mt-6 overflow-hidden rounded-t-[2.5rem]">
         <Banner user={user} className="h-28" />
       </div>
-      <div className="-mt-12 flex items-end justify-between gap-3">
+      <div className="-mt-12">
         <Avatar user={user} size="lg" showStatus className="ring-2 ring-white" />
-        <button className="btn-primary !rounded-full !py-2 !text-sm" onClick={() => go({ name: 'profile', userId: user.id })}>
-          Voir profil complet
-        </button>
       </div>
       <div className="mt-4 flex flex-col gap-4">
+        <button className="btn-primary w-full" onClick={() => go({ name: 'profile', userId: user.id })}>
+          Voir profil complet
+        </button>
         <div>
           <p className="flex items-center gap-2 text-lg font-extrabold" style={{ color }}>{user.pseudo}{user.is_plus ? <PlusBadge /> : null}</p>
           <p className="text-sm text-slate-400">#{user.tag} · {isOnline(user) ? 'En ligne' : 'Hors ligne'}</p>
@@ -245,7 +245,31 @@ function ChannelModal({ serverId, onClose }) {
   );
 }
 
+function RenameChannelModal({ channelId, name: current, onClose }) {
+  const [name, setName] = useState(current);
+  const { error, busy, submit } = useSubmit(async () => {
+    await updateChannel(channelId, name);
+    onClose();
+  });
+  return (
+    <Modal open title="Renommer le salon" onClose={onClose}>
+      <form onSubmit={submit} className="flex flex-col gap-4">
+        <label className="flex flex-col gap-2"><Label>Nouveau nom</Label>
+          <input className="field" maxLength={16} value={name} autoFocus onChange={(e) => setName(e.target.value)} />
+        </label>
+        <span className="text-xs text-slate-400">Lettres, chiffres et tirets, 16 caractères max. Deux salons ne peuvent pas porter le même nom.</span>
+        <ErrorLine>{error}</ErrorLine>
+        <div className="flex justify-end gap-2">
+          <button type="button" className="btn-ghost" onClick={onClose}>Annuler</button>
+          <button type="submit" className="btn-primary" disabled={busy || !name.trim()}>Enregistrer</button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
 const MODALS = {
+  'rename-channel': RenameChannelModal,
   createServer: CreateServerModal,
   join: JoinServerModal,
   invite: InviteModal,

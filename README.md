@@ -82,7 +82,7 @@ Le compte **`lvnah#0000`** (statut administrateur) est créé au démarrage s'il
 ADMIN_PASSWORD='votre-mot-de-passe' npm start
 ```
 
-Connexion : pseudo `lvnah` (le tag est facultatif car le pseudo est unique) et ce mot de passe.
+Connexion : `lvnah#0000` et ce mot de passe. Le tag est obligatoire pour se connecter.
 La page **Admin**, visible uniquement pour ce compte, permet de gérer les utilisateurs (PLUS, suppression),
 les espaces (suppression) et les signalements (classer sans suite).
 
@@ -97,6 +97,8 @@ les espaces (suppression) et les signalements (classer sans suite).
 - Le statut PLUS est une simulation : aucun paiement n'est géré.
 
 ## Vocal
+
+Un vocal accepte 5 personnes maximum.
 
 Le vocal utilise WebRTC : le micro est capté quand on rejoint un salon vocal, et chaque membre du salon est relié
 aux autres (maillage, adapté à quelques personnes). La signalisation passe par l'API (`/api/voice/*`).

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { deleteRole, deleteServer, getMe, kickMember, membersOf, membership, rolesOf, assignRole, updateInvite, updateRole, updateServerIcon, createRole } from '../lib/store';
-import { Avatar, ColorDiamonds, ErrorLine, Modal, ServerIcon, useStore, useUI } from './ui';
+import { Avatar, ColorDiamonds, ErrorLine, Icon, Modal, ServerIcon, useStore, useUI } from './ui';
 import { fileToDataUrl, ICON_OPTS } from '../lib/images';
-import { updateServerName } from '../lib/store';
+import { updateServerName, moveRole } from '../lib/store';
 import { fullName } from '../lib/util';
 import { ROLE_COLORS } from '../lib/util';
 import { run } from '../views/ServerView';
@@ -120,11 +120,19 @@ function RolesTab({ serverId, toast }) {
 
       <div className="flex flex-col gap-3">
         {roles.length === 0 && <p className="text-sm text-slate-500">Aucun rôle pour le moment.</p>}
-        {roles.map((r) => {
+        {roles.map((r, i) => {
           const d = draftOf(r);
           return (
             <div key={r.id} className="flex flex-col gap-3 rounded-2xl border border-slate-100 p-4">
               <div className="flex items-center gap-3">
+                <div className="flex flex-col">
+                  <button type="button" aria-label="Monter" disabled={i === 0} onClick={() => run(toast, () => moveRole(serverId, r.id, -1))} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30">
+                    <Icon name="arrow" className="h-3.5 w-3.5 -rotate-90" />
+                  </button>
+                  <button type="button" aria-label="Descendre" disabled={i === roles.length - 1} onClick={() => run(toast, () => moveRole(serverId, r.id, 1))} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30">
+                    <Icon name="arrow" className="h-3.5 w-3.5 rotate-90" />
+                  </button>
+                </div>
                 <input className="field !py-2" maxLength={20} value={d.name} onChange={(e) => setDraft(r, { name: e.target.value })} />
                 <button className="btn-danger !py-2" onClick={() => window.confirm(`Supprimer le rôle « ${r.name} » ?`) && run(toast, () => deleteRole(serverId, r.id))}>
                   Suppr.

@@ -112,6 +112,9 @@ function addColumn(table, column, definition) {
 }
 addColumn('users', 'is_admin', 'INTEGER NOT NULL DEFAULT 0');
 addColumn('reports', 'server_id', 'TEXT');
+addColumn('roles', 'position', 'INTEGER NOT NULL DEFAULT 0');
+// Anciens rôles sans position : ordre de création.
+db.exec('UPDATE roles SET position = rowid WHERE position = 0');
 db.exec(`
 CREATE TABLE IF NOT EXISTS voice_signals (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
