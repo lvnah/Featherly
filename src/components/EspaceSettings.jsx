@@ -25,7 +25,7 @@ export default function EspaceSettingsModal({ serverId, onClose }) {
   const isOwner = server.owner_id === me.id;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-white">
+    <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-surface">
       <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-8 py-5">
         <div>
           <h2 className="text-xl font-extrabold">Paramètres de l’espace</h2>
@@ -41,7 +41,7 @@ export default function EspaceSettingsModal({ serverId, onClose }) {
           <>
             <nav className="thin-scroll flex gap-2 overflow-x-auto rounded-full bg-slate-100 p-1">
               {TABS.map(([key, label]) => (
-                <button key={key} onClick={() => setTab(key)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition ${tab === key ? 'bg-slate-900 text-brand-400' : 'text-slate-600 hover:bg-white'}`}>
+                <button key={key} onClick={() => setTab(key)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition ${tab === key ? 'bg-ink text-brand-400' : 'text-slate-600 hover:bg-surface'}`}>
                   {label}
                 </button>
               ))}
@@ -170,7 +170,7 @@ function MembersTab({ serverId, toast }) {
       {members.map((u) => {
         const current = membership(s, serverId, u.id)?.role_ids[0] ?? '';
         return (
-          <div key={u.id} className="flex flex-wrap items-center gap-3 rounded-2xl bg-white p-3">
+          <div key={u.id} className="flex flex-wrap items-center gap-3 rounded-2xl bg-surface p-3">
             <Avatar user={u} size="sm" />
             <span className="min-w-0 flex-1 truncate text-sm font-bold">{fullName(u)}</span>
             <select

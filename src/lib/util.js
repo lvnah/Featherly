@@ -3,7 +3,11 @@
 export const OWNER_COLOR = '#ef4444';
 export const ONLINE_WINDOW_MS = 15_000;
 
-export const ROLE_COLORS = ['#ef4444', '#38bdf8', '#a78bfa', '#f472b6', '#facc15', '#34d399', '#fb923c', '#0f172a'];
+export const ROLE_COLORS = [
+  '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#10b981', '#14b8a6',
+  '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899',
+  '#f43f5e', '#94a3b8', '#f8fafc',
+];
 
 // Bannières par défaut (index 0 = vert de la page Paramètres).
 export const BANNER_GRADIENTS = [
@@ -33,6 +37,9 @@ export const isOnline = (user) => statusKey(user) !== 'offline';
 export const STATUS_LABEL = { online: 'En ligne', game: 'En game', away: 'Absent', offline: 'Hors ligne' };
 export const STATUS_DOT = { online: 'bg-brand-500', game: 'bg-violet-500', away: 'bg-amber-400', offline: 'bg-slate-300' };
 export const statusLabel = (user) => STATUS_LABEL[statusKey(user)];
+// Couleur du texte de statut (lisible sur fond sombre).
+export const STATUS_TEXT = { online: '#2fd69a', game: '#a78bfa', away: '#fbbf24', offline: '#7b8494' };
+export const statusColor = (user) => STATUS_TEXT[statusKey(user)];
 
 export function fullName(user) {
   return user ? `${user.pseudo}#${user.tag}` : '';

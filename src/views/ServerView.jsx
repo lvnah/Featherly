@@ -144,14 +144,14 @@ export default function ServerView({ serverId, channelId, goHome }) {
 
   // Une ligne de membre (liste de droite).
   const memberRow = (u) => {
-    const color = roleColorOf(s, serverId, u.id) || '#0f172a';
+    const color = roleColorOf(s, serverId, u.id) || '#e2e8f0';
     const online = isOnline(u);
     return (
       <button
         key={u.id}
         onClick={() => openModal('mini', { userId: u.id, serverId })}
         onContextMenu={(e) => memberMenu(e, u.id)}
-        className={`flex w-full items-center gap-3 rounded-2xl border border-slate-100 bg-white p-2.5 text-left transition hover:shadow-soft ${online ? '' : 'opacity-50'}`}
+        className={`flex w-full items-center gap-3 rounded-2xl border border-slate-100 bg-surface p-2.5 text-left transition hover:shadow-soft ${online ? '' : 'opacity-50'}`}
       >
         <Avatar user={u} size="sm" showStatus />
         <span className="min-w-0">
@@ -256,11 +256,11 @@ export default function ServerView({ serverId, channelId, goHome }) {
               onClick={() => go({ name: 'server', serverId, channelId: c.id })}
               onContextMenu={(e) => channelMenu(e, c)}
               className={`flex min-w-[9rem] shrink-0 flex-col justify-between gap-3 rounded-3xl px-4 py-3 text-left transition ${
-                active ? 'bg-slate-900 text-white shadow-soft' : 'bg-white text-slate-700 shadow-soft'
+                active ? 'bg-ink text-white shadow-soft' : 'bg-surface text-slate-700 shadow-soft'
               }`}
             >
               <span className="flex items-center justify-between">
-                <span className={`flex h-8 w-8 items-center justify-center rounded-xl ${active ? 'bg-white/10 text-brand-400' : 'bg-brand-50 text-brand-600'}`}>
+                <span className={`flex h-8 w-8 items-center justify-center rounded-xl ${active ? 'bg-surface/10 text-brand-400' : 'bg-brand-50 text-brand-600'}`}>
                   <Icon name="hash" className="h-4 w-4" />
                 </span>
                 <CountBadge n={active ? 0 : n} />
@@ -279,12 +279,12 @@ export default function ServerView({ serverId, channelId, goHome }) {
               onClick={() => run(toast, () => joinVoice(c.id), `Connecté à ${c.name}`)}
               onContextMenu={(e) => channelMenu(e, c)}
               className={`flex min-w-[12rem] shrink-0 flex-col justify-between gap-3 rounded-3xl px-4 py-3 text-left transition ${
-                inside ? 'bg-brand-500 text-white shadow-[0_12px_30px_-12px_rgba(0,116,84,0.8)]' : 'bg-white text-slate-700 shadow-soft'
+                inside ? 'bg-brand-500 text-white shadow-[0_12px_30px_-12px_rgba(0,116,84,0.8)]' : 'bg-surface text-slate-700 shadow-soft'
               }`}
             >
               <span className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-sm font-bold">
-                  <span className={`flex h-8 w-8 items-center justify-center rounded-xl ${inside ? 'bg-white/15' : 'bg-brand-50 text-brand-600'}`}>
+                  <span className={`flex h-8 w-8 items-center justify-center rounded-xl ${inside ? 'bg-surface/15' : 'bg-brand-50 text-brand-600'}`}>
                     <Icon name="speaker" className="h-4 w-4" />
                   </span>
                   {c.name}
@@ -299,7 +299,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
                   <span className="flex -space-x-2">
                     {users.slice(0, 5).map((u) => (
                       <span key={u.id} className="relative">
-                        <Avatar user={u} size="xs" className="ring-2 ring-white" />
+                        <Avatar user={u} size="xs" className="ring-2 ring-surface" />
                         <MicBadge muted={voiceMuted(u.id)} />
                       </span>
                     ))}
@@ -331,9 +331,9 @@ export default function ServerView({ serverId, channelId, goHome }) {
                 {messages.map((m) => {
                   const author = getUser(s, m.user_id);
                   if (!author) return null;
-                  const color = roleColorOf(s, serverId, author.id) || '#0f172a';
+                  const color = roleColorOf(s, serverId, author.id) || '#e2e8f0';
                   return (
-                    <div key={m.id} className="group flex items-center gap-4 rounded-3xl border border-slate-100 bg-white px-5 py-4 shadow-soft">
+                    <div key={m.id} className="group flex items-center gap-4 rounded-3xl border border-slate-100 bg-surface px-5 py-4 shadow-soft">
                       <button onClick={() => openModal('mini', { userId: author.id, serverId })} onContextMenu={(e) => memberMenu(e, author.id)} aria-label={`Profil de ${author.pseudo}`}>
                         <Avatar user={author} size="md" />
                       </button>
@@ -410,7 +410,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
 // Petit badge micro (ouvert / coupé) posé sur l'avatar d'un membre du vocal.
 function MicBadge({ muted }) {
   return (
-    <span className={`absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white shadow-soft ${muted ? 'text-red-500' : 'text-brand-600'}`} title={muted ? 'Micro coupé' : 'Micro ouvert'}>
+    <span className={`absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-surface shadow-soft ${muted ? 'text-red-500' : 'text-brand-600'}`} title={muted ? 'Micro coupé' : 'Micro ouvert'}>
       <Icon name={muted ? 'micOff' : 'mic'} className="h-2.5 w-2.5" />
     </span>
   );

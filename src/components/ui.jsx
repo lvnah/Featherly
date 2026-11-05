@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useSyncExternalStore } from 'react';
 import { subscribe, getState } from '../lib/store';
-import { avatarGradient, bannerStyle, ROLE_COLORS, statusKey, STATUS_DOT, statusLabel } from '../lib/util';
+import { avatarGradient, bannerStyle, ROLE_COLORS, statusKey, STATUS_DOT, statusLabel, statusColor } from '../lib/util';
 import Logo from './Logo';
 
 export const UIContext = createContext(null);
@@ -66,8 +66,8 @@ export function Avatar({ user, size = 'md', showStatus = false, className = '' }
       )}
       {showStatus && (
         <span
-          className={`absolute bottom-0 right-0 ${dot} rounded-full border-2 border-white ${STATUS_DOT[key]}`}
-          title={statusLabel(user)}
+          className={`absolute bottom-0 right-0 ${dot} rounded-full border-2 border-line ${STATUS_DOT[key]}`}
+          title=<span style={{ color: statusColor(user) }}>{statusLabel(user)}</span>
         />
       )}
     </div>
@@ -109,9 +109,9 @@ export function Modal({ open, title, onClose, children, width = 'max-w-md' }) {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="mobile-overlay absolute inset-0 bg-slate-900/30 backdrop-blur-sm" onClick={onClose} />
+      <div className="mobile-overlay absolute inset-0 bg-ink/30 backdrop-blur-sm" onClick={onClose} />
       <div role="dialog" aria-modal="true" className={`panel relative max-h-[90dvh] w-full ${width} overflow-y-auto thin-scroll p-6`}>
-        <button onClick={onClose} className="absolute right-5 top-5 z-10 rounded-full bg-white/90 p-2 text-slate-500 shadow-soft hover:text-slate-900" aria-label="Fermer">
+        <button onClick={onClose} className="absolute right-5 top-5 z-10 rounded-full bg-surface/90 p-2 text-slate-500 shadow-soft hover:text-slate-900" aria-label="Fermer">
           <Icon name="x" className="h-4 w-4" />
         </button>
         {title && <h2 className="mb-5 pr-10 text-lg font-bold text-slate-900">{title}</h2>}

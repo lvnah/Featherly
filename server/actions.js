@@ -213,6 +213,12 @@ const handlers = {
   },
 
   createServer(me, p) {
+    // Limite de création : 3 espaces pour un membre, 5 pour un membre PLUS (rejoindre reste illimité).
+    const owned = one('SELECT COUNT(*) AS n FROM servers WHERE owner_id = ?', me.id).n;
+    const limit = me.is_plus ? 5 : 3;
+    if (owned >= limit) {
+      fail(me.is_plus ? 'Limite atteinte : 5 espaces maximum pour un membre PLUS.' : 'Limite atteinte : 3 espaces maximum. Passez PLUS pour en créer 5.', 403);
+    }
     const name = text(p.name, 1, 16, 'Le nom doit faire entre 1 et 16 caractères.');
     const icon = imageData(p.icon, 'icon');
     let code;
