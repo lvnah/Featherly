@@ -148,8 +148,8 @@ function PublicProfile({ user, goBack }) {
             <div className="-mt-10 flex items-end gap-4">
               <Avatar user={user} size="xl" showStatus className="ring-2 ring-white" />
               <div className="min-w-0 pb-1">
-                <h2 className="flex items-center gap-2 truncate text-2xl font-extrabold">
-                  {user.pseudo} <span className="text-base font-semibold text-slate-400">#{user.tag}</span>
+                <h2 className="flex min-w-0 flex-wrap items-center gap-2 text-2xl font-extrabold">
+                  <span className="truncate">{user.pseudo}</span> <span className="text-base font-semibold text-slate-400">#{user.tag}</span>
                   {user.is_plus ? <PlusBadge /> : null}
                 </h2>
                 <p className={`text-sm font-semibold ${isOnline(user) ? 'text-brand-600' : 'text-slate-400'}`}>{isOnline(user) ? 'En ligne' : 'Hors ligne'}</p>
