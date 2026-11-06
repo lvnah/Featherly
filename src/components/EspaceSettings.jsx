@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { deleteRole, deleteServer, getMe, kickMember, membersOf, membership, rolesOf, assignRole, updateInvite, updateRole, updateServerIcon, createRole } from '../lib/store';
-import { Avatar, ColorDiamonds, ErrorLine, Icon, Modal, ServerIcon, useStore, useUI } from './ui';
+import { Avatar, ColorDiamonds, ErrorLine, Modal, ServerIcon, useStore, useUI } from './ui';
 import { fileToDataUrl, ICON_OPTS } from '../lib/images';
-import { updateServerName, moveRole } from '../lib/store';
+import { updateServerName, reorderRoles } from '../lib/store';
 import { fullName } from '../lib/util';
 import { ROLE_COLORS } from '../lib/util';
 import { run } from '../views/ServerView';
@@ -11,7 +11,7 @@ const TABS = [
   ['roles', 'Rôles'],
   ['members', 'Gestion membres'],
   ['invite', 'Invitation'],
-  ['manage', 'Gestion & danger'],
+  ['manage', 'Gestion de l’espace'],
 ];
 
 // Paramètres de l'espace (propriétaire uniquement), reprend settings de server.php.
@@ -76,6 +76,36 @@ function RolesTab({ serverId, toast }) {
   const dirty = roles.filter(isDirty);
   const setDraft = (r, patch) => setDrafts((cur) => ({ ...cur, [r.id]: { ...draftOf(r), ...patch } }));
 
+  // Glisser-déposer pour réordonner : armedId = rôle dont la poignée est saisie, dragId = rôle en cours de déplacement,
+  // dropIndex = position d'insertion (0 = tout en haut, roles.length = tout en bas).
+  const [armedId, setArmedId] = useState(null);
+  const [dragId, setDragId] = useState(null);
+  const [dropIndex, setDropIndex] = useState(null);
+  const resetDrag = () => {
+    setArmedId(null);
+    setDragId(null);
+    setDropIndex(null);
+  };
+  const onRowDragOver = (e, i) => {
+    if (!dragId) return;
+    e.preventDefault();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const idx = e.clientY < rect.top + rect.height / 2 ? i : i + 1;
+    if (idx !== dropIndex) setDropIndex(idx);
+  };
+  const onDrop = (e) => {
+    e.preventDefault();
+    const from = roles.findIndex((r) => r.id === dragId);
+    const to = dropIndex;
+    resetDrag();
+    if (from < 0 || to === null || to === from || to === from + 1) return;
+    const ids = roles.map((r) => r.id);
+    ids.splice(from, 1);
+    ids.splice(to > from ? to - 1 : to, 0, dragId);
+    run(toast, () => reorderRoles(serverId, ids));
+  };
+  const placeholder = <div className="h-14 rounded-2xl border-2 border-dashed border-brand-400 bg-brand-50/60" />;
+
   // Enregistre tous les rôles modifiés d'un coup.
   const saveAll = async () => {
     setSaving(true);
@@ -118,36 +148,51 @@ function RolesTab({ serverId, toast }) {
         <button type="submit" className="btn-primary self-end" disabled={!name.trim()}>Ajouter le rôle</button>
       </form>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3" onDragOver={(e) => dragId && e.preventDefault()} onDrop={onDrop} onDragEnd={resetDrag}>
         {roles.length === 0 && <p className="text-sm text-slate-500">Aucun rôle pour le moment.</p>}
         {roles.map((r, i) => {
           const d = draftOf(r);
           return (
-            <div key={r.id} className="flex flex-col gap-3 rounded-2xl border border-slate-100 p-4">
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col">
-                  <button type="button" aria-label="Monter" disabled={i === 0} onClick={() => run(toast, () => moveRole(serverId, r.id, -1))} className="rounded-lg p-1 text-slate-400 hover:bg-slate-300 hover:text-slate-900 disabled:opacity-30">
-                    <Icon name="arrow" className="h-3.5 w-3.5 -rotate-90" />
-                  </button>
-                  <button type="button" aria-label="Descendre" disabled={i === roles.length - 1} onClick={() => run(toast, () => moveRole(serverId, r.id, 1))} className="rounded-lg p-1 text-slate-400 hover:bg-slate-300 hover:text-slate-900 disabled:opacity-30">
-                    <Icon name="arrow" className="h-3.5 w-3.5 rotate-90" />
+            <Fragment key={r.id}>
+              {dragId && dropIndex === i && placeholder}
+              <div
+                draggable={armedId === r.id}
+                onDragStart={(e) => {
+                  e.dataTransfer.effectAllowed = 'move';
+                  e.dataTransfer.setData('text/plain', r.id);
+                  setDragId(r.id);
+                }}
+                onDragOver={(e) => onRowDragOver(e, i)}
+                className={`flex flex-col gap-3 rounded-2xl border border-slate-100 p-4 transition ${dragId === r.id ? 'opacity-40' : ''}`}
+              >
+                <div className="flex items-center gap-3">
+                  <span
+                    role="img"
+                    aria-label="Glisser pour déplacer le rôle"
+                    title="Glisser pour déplacer"
+                    onMouseDown={() => setArmedId(r.id)}
+                    onMouseUp={() => setArmedId(null)}
+                    className="cursor-grab select-none rounded-lg px-1 py-2 text-lg leading-none text-slate-400 hover:bg-slate-300 hover:text-slate-900 active:cursor-grabbing"
+                  >
+                    ⠿
+                  </span>
+                  <input className="field !py-2" maxLength={20} value={d.name} onChange={(e) => setDraft(r, { name: e.target.value })} />
+                  <button className="btn-danger !py-2" onClick={() => window.confirm(`Supprimer le rôle « ${r.name} » ?`) && run(toast, () => deleteRole(serverId, r.id))}>
+                    Suppr.
                   </button>
                 </div>
-                <input className="field !py-2" maxLength={20} value={d.name} onChange={(e) => setDraft(r, { name: e.target.value })} />
-                <button className="btn-danger !py-2" onClick={() => window.confirm(`Supprimer le rôle « ${r.name} » ?`) && run(toast, () => deleteRole(serverId, r.id))}>
-                  Suppr.
-                </button>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <ColorDiamonds value={d.color} onChange={(c) => setDraft(r, { color: c })} />
+                  <label className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                    <input type="checkbox" className="h-3.5 w-3.5 accent-brand-500" checked={d.manage} onChange={(e) => setDraft(r, { manage: e.target.checked })} />
+                    Gérer salons
+                  </label>
+                </div>
               </div>
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <ColorDiamonds value={d.color} onChange={(c) => setDraft(r, { color: c })} />
-                <label className="flex items-center gap-2 text-xs font-bold text-slate-600">
-                  <input type="checkbox" className="h-3.5 w-3.5 accent-brand-500" checked={d.manage} onChange={(e) => setDraft(r, { manage: e.target.checked })} />
-                  Gérer salons
-                </label>
-              </div>
-            </div>
+            </Fragment>
           );
         })}
+        {dragId && dropIndex === roles.length && placeholder}
       </div>
 
       {roles.length > 0 && (

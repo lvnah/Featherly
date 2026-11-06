@@ -118,7 +118,7 @@ export default function Layout({ view, children }) {
               <Avatar user={me} size="md" showStatus />
             </button>
             <button type="button" onClick={() => navigate({ name: 'profile', userId: me.id })} className="min-w-0 text-left">
-              <span className="block truncate text-sm font-bold text-slate-900">{me.pseudo}</span>
+              <span className="block truncate text-sm font-bold text-slate-900" style={{ color: me.name_color || undefined }}>{me.pseudo}</span>
               <span className="block truncate text-xs font-semibold" style={{ color: statusColor(me) }}>{statusLabel(me)}</span>
             </button>
           </div>
