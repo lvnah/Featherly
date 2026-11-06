@@ -209,9 +209,6 @@ export default function ServerView({ serverId, channelId, goHome }) {
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
       {/* Barre d'en-tête de l'espace */}
       <header className="panel flex flex-wrap items-center gap-4 rounded-[2rem] px-5 py-3">
-        <button onClick={goHome} aria-label="Retour à l’accueil" className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200">
-          <Icon name="back" className="h-5 w-5" />
-        </button>
         <div className="flex min-w-0 items-center gap-3" onContextMenu={(e) => {
           if (isOwner) { e.preventDefault(); return; }
           openMenu(e, [{ label: 'Quitter l’espace', danger: true, onClick: () => { if (window.confirm(`Quitter « ${server.name} » ?`)) run(toast, () => leaveServer(serverId)).then((ok) => ok && goHome()); } }]);
@@ -319,7 +316,12 @@ export default function ServerView({ serverId, channelId, goHome }) {
 
       <div className="flex min-h-0 flex-1 gap-4">
         {/* Chat */}
-        <section className="panel flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <section className="panel relative isolate flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          {me.chatBg && (
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-cover bg-center" style={{ backgroundImage: `url("${me.chatBg}")` }}>
+              <div className="absolute inset-0 bg-white/55" />
+            </div>
+          )}
           <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4">
             <span className="pill !bg-brand-100 !px-3 !py-1 !text-sm !font-bold !text-brand-700">Salon #{current?.name ?? '—'}</span>
           </div>

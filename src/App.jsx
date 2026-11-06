@@ -157,15 +157,10 @@ export default function App() {
     content = <div className="flex min-h-dvh items-center justify-center text-sm text-slate-500">Chargement…</div>;
   } else if (!me) {
     content = <Login toast={toast} />;
-  } else if (view.name === 'server') {
-    content = (
-      <div className="flex h-dvh min-w-0 flex-col p-4">
-        <ServerView key={view.serverId} serverId={view.serverId} channelId={view.channelId} goHome={goHome} />
-      </div>
-    );
   } else {
     content = (
       <Layout view={view}>
+        {view.name === 'server' && <ServerView key={view.serverId} serverId={view.serverId} channelId={view.channelId} goHome={goHome} />}
         {view.name === 'home' && <Home />}
         {view.name === 'messages' && <MessagesView withId={view.withId} />}
         {view.name === 'friends' && <FriendsView />}

@@ -16,6 +16,8 @@ const PARTICLES = [
   { left: '92%', size: 4, delay: '9s', duration: '19s' },
 ];
 
+const HERO_TAGLINE = ['Client', 'léger', 'de', 'discussion', 'pour', 'gamer'];
+
 function HeroBanner({ onJoin }) {
   return (
     <section className="hero relative isolate flex min-h-[20rem] items-center justify-center overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-brand-900 via-brand-800 to-[#052e16] p-8 text-white shadow-panel md:min-h-[24rem] md:p-10">
@@ -34,16 +36,33 @@ function HeroBanner({ onJoin }) {
         />
       ))}
 
-      <div className="relative z-10 flex flex-col items-center gap-7 text-center">
-        <div className="hero-logo-wrap relative flex h-36 w-36 items-center justify-center md:h-44 md:w-44">
-          <div className="hero-logo-float flex h-full w-full items-center justify-center">
-            <div className="hero-logo-reveal relative flex h-full w-full items-center justify-center overflow-hidden rounded-[2.25rem] bg-white/10 p-5 ring-1 ring-white/20">
-              <Logo className="hero-logo-img h-full w-full" />
-              <span className="hero-sweep pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/35 to-transparent" />
+      <div className="relative z-10 grid justify-items-center gap-8 text-center">
+        {/* 1. Accroche qui apparaît mot par mot, puis s'efface */}
+        <p className="hero-tag col-start-1 row-start-1 flex max-w-md flex-wrap justify-center gap-x-2 text-lg font-semibold text-white/90 md:text-2xl">
+          {HERO_TAGLINE.map((word, i) => (
+            <span key={i} className="hero-word inline-block" style={{ animationDelay: `${0.35 + i * 0.2}s` }}>{word}</span>
+          ))}
+        </p>
+
+        {/* 2. Logo qui se révèle, puis le nom Feathery lettre par lettre */}
+        <div className="hero-brand col-start-1 row-start-1 flex flex-col items-center gap-5">
+          <div className="hero-logo-wrap relative flex h-36 w-36 items-center justify-center md:h-44 md:w-44">
+            <div className="hero-logo-float flex h-full w-full items-center justify-center">
+              <div className="hero-logo-reveal relative flex h-full w-full items-center justify-center overflow-hidden rounded-[2.25rem] bg-white/10 p-5 ring-1 ring-white/20">
+                <Logo className="hero-logo-img h-full w-full" />
+                <span className="hero-sweep pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/35 to-transparent" />
+              </div>
             </div>
           </div>
+          <p aria-label="Feathery" className="flex text-4xl font-extrabold tracking-tight md:text-5xl">
+            {'Feathery'.split('').map((ch, i) => (
+              <span key={i} aria-hidden="true" className="hero-letter inline-block" style={{ animationDelay: `${3.9 + i * 0.08}s` }}>{ch}</span>
+            ))}
+          </p>
         </div>
-        <button onClick={onJoin} className="hero-cta btn-soft !rounded-full !px-6">
+
+        {/* 3. Bouton d'entrée */}
+        <button onClick={onJoin} className="hero-cta btn-soft col-start-1 row-start-2 !rounded-full !px-6">
           Rejoindre un espace
         </button>
       </div>

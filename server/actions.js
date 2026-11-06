@@ -71,7 +71,7 @@ const randomCode = () => {
 // Images envoyées depuis le navigateur (data URL redimensionnée côté client).
 // Limites de taille : ce sont des miniatures, elles sont renvoyées à chaque synchronisation.
 // Images fixes : tout le monde. GIF animés : PLUS seulement, et plus légers (poids limité).
-const IMAGE_LIMITS = { avatar: 60_000, banner: 160_000, icon: 60_000 };
+const IMAGE_LIMITS = { avatar: 60_000, banner: 160_000, icon: 60_000, chat: 900_000 };
 // GIF animés (PLUS) : limites en caractères de la data URL (≈ 9 Mo et 12 Mo de fichier).
 const GIF_LIMITS = { avatar: 12_000_000, banner: 17_000_000 };
 // Couleurs de pseudo : simples pour tous, davantage pour les PLUS.
@@ -411,6 +411,14 @@ const handlers = {
     });
   },
 
+  // Fond d'écran du chat des espaces (PLUS) : image fixe, appliquée à tous les espaces de ce membre.
+  setChatBackground(me, p) {
+    if (!me.is_plus) fail('Le fond du chat est réservé aux membres PLUS.', 403);
+    const v = String(p.value ?? '').trim();
+    if (v.startsWith('data:image/gif')) fail('Le fond du chat accepte une image fixe (PNG, JPEG ou WebP).');
+    run('UPDATE users SET chat_bg = ? WHERE id = ?', imageData(v, 'chat', true), me.id);
+  },
+
   // Un seul rôle par membre (roleId vide = retirer les rôles), comme assign_role de server.php.
   assignRole(me, p) {
     requireOwner(p.serverId, me);
@@ -513,7 +521,7 @@ const handlers = {
     if (p.value) {
       run('UPDATE users SET is_plus = 1 WHERE id = ?', p.userId);
     } else {
-      run("UPDATE users SET is_plus = 0, banner_type = 'gradient', banner_value = '0' WHERE id = ?", p.userId);
+      run("UPDATE users SET is_plus = 0, banner_type = 'gradient', banner_value = '0', chat_bg = '' WHERE id = ?", p.userId);
     }
   },
 
