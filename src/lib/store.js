@@ -174,6 +174,7 @@ export const reorderRoles = (serverId, order) => act('reorderRoles', { serverId,
 export const setChatBackground = (value) => act('setChatBackground', { value });
 export const updateChannel = (channelId, name) => act('updateChannel', { channelId, name });
 export const setChannelReadonly = (channelId, readonly) => act('setChannelReadonly', { channelId, readonly });
+export const setServerBanner = (serverId, value) => act('setServerBanner', { serverId, value });
 export const deleteRole = (serverId, roleId) => act('deleteRole', { serverId, roleId });
 export const deleteMessage = (messageId) => act('deleteMessage', { messageId });
 export const updateServerName = (serverId, name) => act('updateServerName', { serverId, name });

@@ -343,6 +343,12 @@ const handlers = {
     run('INSERT INTO messages (id, channel_id, user_id, content, created_at) VALUES (?, ?, ?, ?, ?)', newId('m'), ch.id, me.id, content, now());
   },
 
+  // Bannière de l'espace (propriétaire) : image fixe pour tous ; GIF animé réservé aux membres PLUS.
+  setServerBanner(me, p) {
+    requireOwner(p.serverId, me);
+    run('UPDATE servers SET banner = ? WHERE id = ?', imageData(p.value, 'banner', !!me.is_plus), p.serverId);
+  },
+
   // Autoriser ou non d'écrire dans un salon texte. Le propriétaire et les rôles qui gèrent les salons peuvent toujours écrire.
   setChannelReadonly(me, p) {
     const ch = one('SELECT * FROM channels WHERE id = ?', p.channelId);
@@ -529,7 +535,9 @@ const handlers = {
     if (p.value) {
       run('UPDATE users SET is_plus = 1 WHERE id = ?', p.userId);
     } else {
-      run("UPDATE users SET is_plus = 0, banner_type = 'gradient', banner_value = '0', chat_bg = '' WHERE id = ?", p.userId);
+      // Retirer PLUS : pseudo remis en couleur de base, fond de chat retiré, bannière animée des espaces retirée.
+      run("UPDATE users SET is_plus = 0, banner_type = 'gradient', banner_value = '0', chat_bg = '', name_color = '' WHERE id = ?", p.userId);
+      run("UPDATE servers SET banner = '' WHERE owner_id = ? AND banner LIKE 'data:image/gif%'", p.userId);
     }
   },
 

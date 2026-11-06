@@ -1,8 +1,8 @@
 import { Fragment, useState } from 'react';
 import { deleteRole, deleteServer, getMe, kickMember, membersOf, membership, rolesOf, assignRole, updateInvite, updateRole, updateServerIcon, createRole } from '../lib/store';
 import { Avatar, ColorDiamonds, ErrorLine, Modal, ServerIcon, useStore, useUI } from './ui';
-import { fileToDataUrl, ICON_OPTS } from '../lib/images';
-import { updateServerName, reorderRoles } from '../lib/store';
+import { fileToDataUrl, readGif, BANNER_OPTS, GIF_MAX_BANNER, ICON_OPTS } from '../lib/images';
+import { updateServerName, reorderRoles, setServerBanner } from '../lib/store';
 import { fullName } from '../lib/util';
 import { ROLE_COLORS } from '../lib/util';
 import { run } from '../views/ServerView';
@@ -338,6 +338,8 @@ function ManageTab({ serverId, toast, onDeleted }) {
         </div>
         <ErrorLine>{error}</ErrorLine>
       </form>
+      <BannerForm serverId={serverId} server={server} toast={toast} />
+
       <div className="flex flex-col gap-3 rounded-3xl border border-red-100 bg-red-50/60 p-5">
         <p className="text-xs font-bold uppercase tracking-widest text-red-600">Suppression définitive</p>
         <p className="text-sm text-slate-600">Salons, messages et rôles de cet espace disparaîtront définitivement.</p>
@@ -364,6 +366,53 @@ function ManageTab({ serverId, toast, onDeleted }) {
           </div>
         </Modal>
       </div>
+    </div>
+  );
+}
+
+// Bannière de l'espace : image fixe pour tous ; GIF animé seulement si le propriétaire est PLUS.
+function BannerForm({ serverId, server, toast }) {
+  const s = useStore();
+  const me = getMe(s);
+  const [error, setError] = useState('');
+  const pick = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const data = file.type === 'image/gif'
+        ? await readGif(file, GIF_MAX_BANNER, !!me.is_plus)
+        : await fileToDataUrl(file, BANNER_OPTS);
+      setError('');
+      await run(toast, () => setServerBanner(serverId, data), 'Bannière de l’espace mise à jour');
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+  return (
+    <div className="flex flex-col gap-4 rounded-3xl bg-slate-50 p-5">
+      <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Bannière de l’espace</p>
+      <div
+        className="relative h-28 overflow-hidden rounded-2xl bg-slate-200 bg-cover bg-center"
+        style={server.banner ? { backgroundImage: `url("${server.banner}")` } : undefined}
+      >
+        {!server.banner && <span className="absolute inset-0 flex items-center justify-center text-sm text-slate-500">Aucune bannière</span>}
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="btn-ghost cursor-pointer">
+          {server.banner ? 'Changer la bannière' : 'Importer une bannière'}
+          <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={pick} />
+        </label>
+        {server.banner && (
+          <button type="button" className="btn-ghost" onClick={() => run(toast, () => setServerBanner(serverId, ''), 'Bannière retirée')}>
+            Retirer
+          </button>
+        )}
+      </div>
+      <span className="text-xs text-slate-500">
+        {me.is_plus ? 'Vous êtes PLUS : vous pouvez utiliser un GIF animé.' : 'Image fixe uniquement. Les bannières animées (GIF) sont réservées aux membres PLUS.'}
+      </span>
+      <ErrorLine>{error}</ErrorLine>
     </div>
   );
 }
