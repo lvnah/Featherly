@@ -343,7 +343,6 @@ export default function ServerView({ serverId, channelId, goHome }) {
                             {author.pseudo}
                           </button>
                           {author.is_plus ? <PlusBadge /> : null}
-                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">#{author.tag}</span>
                         </div>
                         <p className="mt-1 whitespace-pre-wrap break-words text-sm font-bold text-slate-900">{m.content}</p>
                       </div>

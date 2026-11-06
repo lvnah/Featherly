@@ -102,6 +102,19 @@
 @keyframes letter-in {
   to { opacity: 1; transform: none; filter: blur(0); }
 }
+@keyframes hero-float {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-10px) rotate(3deg); }
+}
+@keyframes hero-sheen {
+  0% { transform: translateX(0) skewX(-20deg); }
+  100% { transform: translateX(520%) skewX(-20deg); }
+}
+.hero-logo { animation: hero-float 5s ease-in-out infinite; }
+.hero-sheen { animation: hero-sheen 4.5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .hero-logo, .hero-sheen { animation: none; }
+}
 @keyframes splash-out {
   from { opacity: 1; }
   to { opacity: 0; visibility: hidden; }

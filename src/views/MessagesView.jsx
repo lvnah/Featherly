@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { acceptDM, friendsOf, friendshipBetween, getMe, getUser, markDmRead, refuseDM, respondFriendRequest, sendDM, sendFriendRequest, unreadCount } from '../lib/store';
 import { useStore, useUI, Avatar, CountBadge, EmptyState, ErrorLine, Icon } from '../components/ui';
-import { formatStamp, fullName, isOnline, statusLabel, statusColor } from '../lib/util';
+import { formatStamp, isOnline, statusLabel, statusColor } from '../lib/util';
 import PlusBadge from '../components/PlusBadge';
 import { run } from './ServerView';
 
@@ -69,7 +69,7 @@ export default function MessagesView({ withId }) {
             {requests.map((u) => (
               <button key={u.id} onClick={() => go({ name: 'messages', withId: u.id })} className="flex items-center gap-3 rounded-2xl border border-brand-100 bg-brand-50/60 p-3 text-left">
                 <Avatar user={u} size="sm" />
-                <span className="min-w-0 flex-1 truncate text-sm font-bold">{fullName(u)}</span>
+                <span className="min-w-0 flex-1 truncate text-sm font-bold">{u.pseudo}</span>
                 <CountBadge n={unread.dms[u.id] ? 1 : 0} />
               </button>
             ))}
@@ -84,7 +84,7 @@ export default function MessagesView({ withId }) {
                 <Avatar user={user} size="md" showStatus />
               </button>
               <span className="min-w-0 flex-1">
-                <span onClick={(e) => { e.stopPropagation(); openUser(user.id); }} className="inline-block max-w-full truncate font-bold hover:underline" style={{ color: user.name_color || undefined }}>{fullName(user)}</span>
+                <span onClick={(e) => { e.stopPropagation(); openUser(user.id); }} className="inline-block max-w-full truncate font-bold hover:underline" style={{ color: user.name_color || undefined }}>{user.pseudo}</span>
                 <span className="block truncate text-xs text-slate-500">{last ? last.content : statusLabel(user)}</span>
               </span>
               <CountBadge n={unread.dms[user.id] || 0} />
@@ -103,7 +103,7 @@ export default function MessagesView({ withId }) {
               <button onClick={() => go({ name: 'profile', userId: partner.id })} className="flex min-w-0 items-center gap-3 text-left">
                 <Avatar user={partner} size="sm" showStatus />
                 <span className="min-w-0">
-                  <span className="flex items-center gap-2 font-bold"><span className="truncate" style={{ color: partner.name_color || undefined }}>{fullName(partner)}</span>{partner.is_plus ? <PlusBadge /> : null}</span>
+                  <span className="flex items-center gap-2 font-bold"><span className="truncate" style={{ color: partner.name_color || undefined }}>{partner.pseudo}</span>{partner.is_plus ? <PlusBadge /> : null}</span>
                   <span className="block text-xs text-slate-500"><span style={{ color: statusColor(partner) }}>{statusLabel(partner)}</span></span>
                 </span>
               </button>
@@ -152,7 +152,6 @@ export default function MessagesView({ withId }) {
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span onClick={() => openUser(author.id)} className="cursor-pointer font-bold text-slate-900 hover:underline" style={{ color: author.name_color || undefined }}>{author.pseudo}</span>
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">#{author.tag}</span>
                         {author.is_plus ? <PlusBadge /> : null}
                         {d.status === 'request' && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-700">En attente</span>}
                       </div>

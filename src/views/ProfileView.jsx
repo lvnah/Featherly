@@ -294,13 +294,12 @@ function GamesBlock({ user, editable }) {
         {editable && <span className="text-xs font-bold text-brand-600">Modifier</span>}
       </span>
       {games.length === 0 ? (
-        <span className="text-sm text-slate-500">Ajoutez vos jeux, votre rang et vos heures.</span>
+        <span className="text-sm text-slate-500">Ajoutez vos jeux.</span>
       ) : (
         <span className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           {games.map((g) => (
             <span key={g.game} className="flex flex-col rounded-xl bg-surface px-3 py-2 shadow-soft">
               <span className="truncate text-sm font-extrabold">{g.game}</span>
-              <span className="truncate text-xs font-semibold text-brand-600">{g.rank || 'Sans rang'}</span>
             </span>
           ))}
         </span>
