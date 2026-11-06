@@ -145,7 +145,7 @@ export function buildSnapshot(me) {
         .map((r) => r.role_id),
     })),
     roles: roles.map((r) => ({ ...r, can_manage_channels: r.can_manage_channels })),
-    channels: channels.map((c) => ({ id: c.id, server_id: c.server_id, name: c.name, type: c.type })),
+    channels: channels.map((c) => ({ id: c.id, server_id: c.server_id, name: c.name, type: c.type, readonly: !!c.readonly })),
     messages,
     friendships: friendships.map((f) => ({ id: f.id, from: f.from_id, to: f.to_id, status: f.status })),
     dms: dms.map((d) => ({ id: d.id, from: d.from_id, to: d.to_id, content: d.content, created_at: d.created_at, status: d.status })),

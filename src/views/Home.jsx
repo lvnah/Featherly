@@ -4,9 +4,11 @@ import { useStore, useUI, Avatar, CountBadge, Icon, ServerIcon } from '../compon
 import { serverUnread, leaveServer } from '../lib/store';
 import { run } from './ServerView';
 import Logo from '../components/Logo';
+import { fullName, isOnline, statusLabel, statusColor } from '../lib/util';
 
-// Bannière animée : logo central qui se révèle, anneaux en orbite lente, lueur qui respire et particules.
-// Tout est en CSS (voir index.css, classes .hero-*) pour rester fluide ; désactivé si « moins de mouvement ».
+// Bannière d'accueil : l'accroche apparaît mot par mot, « gamer » bascule vers « communauté »,
+// puis le logo arrive, suivi du nom Feathery. Ensuite, le mouvement reste lent et continu.
+const HERO_TAGLINE = ['Client', 'léger', 'de', 'discussion', 'pour'];
 const PARTICLES = [
   { left: '12%', size: 6, delay: '0s', duration: '14s' },
   { left: '28%', size: 4, delay: '3s', duration: '18s' },
@@ -16,12 +18,15 @@ const PARTICLES = [
   { left: '92%', size: 4, delay: '9s', duration: '19s' },
 ];
 
-const HERO_TAGLINE = ['Client', 'léger', 'de', 'discussion', 'pour', 'gamer'];
-
 function HeroBanner({ onJoin }) {
   return (
     <section className="hero relative isolate flex min-h-[20rem] items-center justify-center overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-brand-900 via-brand-800 to-[#052e16] p-8 text-white shadow-panel md:min-h-[24rem] md:p-10">
-      <div className="hero-aura pointer-events-none absolute inset-0 m-auto h-[120%] w-[120%] rounded-full bg-brand-400/20 blur-3xl" />
+      {/* Lueur en dégradé radial (sans filtre flou : plus fluide à animer) */}
+      <div
+        aria-hidden="true"
+        className="hero-aura pointer-events-none absolute inset-0 m-auto h-[120%] w-[120%] rounded-full"
+        style={{ background: 'radial-gradient(closest-side, rgba(52,211,153,0.28), rgba(52,211,153,0) 100%)' }}
+      />
       <div className="hero-ring pointer-events-none absolute inset-0 m-auto h-72 w-72 rounded-full border border-white/10 md:h-96 md:w-96">
         <span className="hero-dot absolute -top-1 left-1/2 h-2 w-2 rounded-full bg-brand-300" />
       </div>
@@ -37,26 +42,27 @@ function HeroBanner({ onJoin }) {
       ))}
 
       <div className="relative z-10 grid justify-items-center gap-8 text-center">
-        {/* 1. Accroche qui apparaît mot par mot, puis s'efface */}
-        <p className="hero-tag col-start-1 row-start-1 flex max-w-md flex-wrap justify-center gap-x-2 text-lg font-semibold text-white/90 md:text-2xl">
+        {/* 1. Accroche mot à mot, puis bascule « gamer » → « communauté » */}
+        <p className="hero-tag col-start-1 row-start-1 flex max-w-md flex-wrap items-baseline justify-center gap-x-2 text-lg font-semibold text-white/90 md:text-2xl">
           {HERO_TAGLINE.map((word, i) => (
             <span key={i} className="hero-word inline-block" style={{ animationDelay: `${0.35 + i * 0.2}s` }}>{word}</span>
           ))}
+          <span className="inline-grid">
+            <span className="hero-word-out col-start-1 row-start-1" style={{ animationDelay: '2.5s' }}>gamer</span>
+            <span className="hero-word-in col-start-1 row-start-1 whitespace-nowrap" style={{ animationDelay: '2.9s' }}>communauté</span>
+          </span>
         </p>
 
-        {/* 2. Logo qui se révèle, puis le nom Feathery lettre par lettre */}
+        {/* 2. Logo (sans cadre) puis le nom Feathery, lettre par lettre, avec un reflet blanc/gris */}
         <div className="hero-brand col-start-1 row-start-1 flex flex-col items-center gap-5">
-          <div className="hero-logo-wrap relative flex h-36 w-36 items-center justify-center md:h-44 md:w-44">
+          <div className="hero-logo-wrap flex h-36 w-36 items-center justify-center md:h-44 md:w-44">
             <div className="hero-logo-float flex h-full w-full items-center justify-center">
-              <div className="hero-logo-reveal relative flex h-full w-full items-center justify-center overflow-hidden rounded-[2.25rem] bg-white/10 p-5 ring-1 ring-white/20">
-                <Logo className="hero-logo-img h-full w-full" />
-                <span className="hero-sweep pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/35 to-transparent" />
-              </div>
+              <Logo className="hero-logo-img h-full w-full" />
             </div>
           </div>
-          <p aria-label="Feathery" className="flex text-4xl font-extrabold tracking-tight md:text-5xl">
+          <p aria-label="Feathery" className="hero-wordmark flex text-4xl font-extrabold tracking-tight md:text-5xl">
             {'Feathery'.split('').map((ch, i) => (
-              <span key={i} aria-hidden="true" className="hero-letter inline-block" style={{ animationDelay: `${3.9 + i * 0.08}s` }}>{ch}</span>
+              <span key={i} aria-hidden="true" className="hero-letter inline-block" style={{ animationDelay: `${5 + i * 0.09}s` }}>{ch}</span>
             ))}
           </p>
         </div>
@@ -68,7 +74,7 @@ function HeroBanner({ onJoin }) {
       </div>
     </section>
   );
-}import { fullName, isOnline, statusLabel, statusColor } from '../lib/util';
+}
 
 export default function Home() {
   const s = useStore();

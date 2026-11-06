@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { getMe, getUser, friendshipBetween, isFriend, sendFriendRequest, setChatBackground, setStatus, updateProfile } from '../lib/store';
 import { useStore, useUI, Avatar, Banner, EmptyState, ErrorLine, Icon } from '../components/ui';
-import { BANNER_GRADIENTS, bannerStyle, fullName, isOnline, statusLabel, statusColor } from '../lib/util';
+import { BANNER_GRADIENTS, bannerStyle, fullName, isOnline, statusLabel, statusColor, nameStyle, RAINBOW_GRADIENTS, RAINBOW_LABELS } from '../lib/util';
 import { fileToDataUrl, readGif, AVATAR_OPTS, BANNER_OPTS, CHAT_BG_OPTS, GIF_MAX_AVATAR, GIF_MAX_BANNER } from '../lib/images';
 import { NAME_COLORS_BASIC, NAME_COLORS_PLUS } from '../lib/util';
 import PlusBadge from '../components/PlusBadge';
@@ -29,7 +29,6 @@ function OwnProfile() {
   const [bio, setBio] = useState(me.bio || '');
   const [country, setCountry] = useState(me.country || '');
   const [nameColor, setNameColor] = useState(me.name_color || '');
-  const [hexInput, setHexInput] = useState(me.name_color && /^#[0-9a-f]{6}$/i.test(me.name_color) ? me.name_color.toLowerCase() : '');
   const [banner, setBanner] = useState(me.banner?.type === 'image' ? me.banner : { type: 'gradient', index: me.banner?.index ?? 0 });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -109,37 +108,14 @@ function OwnProfile() {
                     key={c || 'none'}
                     type="button"
                     aria-label={c || 'Couleur par défaut'}
-                    onClick={() => {
-                      setNameColor(c);
-                      setHexInput(c);
-                    }}
+                    onClick={() => setNameColor(c)}
+                    title={RAINBOW_LABELS[c] || c || 'Couleur par défaut'}
                     className={`h-7 w-7 rounded-full border-2 ${nameColor === c ? 'border-brand-600 ring-2 ring-brand-300' : 'border-line'}`}
-                    style={{ background: c || 'repeating-linear-gradient(45deg,#e2e8f0 0 4px,#fff 4px 8px)' }}
+                    style={{ background: RAINBOW_GRADIENTS[c] || c || 'repeating-linear-gradient(45deg,#e2e8f0 0 4px,#fff 4px 8px)' }}
                   />
                 ))}
               </div>
-              {me.is_plus ? (
-                <div className="mt-3 flex items-center gap-3">
-                  <span className="text-xs font-semibold text-slate-500">Couleur personnalisée</span>
-                  <input
-                    type="text"
-                    aria-label="Couleur personnalisée au format hexadécimal"
-                    className="field !w-36 font-mono !py-2"
-                    placeholder="#RRGGBB"
-                    maxLength={7}
-                    value={hexInput}
-                    onChange={(e) => {
-                      const v = e.target.value.toLowerCase();
-                      const next = v.startsWith('#') ? v : `#${v}`;
-                      setHexInput(next.slice(0, 7));
-                      if (/^#[0-9a-f]{6}$/.test(next)) setNameColor(next);
-                    }}
-                  />
-                  {/^#[0-9a-f]{6}$/i.test(hexInput) && <span className="h-7 w-7 rounded-full border-2 border-line" style={{ background: hexInput }} />}
-                </div>
-              ) : (
-                <span className="text-xs text-slate-400">D’autres couleurs sont réservées aux membres PLUS.</span>
-              )}
+              {!me.is_plus && <span className="text-xs text-slate-400">D’autres couleurs sont réservées aux membres PLUS.</span>}
             </Field>
 
             <div className="grid grid-cols-2 gap-4">
@@ -222,7 +198,7 @@ function PublicProfile({ user, goBack }) {
               <Avatar user={user} size="xl" showStatus className="ring-2 ring-surface" />
               <div className="min-w-0 pb-1">
                 <h2 className="flex min-w-0 flex-wrap items-center gap-2 text-2xl font-extrabold">
-                  <span className="truncate" style={{ color: user.name_color || undefined }}>{user.pseudo}</span> <span className="text-base font-semibold text-slate-400">#{user.tag}</span>
+                  <span className="truncate" style={nameStyle(user)}>{user.pseudo}</span> <span className="text-base font-semibold text-slate-400">#{user.tag}</span>
                   {user.is_plus ? <PlusBadge /> : null}
                   {user.country ? <Flag code={user.country} name={countryName(user.country)} /> : null}
                 </h2>

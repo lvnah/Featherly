@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createChannel, createServer, getMe, getUser, joinServer, regenerateInvite, reportUser, updateChannel, setGames } from '../lib/store';
+import { createChannel, createServer, getMe, getUser, joinServer, regenerateInvite, reportUser, updateChannel, setChannelReadonly, setGames } from '../lib/store';
 import { Modal, Avatar, Banner, ErrorLine, Icon, ServerIcon, useStore, useUI } from './ui';
 import { fullName, isOnline, statusLabel, statusColor } from '../lib/util';
 import { fileToDataUrl, ICON_OPTS } from '../lib/images';
@@ -301,7 +301,7 @@ function GamesModal({ onClose }) {
       <form onSubmit={submit} className="flex flex-col gap-4">
         {rows.map((r, i) => (
           <div key={i} className="grid grid-cols-1 gap-2 rounded-2xl border border-line p-3 sm:grid-cols-[1fr_auto]">
-            <input className="field !py-2" placeholder="Jeu" maxLength={24} value={r.game} onChange={(e) => update(i, { game: e.target.value })} />
+            <input className="field !py-2" placeholder="Jeu" maxLength={24} value={r.game} onChange={(e) => update(i, { game: e.target.value.toUpperCase() })} />
             <button type="button" className="btn-danger !py-2" onClick={() => setRows((cur) => cur.filter((_, k) => k !== i))}>Retirer</button>
           </div>
         ))}
@@ -319,6 +319,36 @@ function GamesModal({ onClose }) {
   );
 }
 
+function ChannelSettingsModal({ channelId, onClose }) {
+  const s = useStore();
+  const { toast } = useUI();
+  const ch = s.channels.find((c) => c.id === channelId);
+  if (!ch) return null;
+  const writable = !ch.readonly;
+  return (
+    <Modal open title="Paramètres du salon" onClose={onClose}>
+      <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-1">
+          <Label>Salon</Label>
+          <p className="font-bold text-slate-900">#{ch.name}</p>
+        </div>
+        <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl bg-slate-50 p-4">
+          <span className="flex flex-col gap-1">
+            <span className="font-bold text-slate-900">Autoriser à écrire</span>
+            <span className="text-xs text-slate-500">Désactivé : seuls le propriétaire et les rôles qui gèrent les salons peuvent écrire. Les autres membres voient les messages.</span>
+          </span>
+          <input
+            type="checkbox"
+            className="h-5 w-5 shrink-0 accent-brand-500"
+            checked={writable}
+            onChange={(e) => run(toast, () => setChannelReadonly(ch.id, !e.target.checked))}
+          />
+        </label>
+      </div>
+    </Modal>
+  );
+}
+
 const MODALS = {
   games: GamesModal,
   install: InstallModal,
@@ -330,4 +360,5 @@ const MODALS = {
   report: ReportModal,
   channel: ChannelModal,
   'espace-settings': EspaceSettingsModal,
+  'channel-settings': ChannelSettingsModal,
 };

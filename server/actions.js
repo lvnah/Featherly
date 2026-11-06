@@ -76,7 +76,7 @@ const IMAGE_LIMITS = { avatar: 60_000, banner: 160_000, icon: 60_000, chat: 900_
 const GIF_LIMITS = { avatar: 12_000_000, banner: 17_000_000 };
 // Couleurs de pseudo : simples pour tous, davantage pour les PLUS.
 const NAME_COLORS_BASIC = ['#111827', '#dc2626', '#2563eb', '#16a34a', '#9333ea', '#ea580c'];
-const NAME_COLORS_PLUS = [...NAME_COLORS_BASIC, '#0891b2', '#db2777', '#4f46e5', '#65a30d', '#b45309', '#0f766e', '#7c3aed', '#be123c', '#1d4ed8', '#047857', '#c026d3', '#854d0e'];
+const NAME_COLORS_PLUS = [...NAME_COLORS_BASIC, '#0891b2', '#db2777', '#4f46e5', '#65a30d', '#b45309', '#0f766e', '#7c3aed', '#be123c', '#1d4ed8', '#047857', '#c026d3', '#854d0e', 'rainbow', 'sunset', 'ocean', 'aurora', 'candy'];
 const imageData = (value, kind, isPlus = false) => {
   const v = String(value ?? '').trim();
   if (!v) return '';
@@ -122,8 +122,7 @@ const handlers = {
     if (p.country !== undefined) run('UPDATE users SET country = ? WHERE id = ?', p.country, me.id);
     if (p.nameColor !== undefined) {
       const allowed = me.is_plus ? NAME_COLORS_PLUS : NAME_COLORS_BASIC;
-      const hexOk = me.is_plus && /^#[0-9a-f]{6}$/i.test(p.nameColor ?? '');
-      if (p.nameColor !== '' && !allowed.includes(p.nameColor) && !hexOk) fail(me.is_plus ? 'Couleur invalide (format #RRGGBB).' : 'Cette couleur est réservée aux membres PLUS.', 403);
+      if (p.nameColor !== '' && !allowed.includes(p.nameColor)) fail(me.is_plus ? 'Couleur inconnue.' : 'Cette couleur est réservée aux membres PLUS.', 403);
       run('UPDATE users SET name_color = ? WHERE id = ?', p.nameColor, me.id);
     }
     if (p.customStatus !== undefined) {
@@ -339,8 +338,17 @@ const handlers = {
     const ch = one('SELECT * FROM channels WHERE id = ?', p.channelId);
     if (!ch || ch.type !== 'text') fail('Salon texte introuvable.', 404);
     if (!isMember(ch.server_id, me.id)) fail('Vous n’êtes pas membre de cet espace.', 403);
+    if (ch.readonly && !canManageChannels(ch.server_id, me.id)) fail('Ce salon est en lecture seule.', 403);
     const content = text(p.content, 1, 2000, 'Message vide ou trop long (2000 caractères max).');
     run('INSERT INTO messages (id, channel_id, user_id, content, created_at) VALUES (?, ?, ?, ?, ?)', newId('m'), ch.id, me.id, content, now());
+  },
+
+  // Autoriser ou non d'écrire dans un salon texte. Le propriétaire et les rôles qui gèrent les salons peuvent toujours écrire.
+  setChannelReadonly(me, p) {
+    const ch = one('SELECT * FROM channels WHERE id = ?', p.channelId);
+    if (!ch || ch.type !== 'text') fail('Salon texte introuvable.', 404);
+    if (!canManageChannels(ch.server_id, me.id)) fail('Permission insuffisante.', 403);
+    run('UPDATE channels SET readonly = ? WHERE id = ?', p.readonly ? 1 : 0, ch.id);
   },
 
   // Renommer un salon : même règle de nom et unicité dans l'espace.
