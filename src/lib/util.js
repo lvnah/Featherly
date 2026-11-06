@@ -80,3 +80,7 @@ export function formatStamp(ts) {
   const p = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 }
+
+// Couleurs de pseudo : simples pour tous, davantage pour les PLUS (même liste que le serveur).
+export const NAME_COLORS_BASIC = ['#111827', '#dc2626', '#2563eb', '#16a34a', '#9333ea', '#ea580c'];
+export const NAME_COLORS_PLUS = [...NAME_COLORS_BASIC, '#0891b2', '#db2777', '#4f46e5', '#65a30d', '#b45309', '#0f766e', '#7c3aed', '#be123c', '#1d4ed8', '#047857', '#c026d3', '#854d0e'];

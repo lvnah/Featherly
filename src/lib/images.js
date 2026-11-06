@@ -61,5 +61,5 @@ export function readGif(file, maxBytes, isPlus) {
     reader.readAsDataURL(file);
   });
 }
-export const GIF_MAX_AVATAR = 150_000; // octets du fichier
-export const GIF_MAX_BANNER = 225_000;
+export const GIF_MAX_AVATAR = 9_000_000; // octets du fichier
+export const GIF_MAX_BANNER = 12_000_000;

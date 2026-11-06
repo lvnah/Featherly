@@ -290,9 +290,9 @@ function GamesModal({ onClose }) {
   const s = useStore();
   const { toast } = useUI();
   const me = getMe(s);
-  const [rows, setRows] = useState(() => (me.games ?? []).map((g) => ({ game: g.game, rank: g.rank, hours: String(g.hours) })));
+  const [rows, setRows] = useState(() => (me.games ?? []).map((g) => ({ game: g.game, rank: g.rank })));
   const { error, busy, submit } = useSubmit(async () => {
-    await setGames(rows.filter((r) => r.game.trim()).map((r) => ({ game: r.game, rank: r.rank, hours: Number(r.hours) || 0 })));
+    await setGames(rows.filter((r) => r.game.trim()).map((r) => ({ game: r.game, rank: r.rank })));
     onClose();
   });
   const update = (i, patch) => setRows((cur) => cur.map((r, k) => (k === i ? { ...r, ...patch } : r)));
@@ -300,17 +300,16 @@ function GamesModal({ onClose }) {
     <Modal open title="Mes jeux" onClose={onClose}>
       <form onSubmit={submit} className="flex flex-col gap-4">
         {rows.map((r, i) => (
-          <div key={i} className="grid grid-cols-1 gap-2 rounded-2xl border border-line p-3 sm:grid-cols-[1fr_1fr_6rem_auto]">
+          <div key={i} className="grid grid-cols-1 gap-2 rounded-2xl border border-line p-3 sm:grid-cols-[1fr_1fr_auto]">
             <input className="field !py-2" placeholder="Jeu" maxLength={24} value={r.game} onChange={(e) => update(i, { game: e.target.value })} />
             <input className="field !py-2" placeholder="Rang (ex. Immortel 2)" maxLength={24} value={r.rank} onChange={(e) => update(i, { rank: e.target.value })} />
-            <input className="field !py-2" placeholder="Heures" inputMode="numeric" value={r.hours} onChange={(e) => update(i, { hours: e.target.value.replace(/\D/g, '').slice(0, 5) })} />
             <button type="button" className="btn-danger !py-2" onClick={() => setRows((cur) => cur.filter((_, k) => k !== i))}>Retirer</button>
           </div>
         ))}
         {rows.length < 3 && (
-          <button type="button" className="btn-ghost" onClick={() => setRows((cur) => [...cur, { game: '', rank: '', hours: '0' }])}>Ajouter un jeu</button>
+          <button type="button" className="btn-ghost" onClick={() => setRows((cur) => [...cur, { game: '', rank: '' }])}>Ajouter un jeu</button>
         )}
-        <span className="text-xs text-slate-400">3 jeux maximum.</span>
+        <span className="text-xs text-slate-400">3 jeux maximum, avec leur niveau.</span>
         <ErrorLine>{error}</ErrorLine>
         <div className="flex justify-end gap-2">
           <button type="button" className="btn-ghost" onClick={onClose}>Annuler</button>
