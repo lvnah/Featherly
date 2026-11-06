@@ -127,7 +127,7 @@ export function buildSnapshot(me) {
       channels: Object.fromEntries(channelUnread.map((r) => [r.channel, r.n])),
     },
     stats: { total: counts.total, online: counts.online },
-    me: { ...publicUser(me), chatBg: me.chat_bg || '' },
+    me: publicUser(me),
     users: users.map((u) => ({ ...publicUser(u), games: gameRows.filter((g) => g.user_id === u.id).map((g) => ({ game: g.game, rank: g.rank })), spaces: spaceRows.filter((x) => x.user_id === u.id).map((x) => ({ id: x.id, name: x.name, icon: x.icon })) })),
     servers: servers.map((s) => ({
       id: s.id,

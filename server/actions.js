@@ -71,9 +71,9 @@ const randomCode = () => {
 // Images envoyées depuis le navigateur (data URL redimensionnée côté client).
 // Limites de taille : ce sont des miniatures, elles sont renvoyées à chaque synchronisation.
 // Images fixes : tout le monde. GIF animés : PLUS seulement, et plus légers (poids limité).
-const IMAGE_LIMITS = { avatar: 60_000, banner: 160_000, icon: 60_000, chat: 900_000 };
+const IMAGE_LIMITS = { avatar: 60_000, banner: 160_000, icon: 60_000, espace: 700_000 };
 // GIF animés (PLUS) : limites en caractères de la data URL (≈ 9 Mo et 12 Mo de fichier).
-const GIF_LIMITS = { avatar: 12_000_000, banner: 17_000_000 };
+const GIF_LIMITS = { avatar: 12_000_000, banner: 17_000_000, espace: 17_000_000 };
 // Couleurs de pseudo : simples pour tous, davantage pour les PLUS.
 const NAME_COLORS_BASIC = ['#111827', '#dc2626', '#2563eb', '#16a34a', '#9333ea', '#ea580c'];
 const NAME_COLORS_PLUS = [...NAME_COLORS_BASIC, '#0891b2', '#db2777', '#4f46e5', '#65a30d', '#b45309', '#0f766e', '#7c3aed', '#be123c', '#1d4ed8', '#047857', '#c026d3', '#854d0e', 'rainbow', 'sunset', 'ocean', 'aurora', 'candy'];
@@ -346,7 +346,7 @@ const handlers = {
   // Bannière de l'espace (propriétaire) : image fixe pour tous ; GIF animé réservé aux membres PLUS.
   setServerBanner(me, p) {
     requireOwner(p.serverId, me);
-    run('UPDATE servers SET banner = ? WHERE id = ?', imageData(p.value, 'banner', !!me.is_plus), p.serverId);
+    run('UPDATE servers SET banner = ? WHERE id = ?', imageData(p.value, 'espace', !!me.is_plus), p.serverId);
   },
 
   // Autoriser ou non d'écrire dans un salon texte. Le propriétaire et les rôles qui gèrent les salons peuvent toujours écrire.
@@ -425,12 +425,86 @@ const handlers = {
     });
   },
 
-  // Fond d'écran du chat des espaces (PLUS) : image fixe, appliquée à tous les espaces de ce membre.
-  setChatBackground(me, p) {
-    if (!me.is_plus) fail('Le fond du chat est réservé aux membres PLUS.', 403);
-    const v = String(p.value ?? '').trim();
-    if (v.startsWith('data:image/gif')) fail('Le fond du chat accepte une image fixe (PNG, JPEG ou WebP).');
-    run('UPDATE users SET chat_bg = ? WHERE id = ?', imageData(v, 'chat', true), me.id);
+  // Bannière de l'espace (propriétaire) : image fixe pour tous ; GIF animé réservé aux membres PLUS.
+  setServerBanner(me, p) {
+    requireOwner(p.serverId, me);
+    run('UPDATE servers SET banner = ? WHERE id = ?', imageData(p.value, 'espace', !!me.is_plus), p.serverId);
+  },
+
+  // Autoriser ou non d'écrire dans un salon texte. Le propriétaire et les rôles qui gèrent les salons peuvent toujours écrire.
+  setChannelReadonly(me, p) {
+    const ch = one('SELECT * FROM channels WHERE id = ?', p.channelId);
+    if (!ch || ch.type !== 'text') fail('Salon texte introuvable.', 404);
+    if (!canManageChannels(ch.server_id, me.id)) fail('Permission insuffisante.', 403);
+    run('UPDATE channels SET readonly = ? WHERE id = ?', p.readonly ? 1 : 0, ch.id);
+  },
+
+  // Renommer un salon : même règle de nom et unicité dans l'espace.
+  updateChannel(me, p) {
+    const ch = one('SELECT * FROM channels WHERE id = ?', p.channelId);
+    if (!ch) fail('Salon introuvable.', 404);
+    if (!canManageChannels(ch.server_id, me.id)) fail('Permission insuffisante.', 403);
+    const raw = String(p.name ?? '').trim();
+    if (!/^[a-zA-Z0-9-]{1,16}$/.test(raw)) fail('Nom invalide (uniquement lettres, chiffres, tirets, max 16 caractères).');
+    if (one('SELECT 1 FROM channels WHERE server_id = ? AND name = ? AND id <> ?', ch.server_id, raw.toLowerCase(), ch.id)) {
+      fail('Un salon porte déjà ce nom dans cet espace.', 409);
+    }
+    run('UPDATE channels SET name = ? WHERE id = ?', raw.toLowerCase(), ch.id);
+  },
+
+  joinVoice(me, p) {
+    const ch = one('SELECT * FROM channels WHERE id = ?', p.channelId);
+    if (!ch || ch.type !== 'voice') fail('Salon vocal introuvable.', 404);
+    if (!isMember(ch.server_id, me.id)) fail('Vous n’êtes pas membre de cet espace.', 403);
+    // 5 personnes maximum par vocal (hors soi-même si l'on y est déjà).
+    const count = one('SELECT COUNT(*) AS n FROM voice_connections WHERE channel_id = ? AND user_id <> ?', ch.id, me.id).n;
+    if (count >= 5) fail('Ce vocal est complet (5 personnes maximum).', 409);
+    run('INSERT OR REPLACE INTO voice_connections (user_id, channel_id) VALUES (?, ?)', me.id, ch.id);
+  },
+
+  leaveVoice(me) {
+    run('DELETE FROM voice_connections WHERE user_id = ?', me.id);
+  },
+
+  createRole(me, p) {
+    requireOwner(p.serverId, me);
+    const name = text(p.name, 1, 20, 'Le nom du rôle doit faire entre 1 et 20 caractères.');
+    const color = /^#[0-9a-f]{6}$/i.test(p.color ?? '') ? p.color : '#38bdf8';
+    const next = one('SELECT COALESCE(MAX(position), 0) + 1 AS n FROM roles WHERE server_id = ?', p.serverId).n;
+    run(
+      'INSERT INTO roles (id, server_id, name, color, can_manage_channels, created_at, position) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      newId('r'), p.serverId, name, color, p.can_manage_channels ? 1 : 0, now(), next,
+    );
+  },
+
+  // Déplacer un rôle vers le haut (-1) ou le bas (+1) : change l'ordre d'affichage des groupes.
+  moveRole(me, p) {
+    requireOwner(p.serverId, me);
+    const role = one('SELECT * FROM roles WHERE id = ? AND server_id = ?', p.roleId, p.serverId);
+    if (!role) fail('Rôle introuvable.', 404);
+    const other = p.direction < 0
+      ? one('SELECT * FROM roles WHERE server_id = ? AND position < ? ORDER BY position DESC LIMIT 1', p.serverId, role.position)
+      : one('SELECT * FROM roles WHERE server_id = ? AND position > ? ORDER BY position ASC LIMIT 1', p.serverId, role.position);
+    if (!other) return;
+    transaction(() => {
+      run('UPDATE roles SET position = ? WHERE id = ?', other.position, role.id);
+      run('UPDATE roles SET position = ? WHERE id = ?', role.position, other.id);
+    });
+  },
+
+  // Réordonner tous les rôles d'un coup (glisser-déposer) : order = liste des ids, du haut vers le bas.
+  reorderRoles(me, p) {
+    requireOwner(p.serverId, me);
+    const order = Array.isArray(p.order) ? p.order : [];
+    const roles = all('SELECT id FROM roles WHERE server_id = ?', p.serverId);
+    const known = new Set(roles.map((r) => r.id));
+    const unique = new Set(order);
+    if (order.length !== roles.length || unique.size !== order.length || order.some((id) => !known.has(id))) {
+      fail('Ordre des rôles invalide.', 400);
+    }
+    transaction(() => {
+      order.forEach((id, index) => run('UPDATE roles SET position = ? WHERE id = ?', index + 1, id));
+    });
   },
 
   // Un seul rôle par membre (roleId vide = retirer les rôles), comme assign_role de server.php.
@@ -535,8 +609,8 @@ const handlers = {
     if (p.value) {
       run('UPDATE users SET is_plus = 1 WHERE id = ?', p.userId);
     } else {
-      // Retirer PLUS : pseudo remis en couleur de base, fond de chat retiré, bannière animée des espaces retirée.
-      run("UPDATE users SET is_plus = 0, banner_type = 'gradient', banner_value = '0', chat_bg = '', name_color = '' WHERE id = ?", p.userId);
+      // Retirer PLUS : pseudo remis en couleur de base, bannières animées des espaces retirées.
+      run("UPDATE users SET is_plus = 0, banner_type = 'gradient', banner_value = '0', name_color = '' WHERE id = ?", p.userId);
       run("UPDATE servers SET banner = '' WHERE owner_id = ? AND banner LIKE 'data:image/gif%'", p.userId);
     }
   },
