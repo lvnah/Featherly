@@ -84,7 +84,7 @@ export default function MessagesView({ withId }) {
                 <Avatar user={user} size="md" showStatus />
               </button>
               <span className="min-w-0 flex-1">
-                <span onClick={(e) => { e.stopPropagation(); openUser(user.id); }} className="inline-block max-w-full truncate font-bold hover:underline">{fullName(user)}</span>
+                <span onClick={(e) => { e.stopPropagation(); openUser(user.id); }} className="inline-block max-w-full truncate font-bold hover:underline" style={{ color: user.name_color || undefined }}>{fullName(user)}</span>
                 <span className="block truncate text-xs text-slate-500">{last ? last.content : statusLabel(user)}</span>
               </span>
               <CountBadge n={unread.dms[user.id] || 0} />
@@ -103,7 +103,7 @@ export default function MessagesView({ withId }) {
               <button onClick={() => go({ name: 'profile', userId: partner.id })} className="flex min-w-0 items-center gap-3 text-left">
                 <Avatar user={partner} size="sm" showStatus />
                 <span className="min-w-0">
-                  <span className="flex items-center gap-2 font-bold"><span className="truncate">{fullName(partner)}</span>{partner.is_plus ? <PlusBadge /> : null}</span>
+                  <span className="flex items-center gap-2 font-bold"><span className="truncate" style={{ color: partner.name_color || undefined }}>{fullName(partner)}</span>{partner.is_plus ? <PlusBadge /> : null}</span>
                   <span className="block text-xs text-slate-500"><span style={{ color: statusColor(partner) }}>{statusLabel(partner)}</span></span>
                 </span>
               </button>
@@ -151,7 +151,7 @@ export default function MessagesView({ withId }) {
                     </button>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span onClick={() => openUser(author.id)} className="cursor-pointer font-bold text-slate-900 hover:underline">{author.pseudo}</span>
+                        <span onClick={() => openUser(author.id)} className="cursor-pointer font-bold text-slate-900 hover:underline" style={{ color: author.name_color || undefined }}>{author.pseudo}</span>
                         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">#{author.tag}</span>
                         {author.is_plus ? <PlusBadge /> : null}
                         {d.status === 'request' && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-700">En attente</span>}

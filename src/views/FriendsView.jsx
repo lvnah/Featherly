@@ -34,7 +34,7 @@ export default function FriendsView() {
       <button onClick={() => go({ name: 'profile', userId: user.id })} className="flex min-w-0 flex-1 items-center gap-4 text-left">
         <Avatar user={user} size="md" showStatus />
         <span className="min-w-0">
-          <span className="block truncate font-bold">{fullName(user)}</span>
+          <span className="block truncate font-bold" style={{ color: user.name_color || undefined }}>{fullName(user)}</span>
           <span className="block text-xs text-slate-500">{sub}</span>
         </span>
       </button>

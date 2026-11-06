@@ -15,7 +15,7 @@ ensureAdmin();
 const PORT = Number(process.env.PORT || 3001);
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(root, 'dist');
-const MAX_BODY = 1024 * 1024;
+const MAX_BODY = 20 * 1024 * 1024; // GIF animés jusqu'à ~12 Mo
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',

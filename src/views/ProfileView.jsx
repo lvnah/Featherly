@@ -3,6 +3,7 @@ import { getMe, getUser, friendshipBetween, isFriend, sendFriendRequest, setStat
 import { useStore, useUI, Avatar, Banner, EmptyState, ErrorLine, Icon } from '../components/ui';
 import { BANNER_GRADIENTS, bannerStyle, fullName, isOnline, statusLabel, statusColor } from '../lib/util';
 import { fileToDataUrl, readGif, AVATAR_OPTS, BANNER_OPTS, GIF_MAX_AVATAR, GIF_MAX_BANNER } from '../lib/images';
+import { NAME_COLORS_BASIC, NAME_COLORS_PLUS } from '../lib/util';
 import PlusBadge from '../components/PlusBadge';
 import Flag from '../components/Flag';
 import CountrySelect from '../components/CountrySelect';
@@ -27,7 +28,7 @@ function OwnProfile() {
   const [avatar, setAvatar] = useState(me.avatar || '');
   const [bio, setBio] = useState(me.bio || '');
   const [country, setCountry] = useState(me.country || '');
-  const [customStatus, setCustomStatus] = useState(me.custom_status || '');
+  const [nameColor, setNameColor] = useState(me.name_color || '');
   const [banner, setBanner] = useState(me.banner?.type === 'image' ? me.banner : { type: 'gradient', index: me.banner?.index ?? 0 });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -54,7 +55,7 @@ function OwnProfile() {
     setError('');
     setBusy(true);
     try {
-      await updateProfile({ pseudo, tag: me.is_plus ? tag : undefined, avatar, bio, banner, country, customStatus });
+      await updateProfile({ pseudo, tag: me.is_plus ? tag : undefined, avatar, bio, banner, country, nameColor });
       // Enregistré : retour sur la vue de son profil.
       go({ name: 'profile', userId: me.id });
     } catch (err) {
@@ -75,10 +76,12 @@ function OwnProfile() {
         <form onSubmit={save} className="w-full max-w-lg overflow-hidden rounded-[2.5rem] border border-slate-100 bg-surface shadow-soft">
           <div className="relative h-40">
             {/* Cliquer sur la bannière ou la photo ouvre le choix du fichier */}
-            <label className="absolute inset-0 cursor-pointer" style={bannerStyle(preview)} title="Changer la bannière">
+            <label className="group absolute inset-0 cursor-pointer" style={bannerStyle(preview)} title="Changer la bannière">
+              <span className="pointer-events-none absolute inset-2 hidden items-center justify-center rounded-[1.5rem] border-2 border-dashed border-white/80 bg-black/30 group-hover:flex"><Icon name="camera" className="h-7 w-7 text-white" /></span>
               <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={pick(setBanner, BANNER_OPTS, true)} />
             </label>
-            <label className="absolute -bottom-12 left-7 h-24 w-24 cursor-pointer rounded-full ring-2 ring-surface" title="Changer la photo">
+            <label className="group absolute -bottom-12 left-7 h-24 w-24 cursor-pointer rounded-full ring-2 ring-surface" title="Changer la photo">
+              <span className="pointer-events-none absolute inset-0 z-10 hidden items-center justify-center rounded-full border-2 border-dashed border-white bg-black/40 group-hover:flex"><Icon name="pencil" className="h-6 w-6 text-white" /></span>
               <Avatar user={preview} size="xl" className="!h-full !w-full" />
               <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={pick(setAvatar, AVATAR_OPTS)} />
             </label>
@@ -98,14 +101,20 @@ function OwnProfile() {
               </Field>
             </div>
 
-            <Field label="Statut personnalisé (16 caractères, lettres et chiffres)">
-              <input
-                className="field"
-                maxLength={16}
-                value={customStatus}
-                placeholder="Ex. Dispo ce soir"
-                onChange={(e) => setCustomStatus(e.target.value.replace(/[^\p{L}\p{N} ]/gu, '').slice(0, 16))}
-              />
+            <Field label="Couleur du pseudo">
+              <div className="flex flex-wrap items-center gap-2">
+                {[''].concat(me.is_plus ? NAME_COLORS_PLUS : NAME_COLORS_BASIC).map((c) => (
+                  <button
+                    key={c || 'none'}
+                    type="button"
+                    aria-label={c || 'Couleur par défaut'}
+                    onClick={() => setNameColor(c)}
+                    className={`h-7 w-7 rounded-full border-2 ${nameColor === c ? 'border-brand-600 ring-2 ring-brand-300' : 'border-line'}`}
+                    style={{ background: c || 'repeating-linear-gradient(45deg,#e2e8f0 0 4px,#fff 4px 8px)' }}
+                  />
+                ))}
+              </div>
+              {!me.is_plus && <span className="text-xs text-slate-400">D’autres couleurs sont réservées aux membres PLUS.</span>}
             </Field>
 
             <div className="grid grid-cols-2 gap-4">
@@ -186,11 +195,10 @@ function PublicProfile({ user, goBack }) {
               <Avatar user={user} size="xl" showStatus className="ring-2 ring-surface" />
               <div className="min-w-0 pb-1">
                 <h2 className="flex min-w-0 flex-wrap items-center gap-2 text-2xl font-extrabold">
-                  <span className="truncate">{user.pseudo}</span> <span className="text-base font-semibold text-slate-400">#{user.tag}</span>
+                  <span className="truncate" style={{ color: user.name_color || undefined }}>{user.pseudo}</span> <span className="text-base font-semibold text-slate-400">#{user.tag}</span>
                   {user.is_plus ? <PlusBadge /> : null}
                   {user.country ? <Flag code={user.country} name={countryName(user.country)} /> : null}
                 </h2>
-                {user.custom_status ? <p className="text-sm font-semibold text-slate-500">{user.custom_status}</p> : null}
                 <p className={`text-sm font-semibold ${isOnline(user) ? 'text-brand-600' : 'text-slate-400'}`}><span style={{ color: statusColor(user) }}>{statusLabel(user)}</span></p>
               </div>
             </div>
@@ -199,6 +207,16 @@ function PublicProfile({ user, goBack }) {
               <p className="text-sm text-slate-700">{user.bio || "Cet utilisateur n’a pas encore rédigé de biographie."}</p>
             </div>
             <GamesBlock user={user} editable={user.id === me.id} />
+            {(user.spaces ?? []).length > 0 && (
+              <div className="flex flex-col gap-2">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">Espaces</span>
+                <div className="flex flex-wrap gap-2">
+                  {user.spaces.map((sp) => (
+                    <span key={sp.id} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">{sp.name}</span>
+                  ))}
+                </div>
+              </div>
+            )}
                         {user.id === me.id && (
               <div className="flex gap-2 pt-2">
                 <button className="btn-primary" onClick={() => go({ name: 'profile', userId: me.id, edit: true })}>Modifier le profil</button>
@@ -258,7 +276,6 @@ function GamesBlock({ user, editable }) {
             <span key={g.game} className="flex flex-col rounded-xl bg-surface px-3 py-2 shadow-soft">
               <span className="truncate text-sm font-extrabold">{g.game}</span>
               <span className="truncate text-xs font-semibold text-brand-600">{g.rank || 'Sans rang'}</span>
-              <span className="text-xs text-slate-500">{g.hours} h</span>
             </span>
           ))}
         </span>

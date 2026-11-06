@@ -72,7 +72,11 @@ const randomCode = () => {
 // Limites de taille : ce sont des miniatures, elles sont renvoyées à chaque synchronisation.
 // Images fixes : tout le monde. GIF animés : PLUS seulement, et plus légers (poids limité).
 const IMAGE_LIMITS = { avatar: 60_000, banner: 160_000, icon: 60_000 };
-const GIF_LIMITS = { avatar: 200_000, banner: 300_000 };
+// GIF animés (PLUS) : limites en caractères de la data URL (≈ 9 Mo et 12 Mo de fichier).
+const GIF_LIMITS = { avatar: 12_000_000, banner: 17_000_000 };
+// Couleurs de pseudo : simples pour tous, davantage pour les PLUS.
+const NAME_COLORS_BASIC = ['#111827', '#dc2626', '#2563eb', '#16a34a', '#9333ea', '#ea580c'];
+const NAME_COLORS_PLUS = [...NAME_COLORS_BASIC, '#0891b2', '#db2777', '#4f46e5', '#65a30d', '#b45309', '#0f766e', '#7c3aed', '#be123c', '#1d4ed8', '#047857', '#c026d3', '#854d0e'];
 const imageData = (value, kind, isPlus = false) => {
   const v = String(value ?? '').trim();
   if (!v) return '';
@@ -95,8 +99,7 @@ const handlers = {
       if (!game || game.length > 24) fail('Nom de jeu : 1 à 24 caractères.');
       const rank = String(g.rank ?? '').trim();
       if (rank.length > 24) fail('Rang : 24 caractères maximum.');
-      const hours = Math.max(0, Math.min(99999, Math.floor(Number(g.hours) || 0)));
-      return { game, rank, hours };
+      return { game, rank, hours: 0 }; // seul le nom du jeu et le niveau sont affichés
     });
     transaction(() => {
       run('DELETE FROM user_games WHERE user_id = ?', me.id);
@@ -117,6 +120,11 @@ const handlers = {
   updateProfile(me, p) {
     if (p.country !== undefined && p.country !== '' && !COUNTRY_CODES.has(p.country)) fail('Pays non proposé.');
     if (p.country !== undefined) run('UPDATE users SET country = ? WHERE id = ?', p.country, me.id);
+    if (p.nameColor !== undefined) {
+      const allowed = me.is_plus ? NAME_COLORS_PLUS : NAME_COLORS_BASIC;
+      if (p.nameColor !== '' && !allowed.includes(p.nameColor)) fail(me.is_plus ? 'Couleur non proposée.' : 'Cette couleur est réservée aux membres PLUS.', 403);
+      run('UPDATE users SET name_color = ? WHERE id = ?', p.nameColor, me.id);
+    }
     if (p.customStatus !== undefined) {
       const cs = String(p.customStatus).trim();
       if (cs.length > 16) fail('Le statut personnalisé fait 16 caractères maximum.');

@@ -17,6 +17,7 @@ export function publicUser(u) {
     is_plus: u.is_plus,
     is_admin: u.is_admin ?? 0,
     country: u.country ?? '',
+    name_color: u.name_color ?? '',
     custom_status: u.custom_status ?? '',
     status: u.status ?? 'online',
     banner:
@@ -75,6 +76,13 @@ export function buildSnapshot(me) {
   voice.forEach((v) => ids.add(v.user_id));
   const uIds = [...ids];
   const users = all(`SELECT * FROM users WHERE id IN (${marks(uIds)})`, ...uIds);
+  // Espaces d'un membre visibles par ce viewer : seulement les espaces publics ou ceux où je suis aussi.
+  const spaceRows = all(
+    `SELECT m.user_id, s.id, s.name, s.icon FROM memberships m JOIN servers s ON s.id = m.server_id
+     WHERE m.user_id IN (${marks(uIds)}) AND (s.is_public = 1 OR s.id IN (SELECT server_id FROM memberships WHERE user_id = ?))
+     ORDER BY s.created_at`,
+    ...uIds, me.id,
+  );
   const gameRows = all(`SELECT * FROM user_games WHERE user_id IN (${marks(uIds)}) ORDER BY position`, ...uIds);
 
   // Totaux globaux (agrégés, sans données personnelles) : membres inscrits et connectés.
@@ -120,7 +128,7 @@ export function buildSnapshot(me) {
     },
     stats: { total: counts.total, online: counts.online },
     me: publicUser(me),
-    users: users.map((u) => ({ ...publicUser(u), games: gameRows.filter((g) => g.user_id === u.id).map((g) => ({ game: g.game, rank: g.rank, hours: g.hours })) })),
+    users: users.map((u) => ({ ...publicUser(u), games: gameRows.filter((g) => g.user_id === u.id).map((g) => ({ game: g.game, rank: g.rank })), spaces: spaceRows.filter((x) => x.user_id === u.id).map((x) => ({ id: x.id, name: x.name, icon: x.icon })) })),
     servers: servers.map((s) => ({
       id: s.id,
       name: s.name,
