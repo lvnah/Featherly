@@ -104,63 +104,76 @@
 }
 /* Bannière d'accueil : mouvements lents et fluides (voir HeroBanner dans Home.jsx). */
 @keyframes hero-reveal {
-  from { opacity: 0; transform: scale(0.7) rotate(-12deg); filter: blur(14px); }
+  from { opacity: 0; transform: translate3d(0, 18px, 0) scale(0.8); filter: blur(12px); }
   to { opacity: 1; transform: none; filter: blur(0); }
 }
 @keyframes hero-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -10px, 0); }
 }
 @keyframes hero-aura {
-  0%, 100% { transform: scale(0.94); opacity: 0.55; }
-  50% { transform: scale(1.06); opacity: 1; }
+  0%, 100% { transform: scale(0.95); opacity: 0.6; }
+  50% { transform: scale(1.05); opacity: 1; }
 }
 @keyframes hero-spin {
   to { transform: rotate(360deg); }
 }
 @keyframes hero-rise {
-  0% { transform: translateY(0); opacity: 0; }
+  0% { transform: translate3d(0, 0, 0); opacity: 0; }
   10% { opacity: 0.8; }
   90% { opacity: 0.5; }
-  100% { transform: translateY(-22rem); opacity: 0; }
-}
-@keyframes hero-sweep {
-  0%, 35% { transform: translateX(-130%) skewX(-20deg); }
-  100% { transform: translateX(130%) skewX(-20deg); }
+  100% { transform: translate3d(0, -22rem, 0); opacity: 0; }
 }
 @keyframes hero-word {
-  from { opacity: 0; transform: translateY(16px); filter: blur(10px); }
+  from { opacity: 0; transform: translate3d(0, 16px, 0); filter: blur(10px); }
   to { opacity: 1; transform: none; filter: blur(0); }
 }
 @keyframes hero-tag-out {
-  to { opacity: 0; transform: translateY(-16px); filter: blur(8px); }
+  to { opacity: 0; transform: translate3d(0, -16px, 0); filter: blur(8px); }
 }
 @keyframes hero-letter {
-  from { opacity: 0; transform: translateY(0.45em); filter: blur(8px); }
+  from { opacity: 0; transform: translate3d(0, 0.45em, 0); filter: blur(8px); }
   to { opacity: 1; transform: none; filter: blur(0); }
 }
 @keyframes hero-fade-up {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
   to { opacity: 1; transform: none; }
 }
-.hero-tag { animation: hero-tag-out 1s cubic-bezier(0.5, 0, 0.75, 0) 2.7s both; }
-.hero-word { animation: hero-word 1s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.hero-logo-wrap { animation: hero-reveal 2.4s cubic-bezier(0.22, 1, 0.36, 1) 3s both; }
-.hero-logo-float { animation: hero-float 9s ease-in-out 5.4s infinite; }
-.hero-letter { animation: hero-letter 0.8s ease-out both; }
-.hero-aura { animation: hero-aura 10s ease-in-out infinite; }
+@keyframes hero-shine {
+  from { background-position: 0% 50%; }
+  to { background-position: 100% 50%; }
+}
+@keyframes name-shift {
+  from { background-position: 0% 50%; }
+  to { background-position: 100% 50%; }
+}
+
+.hero-tag { animation: hero-tag-out 0.9s cubic-bezier(0.5, 0, 0.75, 0) 4s forwards; }
+.hero-word { animation: hero-word 1s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.hero-word-out { animation: hero-tag-out 0.6s ease-in forwards; }
+.hero-word-in { animation: hero-word 0.9s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.hero-logo-wrap { animation: hero-reveal 2.4s cubic-bezier(0.22, 1, 0.36, 1) 4.2s backwards; }
+.hero-logo-float { animation: hero-float 10s ease-in-out 6.6s infinite; }
+.hero-aura { animation: hero-aura 12s ease-in-out infinite; }
 .hero-ring { animation: hero-spin 60s linear infinite; }
 .hero-ring-2 { animation: hero-spin 90s linear infinite reverse; }
 .hero-particle { animation-name: hero-rise; animation-timing-function: linear; animation-iteration-count: infinite; }
-.hero-sweep, .hero-logo-reveal .hero-sweep { animation: hero-sweep 6s ease-in-out 2.8s infinite; }
-.hero-cta { animation: hero-fade-up 1s ease-out 5.3s both; }
+.hero-letter { animation: hero-letter 0.8s ease-out backwards; }
+.hero-wordmark {
+  background-image: linear-gradient(100deg, #ffffff 0%, #9ca3af 25%, #ffffff 50%, #9ca3af 75%, #ffffff 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: hero-shine 6s linear infinite;
+}
+.hero-cta { animation: hero-fade-up 1s ease-out 6.4s backwards; }
 @media (prefers-reduced-motion: reduce) {
-  .hero-logo-wrap, .hero-logo-float, .hero-aura, .hero-ring, .hero-ring-2, .hero-particle, .hero-sweep, .hero-cta, .hero-tag {
+  .hero-tag, .hero-word, .hero-word-out, .hero-word-in, .hero-logo-wrap, .hero-logo-float, .hero-aura,
+  .hero-ring, .hero-ring-2, .hero-particle, .hero-letter, .hero-cta, .hero-wordmark {
     animation: none !important;
   }
-  .hero-particle, .hero-sweep, .hero-word, .hero-letter { animation: none !important; }
-  .hero-tag { display: none; }
-  .hero-particle, .hero-sweep { display: none; }
+  .hero-tag, .hero-particle { display: none; }
 }
 @keyframes splash-out {
   from { opacity: 1; }

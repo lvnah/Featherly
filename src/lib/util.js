@@ -83,4 +83,37 @@ export function formatStamp(ts) {
 
 // Couleurs de pseudo : simples pour tous, davantage pour les PLUS (même liste que le serveur).
 export const NAME_COLORS_BASIC = ['#111827', '#dc2626', '#2563eb', '#16a34a', '#9333ea', '#ea580c'];
-export const NAME_COLORS_PLUS = [...NAME_COLORS_BASIC, '#0891b2', '#db2777', '#4f46e5', '#65a30d', '#b45309', '#0f766e', '#7c3aed', '#be123c', '#1d4ed8', '#047857', '#c026d3', '#854d0e'];
+export const NAME_COLORS_PLUS = [...NAME_COLORS_BASIC, '#0891b2', '#db2777', '#4f46e5', '#65a30d', '#b45309', '#0f766e', '#7c3aed', '#be123c', '#1d4ed8', '#047857', '#c026d3', '#854d0e', 'rainbow', 'sunset', 'ocean', 'aurora', 'candy'];
+
+// Couleurs « arc-en-ciel » prêtes à l'emploi pour les membres PLUS (dégradé animé sur le pseudo).
+const RAINBOW_COLS = {
+  rainbow: ['#ef4444', '#f59e0b', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#a855f7', '#ec4899'],
+  sunset: ['#f97316', '#ef4444', '#ec4899'],
+  ocean: ['#0ea5e9', '#2563eb', '#22d3ee'],
+  aurora: ['#10b981', '#3b82f6', '#a855f7'],
+  candy: ['#f472b6', '#c084fc', '#60a5fa'],
+};
+export const RAINBOW_LABELS = { rainbow: 'Arc-en-ciel', sunset: 'Coucher de soleil', ocean: 'Océan', aurora: 'Aurore', candy: 'Bonbon' };
+// Le dégradé est doublé et se termine par sa première couleur : l'animation boucle sans couture.
+const gradientOf = (cols) => {
+  const seq = [...cols, cols[0]].join(', ');
+  return `linear-gradient(90deg, ${seq}, ${seq})`;
+};
+export const RAINBOW_GRADIENTS = Object.fromEntries(Object.entries(RAINBOW_COLS).map(([k, cols]) => [k, gradientOf(cols)]));
+
+// Style du pseudo : couleur simple, ou dégradé animé pour les couleurs arc-en-ciel.
+export function nameStyle(user) {
+  const c = user?.name_color;
+  if (!c) return {};
+  if (RAINBOW_GRADIENTS[c]) {
+    return {
+      backgroundImage: RAINBOW_GRADIENTS[c],
+      backgroundSize: '200% 100%',
+      WebkitBackgroundClip: 'text',
+      backgroundClip: 'text',
+      color: 'transparent',
+      animation: 'name-shift 6s linear infinite',
+    };
+  }
+  return { color: c };
+}

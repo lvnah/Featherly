@@ -133,6 +133,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
       return;
     }
     openMenu(e, [
+      ...(channel.type === 'text' ? [{ label: 'Paramètres du salon', onClick: () => openModal('channel-settings', { channelId: channel.id }) }] : []),
       { label: 'Renommer le salon', onClick: () => openModal('rename-channel', { channelId: channel.id, current: channel.name }) },
       // Le dernier salon d'un espace ne peut pas être supprimé.
       ...(channels.length > 1 ? [{ separator: true }, { label: 'Supprimer le salon', danger: true, onClick: () => run(toast, () => deleteChannel(channel.id)) }] : []),
@@ -368,12 +369,13 @@ export default function ServerView({ serverId, channelId, goHome }) {
                 <div className="flex items-center gap-3">
                   <input
                     className="field !rounded-2xl !bg-slate-100 !py-3.5"
-                    placeholder={`Partager quelque chose dans #${current.name}...`}
+                    disabled={current.readonly && !canManage}
+                    placeholder={current.readonly && !canManage ? 'Salon en lecture seule' : `Partager quelque chose dans #${current.name}...`}
                     value={text}
                     maxLength={2000}
                     onChange={(e) => setText(e.target.value)}
                   />
-                  <button type="submit" disabled={!text.trim()} aria-label="Envoyer" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-500 text-white shadow-[0_10px_24px_-10px_rgba(34,197,94,0.8)] transition hover:bg-brand-600 disabled:opacity-40">
+                  <button type="submit" disabled={!text.trim() || (current.readonly && !canManage)} aria-label="Envoyer" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-500 text-white shadow-[0_10px_24px_-10px_rgba(34,197,94,0.8)] transition hover:bg-brand-600 disabled:opacity-40">
                     <Icon name="send" className="h-5 w-5" />
                   </button>
                 </div>

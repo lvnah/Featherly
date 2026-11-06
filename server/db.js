@@ -121,6 +121,7 @@ addColumn('voice_connections', 'muted', 'INTEGER NOT NULL DEFAULT 0');
 addColumn('users', 'custom_status', "TEXT NOT NULL DEFAULT ''");
 addColumn('users', 'name_color', "TEXT NOT NULL DEFAULT ''");
 addColumn('users', 'chat_bg', "TEXT NOT NULL DEFAULT ''");
+addColumn('channels', 'readonly', 'INTEGER NOT NULL DEFAULT 0');
 // Statistiques de jeux affichées dans le profil (3 maximum par membre).
 db.exec(`
 CREATE TABLE IF NOT EXISTS user_games (
