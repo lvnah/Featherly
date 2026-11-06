@@ -106,8 +106,8 @@ async function start(channelId, myId) {
   let stream;
   try {
     stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
-  } catch {
-    onError('Accès au micro refusé ou indisponible (HTTPS requis hors localhost).');
+  } catch (err) {
+    onError(micErrorMessage(err));
     return false;
   }
   session = { channelId, myId, stream, peers: new Map(), timer: null };
@@ -139,5 +139,24 @@ export async function syncVoice(channelId, myId, participantIds) {
   }
   for (const id of [...session.peers.keys()]) {
     if (!participantIds.includes(id)) closePeer(id);
+  }
+}
+
+// Message clair selon la cause réelle du refus du micro.
+function micErrorMessage(err) {
+  if (!window.isSecureContext || !navigator.mediaDevices) {
+    return 'Micro bloqué : la page doit être ouverte en HTTPS (https://…) pour utiliser le micro.';
+  }
+  switch (err?.name) {
+    case 'NotAllowedError':
+    case 'SecurityError':
+      return 'Micro refusé : autorisez le micro pour ce site dans la barre d’adresse du navigateur, puis réessayez.';
+    case 'NotFoundError':
+    case 'OverconstrainedError':
+      return 'Aucun micro détecté sur cet appareil.';
+    case 'NotReadableError':
+      return 'Le micro est utilisé par une autre application. Fermez-la puis réessayez.';
+    default:
+      return `Accès au micro impossible (${err?.name || 'erreur inconnue'}).`;
   }
 }
