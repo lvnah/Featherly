@@ -148,12 +148,11 @@
   to { background-position: 100% 50%; }
 }
 
-.hero-tag { animation: hero-tag-out 0.9s cubic-bezier(0.5, 0, 0.75, 0) 4s forwards; }
-.hero-word { animation: hero-word 1s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
-.hero-word-out { animation: hero-tag-out 0.6s ease-in forwards; }
-.hero-word-in { animation: hero-word 0.9s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
-.hero-logo-wrap { animation: hero-reveal 2.4s cubic-bezier(0.22, 1, 0.36, 1) 4.2s backwards; }
-.hero-logo-float { animation: hero-float 10s ease-in-out 6.6s infinite; }
+.hero-tag { animation: hero-tag-out 0.6667s ease-in 5s forwards; }
+.hero-word { animation: hero-word 0.6667s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.hero-word-out { animation: hero-tag-out 0.6667s ease-in forwards; }
+.hero-word-in { animation: hero-word 0.6667s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.hero-logo-wrap { animation: hero-reveal 2s cubic-bezier(0.22, 1, 0.36, 1) 5s backwards; }
 .hero-aura { animation: hero-aura 12s ease-in-out infinite; }
 .hero-ring { animation: hero-spin 60s linear infinite; }
 .hero-ring-2 { animation: hero-spin 90s linear infinite reverse; }
@@ -166,10 +165,12 @@
   background-clip: text;
   color: transparent;
   animation: hero-shine 6s linear infinite;
+  padding: 0.12em 0.2em;
+  overflow: visible;
 }
-.hero-cta { animation: hero-fade-up 1s ease-out 6.4s backwards; }
+.hero-cta { animation: hero-fade-up 1s ease-out 6.9s backwards; }
 @media (prefers-reduced-motion: reduce) {
-  .hero-tag, .hero-word, .hero-word-out, .hero-word-in, .hero-logo-wrap, .hero-logo-float, .hero-aura,
+  .hero-tag, .hero-word, .hero-word-out, .hero-word-in, .hero-logo-wrap, .hero-aura,
   .hero-ring, .hero-ring-2, .hero-particle, .hero-letter, .hero-cta, .hero-wordmark {
     animation: none !important;
   }

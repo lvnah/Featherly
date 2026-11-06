@@ -209,7 +209,12 @@ export default function ServerView({ serverId, channelId, goHome }) {
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
       {/* Barre d'en-tête de l'espace */}
-      <header className="panel flex flex-wrap items-center gap-4 rounded-[2rem] px-5 py-3">
+      <header className="panel relative isolate flex flex-wrap items-center gap-4 overflow-hidden rounded-[2rem] px-5 py-3">
+        {server.banner && (
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-cover bg-center" style={{ backgroundImage: `url("${server.banner}")` }}>
+            <div className="absolute inset-0 bg-white/60" />
+          </div>
+        )}
         <div className="flex min-w-0 items-center gap-3" onContextMenu={(e) => {
           if (isOwner) { e.preventDefault(); return; }
           openMenu(e, [{ label: 'Quitter l’espace', danger: true, onClick: () => { if (window.confirm(`Quitter « ${server.name} » ?`)) run(toast, () => leaveServer(serverId)).then((ok) => ok && goHome()); } }]);

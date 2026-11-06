@@ -4,7 +4,7 @@ import { useStore, useUI, Avatar, CountBadge, Icon, ServerIcon } from '../compon
 import { serverUnread, leaveServer } from '../lib/store';
 import { run } from './ServerView';
 import Logo from '../components/Logo';
-import { fullName, isOnline, statusLabel, statusColor } from '../lib/util';
+import { fullName, isOnline, statusLabel, statusColor, nameStyle } from '../lib/util';
 
 // Bannière d'accueil : l'accroche apparaît mot par mot, « gamer » bascule vers « communauté »,
 // puis le logo arrive, suivi du nom Feathery. Ensuite, le mouvement reste lent et continu.
@@ -45,24 +45,24 @@ function HeroBanner({ onJoin }) {
         {/* 1. Accroche mot à mot, puis bascule « gamer » → « communauté » */}
         <p className="hero-tag col-start-1 row-start-1 flex max-w-md flex-wrap items-baseline justify-center gap-x-2 text-lg font-semibold text-white/90 md:text-2xl">
           {HERO_TAGLINE.map((word, i) => (
-            <span key={i} className="hero-word inline-block" style={{ animationDelay: `${0.35 + i * 0.2}s` }}>{word}</span>
+            <span key={i} className="hero-word inline-block" style={{ animationDelay: `${0.3 + i * 0.6667}s`, animationDuration: '0.6667s' }}>{word}</span>
           ))}
           <span className="inline-grid">
-            <span className="hero-word-out col-start-1 row-start-1" style={{ animationDelay: '2.5s' }}>gamer</span>
-            <span className="hero-word-in col-start-1 row-start-1 whitespace-nowrap" style={{ animationDelay: '2.9s' }}>communauté</span>
+            <span className="hero-word-out col-start-1 row-start-1" style={{ animationDelay: '3.6333s', animationDuration: '0.6667s' }}>gamer</span>
+            <span className="hero-word-in col-start-1 row-start-1 whitespace-nowrap" style={{ animationDelay: '4.3s', animationDuration: '0.6667s' }}>communauté</span>
           </span>
         </p>
 
         {/* 2. Logo (sans cadre) puis le nom Feathery, lettre par lettre, avec un reflet blanc/gris */}
         <div className="hero-brand col-start-1 row-start-1 flex flex-col items-center gap-5">
           <div className="hero-logo-wrap flex h-36 w-36 items-center justify-center md:h-44 md:w-44">
-            <div className="hero-logo-float flex h-full w-full items-center justify-center">
+            <div className="flex h-full w-full items-center justify-center">
               <Logo className="hero-logo-img h-full w-full" />
             </div>
           </div>
-          <p aria-label="Feathery" className="hero-wordmark flex text-4xl font-extrabold tracking-tight md:text-5xl">
+          <p aria-label="Feathery" className="hero-wordmark -my-4 flex px-4 py-4 text-4xl font-extrabold tracking-tight md:text-5xl">
             {'Feathery'.split('').map((ch, i) => (
-              <span key={i} aria-hidden="true" className="hero-letter inline-block" style={{ animationDelay: `${5 + i * 0.09}s` }}>{ch}</span>
+              <span key={i} aria-hidden="true" className="hero-letter inline-block" style={{ animationDelay: `${5.67 + i * 0.08}s` }}>{ch}</span>
             ))}
           </p>
         </div>
@@ -124,7 +124,7 @@ export default function Home() {
               {results.users.map((u) => (
                 <button key={u.id} onClick={() => { setQ(''); go({ name: 'profile', userId: u.id }); }} className="flex w-full items-center gap-3 rounded-2xl p-3 text-left hover:bg-slate-200">
                   <Avatar user={u} size="sm" showStatus />
-                  <span className="text-sm font-semibold">{fullName(u)}</span>
+                  <span className="text-sm font-semibold" style={nameStyle(u)}>{fullName(u)}</span>
                 </button>
               ))}
             </div>
@@ -197,7 +197,7 @@ export default function Home() {
             <div className="flex items-center gap-4">
               <Avatar user={me} size="lg" />
               <div className="min-w-0">
-                <p className="truncate text-lg font-bold">{me.pseudo}</p>
+                <p className="truncate text-lg font-bold" style={nameStyle(me)}>{me.pseudo}</p>
                 <p className="text-sm font-semibold text-brand-600">{me.is_plus ? 'Membre PLUS' : 'Membre Feathery'}</p>
               </div>
             </div>
@@ -216,7 +216,7 @@ export default function Home() {
                 <button onClick={() => go({ name: 'profile', userId: f.id })} className="flex min-w-0 flex-1 items-center gap-3 text-left">
                   <Avatar user={f} size="md" showStatus />
                   <span className="min-w-0">
-                    <span className="block truncate font-bold">{f.pseudo}</span>
+                    <span className="block truncate font-bold" style={nameStyle(f)}>{f.pseudo}</span>
                     <span className="block text-xs text-slate-500"><span style={{ color: statusColor(f) }}>{statusLabel(f)}</span></span>
                   </span>
                 </button>

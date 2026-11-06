@@ -133,6 +133,7 @@ export function buildSnapshot(me) {
       id: s.id,
       name: s.name,
       icon: s.icon,
+      banner: s.banner || '',
       is_public: s.is_public,
       owner_id: s.owner_id,
       invite_code: s.invite_code,
