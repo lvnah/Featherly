@@ -20,7 +20,7 @@ export default function Login({ toast }) {
       if (mode === 'register') {
         await register(pseudo, password, tag);
       } else {
-        await login(pseudo, password);
+        await login(`${pseudo.trim()}#${tag}`, password);
       }
     } catch (err) {
       setError(err.message);
@@ -57,17 +57,44 @@ export default function Login({ toast }) {
         </div>
 
         <form onSubmit={submit} className="flex flex-col gap-4">
-          <label className="flex flex-col gap-2 text-xs font-bold uppercase tracking-widest text-slate-500">
-            {mode === 'register' ? 'Pseudo' : 'Pseudo#tag'}
-            <input
-              className="field normal-case tracking-normal"
-              placeholder={mode === 'register' ? 'Votre pseudo (2 à 24 caractères)' : 'Ex. Lina#4821'}
-              value={pseudo}
-              maxLength={40}
-              autoComplete="username"
-              onChange={(e) => setPseudo(e.target.value)}
-            />
-          </label>
+          {mode === 'login' ? (
+            <div className="flex flex-col gap-2 text-xs font-bold uppercase tracking-widest text-slate-500">
+              Pseudo et tag
+              <div className="flex items-center gap-2">
+                <input
+                  className="field min-w-0 flex-1 normal-case tracking-normal"
+                  placeholder="Ex. Lina"
+                  value={pseudo}
+                  maxLength={40}
+                  autoComplete="username"
+                  onChange={(e) => setPseudo(e.target.value)}
+                  aria-label="Pseudo"
+                />
+                <span className="text-lg font-extrabold text-slate-400">#</span>
+                <input
+                  className="field w-28 shrink-0 normal-case tracking-normal font-mono"
+                  placeholder="4821"
+                  value={tag}
+                  inputMode="numeric"
+                  maxLength={4}
+                  onChange={(e) => setTag(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  aria-label="Tag"
+                />
+              </div>
+            </div>
+          ) : (
+            <label className="flex flex-col gap-2 text-xs font-bold uppercase tracking-widest text-slate-500">
+              Pseudo
+              <input
+                className="field normal-case tracking-normal"
+                placeholder="Votre pseudo (2 à 24 caractères)"
+                value={pseudo}
+                maxLength={40}
+                autoComplete="username"
+                onChange={(e) => setPseudo(e.target.value)}
+              />
+            </label>
+          )}
           {mode === 'register' && (
             <label className="flex flex-col gap-2 text-xs font-bold uppercase tracking-widest text-slate-500">
               Tag # (4 chiffres, facultatif)
@@ -92,7 +119,7 @@ export default function Login({ toast }) {
               onChange={(e) => setPassword(e.target.value)}
             />
           </label>
-          <button type="submit" className="btn-primary mt-2" disabled={busy || !pseudo.trim() || password.length < 8}>
+          <button type="submit" className="btn-primary mt-2" disabled={busy || !pseudo.trim() || password.length < 8 || (mode === 'login' && tag.length !== 4)}>
             <Icon name="arrow" className="h-4 w-4" />
             {mode === 'register' ? 'Créer mon compte' : 'Se connecter'}
           </button>
