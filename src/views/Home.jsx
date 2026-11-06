@@ -4,7 +4,52 @@ import { useStore, useUI, Avatar, CountBadge, Icon, ServerIcon } from '../compon
 import { serverUnread, leaveServer } from '../lib/store';
 import { run } from './ServerView';
 import Logo from '../components/Logo';
-import { fullName, isOnline, statusLabel, statusColor } from '../lib/util';
+
+// Bannière animée : logo central qui se révèle, anneaux en orbite lente, lueur qui respire et particules.
+// Tout est en CSS (voir index.css, classes .hero-*) pour rester fluide ; désactivé si « moins de mouvement ».
+const PARTICLES = [
+  { left: '12%', size: 6, delay: '0s', duration: '14s' },
+  { left: '28%', size: 4, delay: '3s', duration: '18s' },
+  { left: '48%', size: 5, delay: '7s', duration: '16s' },
+  { left: '66%', size: 3, delay: '1.5s', duration: '20s' },
+  { left: '82%', size: 6, delay: '5s', duration: '15s' },
+  { left: '92%', size: 4, delay: '9s', duration: '19s' },
+];
+
+function HeroBanner({ onJoin }) {
+  return (
+    <section className="hero relative isolate flex min-h-[20rem] items-center justify-center overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-brand-900 via-brand-800 to-[#052e16] p-8 text-white shadow-panel md:min-h-[24rem] md:p-10">
+      <div className="hero-aura pointer-events-none absolute inset-0 m-auto h-[120%] w-[120%] rounded-full bg-brand-400/20 blur-3xl" />
+      <div className="hero-ring pointer-events-none absolute inset-0 m-auto h-72 w-72 rounded-full border border-white/10 md:h-96 md:w-96">
+        <span className="hero-dot absolute -top-1 left-1/2 h-2 w-2 rounded-full bg-brand-300" />
+      </div>
+      <div className="hero-ring hero-ring-2 pointer-events-none absolute inset-0 m-auto h-[26rem] w-[26rem] rounded-full border border-white/5 md:h-[32rem] md:w-[32rem]">
+        <span className="hero-dot hero-dot-2 absolute bottom-6 right-6 h-1.5 w-1.5 rounded-full bg-white/70" />
+      </div>
+      {PARTICLES.map((p, i) => (
+        <span
+          key={i}
+          className="hero-particle pointer-events-none absolute bottom-0 rounded-full bg-brand-200/60"
+          style={{ left: p.left, width: p.size, height: p.size, animationDelay: p.delay, animationDuration: p.duration }}
+        />
+      ))}
+
+      <div className="relative z-10 flex flex-col items-center gap-7 text-center">
+        <div className="hero-logo-wrap relative flex h-36 w-36 items-center justify-center md:h-44 md:w-44">
+          <div className="hero-logo-float flex h-full w-full items-center justify-center">
+            <div className="hero-logo-reveal relative flex h-full w-full items-center justify-center overflow-hidden rounded-[2.25rem] bg-white/10 p-5 ring-1 ring-white/20">
+              <Logo className="hero-logo-img h-full w-full" />
+              <span className="hero-sweep pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/35 to-transparent" />
+            </div>
+          </div>
+        </div>
+        <button onClick={onJoin} className="hero-cta btn-soft !rounded-full !px-6">
+          Rejoindre un espace
+        </button>
+      </div>
+    </section>
+  );
+}import { fullName, isOnline, statusLabel, statusColor } from '../lib/util';
 
 export default function Home() {
   const s = useStore();
@@ -72,19 +117,7 @@ export default function Home() {
       <div className="thin-scroll flex min-h-0 flex-1 gap-4 overflow-y-auto pb-2">
         <div className="flex min-w-0 flex-1 flex-col gap-4">
           {/* Bannière de bienvenue */}
-          <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-brand-900 via-brand-800 to-[#052e16] p-8 text-white shadow-panel md:p-10">
-            <div className="absolute -right-10 -top-10 h-72 w-72 rounded-full bg-brand-500/25 blur-3xl" />
-            <Icon name="bolt" className="absolute right-10 top-1/2 hidden h-48 w-48 -translate-y-1/2 text-white/5 md:block" />
-            <div className="hero-sheen pointer-events-none absolute inset-y-0 -left-1/2 w-1/3 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-            <div className="relative flex flex-col items-center gap-6 py-4 text-center">
-              <div className="hero-logo flex h-32 w-32 items-center justify-center rounded-[2rem] bg-white/10 p-4 shadow-panel ring-1 ring-white/20 md:h-40 md:w-40">
-                <Logo className="h-full w-full" />
-              </div>
-              <button onClick={() => openModal('join')} className="btn-soft !rounded-full !px-6">
-                Rejoindre un espace
-              </button>
-            </div>
-          </section>
+          <HeroBanner onJoin={() => openModal('join')} />
 
           {/* Statistiques en direct */}
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
