@@ -147,7 +147,7 @@ function MiniProfileModal({ userId, serverId, onClose }) {
   const me = getMe(s);
   const user = getUser(s, userId);
   if (!user) return null;
-  const color = roleColorOf(s, serverId, user.id) || '#e2e8f0';
+  const color = roleColorOf(s, serverId, user.id) || '#374151';
   const roleName = roleNameOf(s, serverId, user.id);
 
   return (
@@ -300,16 +300,15 @@ function GamesModal({ onClose }) {
     <Modal open title="Mes jeux" onClose={onClose}>
       <form onSubmit={submit} className="flex flex-col gap-4">
         {rows.map((r, i) => (
-          <div key={i} className="grid grid-cols-1 gap-2 rounded-2xl border border-line p-3 sm:grid-cols-[1fr_1fr_auto]">
+          <div key={i} className="grid grid-cols-1 gap-2 rounded-2xl border border-line p-3 sm:grid-cols-[1fr_auto]">
             <input className="field !py-2" placeholder="Jeu" maxLength={24} value={r.game} onChange={(e) => update(i, { game: e.target.value })} />
-            <input className="field !py-2" placeholder="Rang (ex. Immortel 2)" maxLength={24} value={r.rank} onChange={(e) => update(i, { rank: e.target.value })} />
             <button type="button" className="btn-danger !py-2" onClick={() => setRows((cur) => cur.filter((_, k) => k !== i))}>Retirer</button>
           </div>
         ))}
         {rows.length < 3 && (
           <button type="button" className="btn-ghost" onClick={() => setRows((cur) => [...cur, { game: '', rank: '' }])}>Ajouter un jeu</button>
         )}
-        <span className="text-xs text-slate-400">3 jeux maximum, avec leur niveau.</span>
+        <span className="text-xs text-slate-400">3 jeux maximum.</span>
         <ErrorLine>{error}</ErrorLine>
         <div className="flex justify-end gap-2">
           <button type="button" className="btn-ghost" onClick={onClose}>Annuler</button>

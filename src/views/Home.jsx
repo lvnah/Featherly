@@ -3,6 +3,7 @@ import { getMe, serversOf, friendsOf, membersOf } from '../lib/store';
 import { useStore, useUI, Avatar, CountBadge, Icon, ServerIcon } from '../components/ui';
 import { serverUnread, leaveServer } from '../lib/store';
 import { run } from './ServerView';
+import Logo from '../components/Logo';
 import { fullName, isOnline, statusLabel, statusColor } from '../lib/util';
 
 export default function Home() {
@@ -74,14 +75,12 @@ export default function Home() {
           <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-brand-900 via-brand-800 to-[#052e16] p-8 text-white shadow-panel md:p-10">
             <div className="absolute -right-10 -top-10 h-72 w-72 rounded-full bg-brand-500/25 blur-3xl" />
             <Icon name="bolt" className="absolute right-10 top-1/2 hidden h-48 w-48 -translate-y-1/2 text-white/5 md:block" />
-            <div className="relative">
-              <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">
-                Bienvenue sur <span className="text-brand-400">Feathery !</span>
-              </h1>
-              <p className="mt-3 max-w-md text-sm text-white/75">
-                Client web léger pour les gamers ou autre communauté. Rejoignez un espace ou créez le vôtre pour commencer à échanger.
-              </p>
-              <button onClick={() => openModal('join')} className="btn-soft mt-6 !rounded-full !px-6">
+            <div className="hero-sheen pointer-events-none absolute inset-y-0 -left-1/2 w-1/3 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            <div className="relative flex flex-col items-center gap-6 py-4 text-center">
+              <div className="hero-logo flex h-32 w-32 items-center justify-center rounded-[2rem] bg-white/10 p-4 shadow-panel ring-1 ring-white/20 md:h-40 md:w-40">
+                <Logo className="h-full w-full" />
+              </div>
+              <button onClick={() => openModal('join')} className="btn-soft !rounded-full !px-6">
                 Rejoindre un espace
               </button>
             </div>
