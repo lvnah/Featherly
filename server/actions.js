@@ -122,7 +122,8 @@ const handlers = {
     if (p.country !== undefined) run('UPDATE users SET country = ? WHERE id = ?', p.country, me.id);
     if (p.nameColor !== undefined) {
       const allowed = me.is_plus ? NAME_COLORS_PLUS : NAME_COLORS_BASIC;
-      if (p.nameColor !== '' && !allowed.includes(p.nameColor)) fail(me.is_plus ? 'Couleur non proposée.' : 'Cette couleur est réservée aux membres PLUS.', 403);
+      const hexOk = me.is_plus && /^#[0-9a-f]{6}$/i.test(p.nameColor ?? '');
+      if (p.nameColor !== '' && !allowed.includes(p.nameColor) && !hexOk) fail(me.is_plus ? 'Couleur invalide (format #RRGGBB).' : 'Cette couleur est réservée aux membres PLUS.', 403);
       run('UPDATE users SET name_color = ? WHERE id = ?', p.nameColor, me.id);
     }
     if (p.customStatus !== undefined) {
@@ -392,6 +393,21 @@ const handlers = {
     transaction(() => {
       run('UPDATE roles SET position = ? WHERE id = ?', other.position, role.id);
       run('UPDATE roles SET position = ? WHERE id = ?', role.position, other.id);
+    });
+  },
+
+  // Réordonner tous les rôles d'un coup (glisser-déposer) : order = liste des ids, du haut vers le bas.
+  reorderRoles(me, p) {
+    requireOwner(p.serverId, me);
+    const order = Array.isArray(p.order) ? p.order : [];
+    const roles = all('SELECT id FROM roles WHERE server_id = ?', p.serverId);
+    const known = new Set(roles.map((r) => r.id));
+    const unique = new Set(order);
+    if (order.length !== roles.length || unique.size !== order.length || order.some((id) => !known.has(id))) {
+      fail('Ordre des rôles invalide.', 400);
+    }
+    transaction(() => {
+      order.forEach((id, index) => run('UPDATE roles SET position = ? WHERE id = ?', index + 1, id));
     });
   },
 

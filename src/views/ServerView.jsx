@@ -144,7 +144,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
 
   // Une ligne de membre (liste de droite).
   const memberRow = (u) => {
-    const color = roleColorOf(s, serverId, u.id) || '#e2e8f0';
+    const color = roleColorOf(s, serverId, u.id) || '#374151';
     const online = isOnline(u);
     return (
       <button
@@ -331,7 +331,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
                 {messages.map((m) => {
                   const author = getUser(s, m.user_id);
                   if (!author) return null;
-                  const color = roleColorOf(s, serverId, author.id) || '#e2e8f0';
+                  const color = roleColorOf(s, serverId, author.id) || '#374151';
                   return (
                     <div key={m.id} className="group flex items-center gap-4 rounded-3xl border border-slate-100 bg-surface px-5 py-4 shadow-soft">
                       <button onClick={() => openModal('mini', { userId: author.id, serverId })} onContextMenu={(e) => memberMenu(e, author.id)} aria-label={`Profil de ${author.pseudo}`}>
