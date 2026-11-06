@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { getMe, getUser, friendshipBetween, isFriend, sendFriendRequest, setStatus, updateProfile } from '../lib/store';
+import { getMe, getUser, friendshipBetween, isFriend, sendFriendRequest, setChatBackground, setStatus, updateProfile } from '../lib/store';
 import { useStore, useUI, Avatar, Banner, EmptyState, ErrorLine, Icon } from '../components/ui';
 import { BANNER_GRADIENTS, bannerStyle, fullName, isOnline, statusLabel, statusColor } from '../lib/util';
-import { fileToDataUrl, readGif, AVATAR_OPTS, BANNER_OPTS, GIF_MAX_AVATAR, GIF_MAX_BANNER } from '../lib/images';
+import { fileToDataUrl, readGif, AVATAR_OPTS, BANNER_OPTS, CHAT_BG_OPTS, GIF_MAX_AVATAR, GIF_MAX_BANNER } from '../lib/images';
 import { NAME_COLORS_BASIC, NAME_COLORS_PLUS } from '../lib/util';
 import PlusBadge from '../components/PlusBadge';
 import Flag from '../components/Flag';
@@ -172,6 +172,8 @@ function OwnProfile() {
               )}
             </Field>
 
+            <ChatBackgroundField me={me} toast={toast} />
+
             <Field label={`Bio (${bio.length}/190)`}>
               <textarea className="field min-h-24 resize-none" value={bio} maxLength={190} onChange={(e) => setBio(e.target.value)} />
             </Field>
@@ -305,5 +307,36 @@ function GamesBlock({ user, editable }) {
         </span>
       )}
     </button>
+  );
+}
+
+// Fond d'écran du chat des espaces : réservé aux PLUS, appliqué immédiatement (comme les jeux).
+function ChatBackgroundField({ me, toast }) {
+  const pickFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const data = await fileToDataUrl(file, CHAT_BG_OPTS);
+      await run(toast, () => setChatBackground(data), 'Fond du chat mis à jour');
+    } catch (err) {
+      toast(err.message);
+    }
+  };
+  return (
+    <Field label="Fond du chat des espaces (PLUS)" accent>
+      {me.is_plus ? (
+        <>
+          <ImportButton onChange={pickFile} label={me.chatBg ? 'Changer le fond du chat' : 'Importer un fond du chat'} />
+          {me.chatBg && (
+            <button type="button" onClick={() => run(toast, () => setChatBackground(''), 'Fond retiré')} className="self-start text-xs font-bold text-slate-500 hover:text-slate-900">
+              Retirer le fond
+            </button>
+          )}
+        </>
+      ) : (
+        <span className="text-xs text-slate-400">Réservé aux membres PLUS.</span>
+      )}
+    </Field>
   );
 }
