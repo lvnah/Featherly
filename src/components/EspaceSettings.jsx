@@ -1,7 +1,7 @@
 import { Fragment, useState } from 'react';
 import { deleteRole, deleteServer, getMe, kickMember, membersOf, membership, rolesOf, assignRole, updateInvite, updateRole, updateServerIcon, createRole } from '../lib/store';
 import { Avatar, ColorDiamonds, ErrorLine, Modal, ServerIcon, useStore, useUI } from './ui';
-import { fileToDataUrl, readGif, BANNER_OPTS, GIF_MAX_BANNER, ICON_OPTS } from '../lib/images';
+import { fileToDataUrl, readGif, ESPACE_BANNER_OPTS, GIF_MAX_BANNER, ICON_OPTS } from '../lib/images';
 import { updateServerName, reorderRoles, setServerBanner } from '../lib/store';
 import { fullName } from '../lib/util';
 import { ROLE_COLORS } from '../lib/util';
@@ -382,7 +382,7 @@ function BannerForm({ serverId, server, toast }) {
     try {
       const data = file.type === 'image/gif'
         ? await readGif(file, GIF_MAX_BANNER, !!me.is_plus)
-        : await fileToDataUrl(file, BANNER_OPTS);
+        : await fileToDataUrl(file, ESPACE_BANNER_OPTS);
       setError('');
       await run(toast, () => setServerBanner(serverId, data), 'Bannière de l’espace mise à jour');
     } catch (err) {

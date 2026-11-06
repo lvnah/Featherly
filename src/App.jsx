@@ -7,6 +7,7 @@ import { ContextMenu, UIContext, useStore } from './components/ui';
 import Layout from './components/Layout';
 import { ModalHost } from './components/Modals';
 import Login from './views/Login';
+import PlusView from './views/PlusView';
 import Home from './views/Home';
 import ServerView from './views/ServerView';
 import MessagesView from './views/MessagesView';
@@ -164,6 +165,7 @@ export default function App() {
         {view.name === 'home' && <Home />}
         {view.name === 'messages' && <MessagesView withId={view.withId} />}
         {view.name === 'friends' && <FriendsView />}
+        {view.name === 'plus' && <PlusView />}
         {view.name === 'community' && <CommunityView />}
         {view.name === 'admin' && <AdminView />}
         {view.name === 'profile' && <ProfileView key={`${view.userId}-${!!view.edit}`} userId={view.userId} edit={!!view.edit} goBack={goHome} />}

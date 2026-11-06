@@ -209,12 +209,12 @@ export default function ServerView({ serverId, channelId, goHome }) {
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
       {/* Barre d'en-tête de l'espace */}
-      <header className="panel relative isolate flex flex-wrap items-center gap-4 overflow-hidden rounded-[2rem] px-5 py-3">
-        {server.banner && (
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-cover bg-center" style={{ backgroundImage: `url("${server.banner}")` }}>
-            <div className="absolute inset-0 bg-white/60" />
-          </div>
-        )}
+      {server.banner && (
+        <div className="relative h-32 shrink-0 overflow-hidden rounded-[2rem] shadow-soft md:h-44">
+          <img src={server.banner} alt="" draggable={false} className="h-full w-full object-cover object-center" />
+        </div>
+      )}
+      <header className="panel flex flex-wrap items-center gap-4 rounded-[2rem] px-5 py-3">
         <div className="flex min-w-0 items-center gap-3" onContextMenu={(e) => {
           if (isOwner) { e.preventDefault(); return; }
           openMenu(e, [{ label: 'Quitter l’espace', danger: true, onClick: () => { if (window.confirm(`Quitter « ${server.name} » ?`)) run(toast, () => leaveServer(serverId)).then((ok) => ok && goHome()); } }]);
@@ -322,12 +322,7 @@ export default function ServerView({ serverId, channelId, goHome }) {
 
       <div className="flex min-h-0 flex-1 gap-4">
         {/* Chat */}
-        <section className="panel relative isolate flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          {me.chatBg && (
-            <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-cover bg-center" style={{ backgroundImage: `url("${me.chatBg}")` }}>
-              <div className="absolute inset-0 bg-white/55" />
-            </div>
-          )}
+        <section className="panel flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4">
             <span className="pill !bg-brand-100 !px-3 !py-1 !text-sm !font-bold !text-brand-700">Salon #{current?.name ?? '—'}</span>
           </div>

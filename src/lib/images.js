@@ -43,8 +43,8 @@ export function fileToDataUrl(file, { maxWidth = 128, maxHeight = 128, square = 
 export const AVATAR_OPTS = { maxWidth: 128, maxHeight: 128, square: true };
 export const ICON_OPTS = { maxWidth: 128, maxHeight: 128, square: true };
 export const BANNER_OPTS = { maxWidth: 800, maxHeight: 280, square: false };
-// Fond du chat : taille d'écran, image fixe.
-export const CHAT_BG_OPTS = { maxWidth: 1280, maxHeight: 800, square: false };
+// Bannière d'espace : grande définition pour rester nette en largeur.
+export const ESPACE_BANNER_OPTS = { maxWidth: 1600, maxHeight: 500, square: false };
 
 // GIF animé : pas de redimensionnement (il perdrait l'animation). Réservé aux PLUS, poids limité.
 export function readGif(file, maxBytes, isPlus) {
